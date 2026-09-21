@@ -26,6 +26,12 @@ export type JornadaPersona = {
 export type JornadaResumen = {
   horasAlDoble: number;
   fueraDeNorma: number;
+  /** Exceso que el reacomodo sí repartió entre la plantilla (sólo en "Después"). */
+  horasAbsorbidas?: number;
+  /** Exceso que no cupo en la plantilla; definido sólo en el resumen "Después". */
+  horasSinCubrir?: number;
+  /** Vacantes sugeridas: ⌈horasSinCubrir / tope⌉. */
+  vacantes?: number;
 };
 
 export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
@@ -264,11 +270,14 @@ export function JornadaTabla({
     nota === undefined
       ? `${personas.length} colaboradores · desplázate para ver toda la plantilla`
       : nota;
+  // Si alguien recibe horas en el reacomodo se reserva un hueco fijo para el
+  // delta (en ambos estados), así la columna no cambia de ancho al alternar.
+  const conDelta = personas.some((p) => p.reacomodada > p.hoy);
   return (
     <>
       {/* El contenedor propio de Table hace el scroll, así la cabecera sticky sí se ancla. */}
       <div
-        className="relative [&_[data-slot=table-container]]:max-h-[var(--tabla-max)] [&_[data-slot=table-container]]:overflow-y-auto [&_[data-slot=table-container]]:overscroll-contain [&_[data-slot=table-container]]:[scrollbar-width:thin] md:[&_[data-slot=table-container]]:max-h-[var(--tabla-max-md)]"
+        className="@container relative [&_[data-slot=table-container]]:max-h-[var(--tabla-max)] [&_[data-slot=table-container]]:overflow-y-auto [&_[data-slot=table-container]]:overscroll-contain [&_[data-slot=table-container]]:[scrollbar-width:thin] md:[&_[data-slot=table-container]]:max-h-[var(--tabla-max-md)]"
         style={
           {
             "--tabla-max": maxAltura,
@@ -287,13 +296,27 @@ export function JornadaTabla({
           <TableBody>
             {personas.map((p) => {
               const horas = p[clave];
+              const delta = clave === "reacomodada" ? p.reacomodada - p.hoy : 0;
               return (
                 <TableRow key={p.nombre}>
                   <TableCell>
                     <Persona nombre={p.nombre} foto={p.foto} detalle={p.detalle} />
                   </TableCell>
                   <TableCell>
-                    <Barra horas={horas} tope={tope} escala={escala} />
+                    <div className="flex items-center gap-2">
+                      <Barra horas={horas} tope={tope} escala={escala} />
+                      {conDelta && (
+                        <span
+                          className={cn(
+                            "hidden w-11 text-[11px] text-muted-foreground tabular-nums transition-opacity duration-500 @md:inline-block",
+                            delta > 0 ? "opacity-100" : "opacity-0",
+                          )}
+                          aria-hidden={delta <= 0}
+                        >
+                          {delta > 0 && `+${fmt(delta)}`}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <span className="inline-flex items-center justify-end gap-1.5">
@@ -326,7 +349,11 @@ export function JornadaTabla({
   );
 }
 
-/** Pie de totales de la tabla (horas al doble y fuera de norma). */
+/**
+ * Pie de totales de la tabla: horas al doble y fuera de norma. La tercera
+ * cifra es la proyección de 2030 en "Antes" y, en "Después", lo que el
+ * reacomodo no pudo cubrir con la plantilla actual (vacantes sugeridas).
+ */
 export function JornadaTotales({
   resumen,
   colaboradores,
@@ -341,9 +368,12 @@ export function JornadaTotales({
   proyeccion2030?: JornadaResumen | null;
 }) {
   const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
+  const conSinCubrir = resumen.horasSinCubrir !== undefined;
+  const vacantes = resumen.vacantes ?? 0;
   const horas = useContador(resumen.horasAlDoble, 900);
   const fuera = useContador(resumen.fueraDeNorma, 900);
   const horas2030 = useContador(proyeccion2030?.horasAlDoble ?? 0, 900);
+  const sinCubrir = useContador(resumen.horasSinCubrir ?? 0, 900);
   return (
     <Table>
       <TableFooter>
@@ -352,7 +382,7 @@ export function JornadaTotales({
             <div
               className={cn(
                 "grid gap-4 [&_p:first-child]:whitespace-nowrap",
-                proyeccion2030 ? "grid-cols-3" : "grid-cols-2",
+                proyeccion2030 || conSinCubrir ? "grid-cols-3" : "grid-cols-2",
               )}
             >
               <div>
@@ -384,15 +414,43 @@ export function JornadaTotales({
                   </span>
                 </p>
               </div>
-              {proyeccion2030 && (
+              {conSinCubrir ? (
                 <div>
                   <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                    2030 · tope 40 h
+                    Sin cubrir · vacantes
                   </p>
-                  <p className="mt-1 font-semibold text-2xl text-rose-300 tabular-nums md:text-3xl">
-                    {fmt(horas2030)}
+                  <p
+                    className={cn(
+                      "mt-1 whitespace-nowrap font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
+                      (resumen.horasSinCubrir ?? 0) > 0 && "text-amber-600 dark:text-amber-400",
+                    )}
+                  >
+                    {fmt(sinCubrir)}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-0.5 text-xs",
+                      resumen.horasSinCubrir === 0
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    {resumen.horasSinCubrir === 0
+                      ? "plantilla suficiente"
+                      : `${vacantes} ${vacantes === 1 ? "vacante" : "vacantes"}${tope ? ` de ${tope} h` : ""}`}
                   </p>
                 </div>
+              ) : (
+                proyeccion2030 && (
+                  <div>
+                    <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                      2030 · tope 40 h
+                    </p>
+                    <p className="mt-1 font-semibold text-2xl text-rose-300 tabular-nums md:text-3xl">
+                      {fmt(horas2030)}
+                    </p>
+                  </div>
+                )
               )}
             </div>
           </TableCell>

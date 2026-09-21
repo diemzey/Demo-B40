@@ -1,5 +1,12 @@
 import { JornadaHero } from "@/components/demo/jornada-hero";
-import { PLANTILLA_COAPA, resumenDe } from "@/components/demo/plantilla-coapa";
+import {
+  PLANTILLA_COAPA,
+  REACOMODO_COAPA,
+  TOPE,
+  TOPE_2030,
+  resumenDe,
+  resumenDespues,
+} from "@/components/demo/plantilla-coapa";
 import { RippleBackground } from "@/components/ui/ripple-background";
 
 /**
@@ -7,13 +14,11 @@ import { RippleBackground } from "@/components/ui/ripple-background";
  * ronda los $11,500 al mes: ≈ $60 por hora en una jornada de 48 h.
  */
 const COSTO_HORA = 60;
-const TOPE = 46;
-/** Tope final de la reforma, desde enero de 2030. */
-const TOPE_2030 = 40;
 
 export default function JornadaDemo() {
   const antes = resumenDe(PLANTILLA_COAPA, "hoy", TOPE);
-  const despues = resumenDe(PLANTILLA_COAPA, "reacomodada", TOPE);
+  // Después: lo que queda arriba del tope (0) más lo que el reacomodo no cubrió.
+  const despues = resumenDespues(PLANTILLA_COAPA, REACOMODO_COAPA);
   const antes2030 = resumenDe(PLANTILLA_COAPA, "hoy", TOPE_2030);
   return (
     <RippleBackground className="px-4 py-16 md:py-24">

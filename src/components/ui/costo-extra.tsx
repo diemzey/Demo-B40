@@ -12,6 +12,12 @@ export type CostoExtraProps = {
   costoHora: number;
   /** true: costo extra (antes). false: ahorro con la semana reacomodada. */
   activo: boolean;
+  /** Horas del exceso que el reacomodo repartió entre la plantilla actual. */
+  horasAbsorbidas?: number;
+  /** Vacantes sugeridas para las horas que no cupieron en la plantilla. */
+  vacantes?: number;
+  /** Tope semanal con el que se calculó el reacomodo (horas por vacante). */
+  tope?: number;
   className?: string;
 };
 
@@ -22,6 +28,18 @@ const mxn = new Intl.NumberFormat("es-MX", {
   currency: "MXN",
   maximumFractionDigits: 0,
 });
+
+/** "Reparte 44.5 h entre tu plantilla y abre 2 vacantes de 46 h." */
+function fraseReacomodo(horasAbsorbidas?: number, vacantes?: number, tope?: number) {
+  if (horasAbsorbidas === undefined || vacantes === undefined) return null;
+  const abre = `${vacantes} ${vacantes === 1 ? "vacante" : "vacantes"}${tope ? ` de ${tope} h` : ""}`;
+  if (horasAbsorbidas > 0 && vacantes > 0) {
+    return ` Reparte ${horasAbsorbidas.toFixed(1)} h entre tu plantilla y abre ${abre}.`;
+  }
+  if (horasAbsorbidas > 0) return ` Reparte ${horasAbsorbidas.toFixed(1)} h entre tu plantilla sin abrir vacantes.`;
+  if (vacantes > 0) return ` Abre ${abre}.`;
+  return null;
+}
 
 /**
  * Costo humano de las horas que se pagan al doble: cada hora extra cuesta
@@ -34,6 +52,9 @@ export function CostoExtra({
   horasAlDoble2030,
   costoHora,
   activo,
+  horasAbsorbidas,
+  vacantes,
+  tope,
   className,
 }: CostoExtraProps) {
   const semanal = horasAlDoble2030 * costoHora * 2;
@@ -74,6 +95,7 @@ export function CostoExtra({
           <>
             Mismos contratos, turnos reacomodados. Sin reacomodar serían{" "}
             {mxn.format(mensual)} al mes, {mxn.format(anual)} al año.
+            {fraseReacomodo(horasAbsorbidas, vacantes, tope)}
           </>
         )}
       </p>

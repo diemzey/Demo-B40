@@ -76,6 +76,8 @@ export function ColaboradoresTab() {
     : filas;
   // Mismo criterio que `resumenDe`: exceso > 0 ⇔ horas > tope.
   const fuera = filas.filter((f) => f.horas > tope).length;
+  // Vacantes que sugiere el reacomodo para las horas que no caben en la plantilla.
+  const vacantes = datos.despues.vacantes ?? 0;
 
   function agregar(e: FormEvent) {
     e.preventDefault();
@@ -96,7 +98,9 @@ export function ColaboradoresTab() {
       <TabHeader
         eyebrow="Colaboradores"
         title={datos.sucursal ? `Colaboradores · ${datos.sucursal.nombre}` : "Colaboradores"}
-        subtitle={`${filas.length} personas · ${fuera} exceden el tope de ${tope} h esta semana`}
+        subtitle={`${filas.length} personas · ${fuera} exceden el tope de ${tope} h esta semana${
+          vacantes > 0 ? ` · ${vacantes} ${vacantes === 1 ? "vacante sugerida" : "vacantes sugeridas"}` : ""
+        }`}
       />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">

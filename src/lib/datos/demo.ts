@@ -1,4 +1,10 @@
-import { PLANTILLA_COAPA, resumenDe } from "@/components/demo/plantilla-coapa";
+import {
+  PLANTILLA_BASE,
+  PLANTILLA_COAPA,
+  reacomodoDe,
+  resumenDe,
+  resumenDespues,
+} from "@/components/demo/plantilla-coapa";
 import { SEMANAS, SEMANA_ACTUAL } from "@/components/dashboard/semanas-data";
 import { TOPE_2027 } from "@/components/dashboard/colaboradores-table";
 import { semanaDesdeLunes } from "@/lib/datos/semana";
@@ -36,7 +42,11 @@ function lunesDeSemanaDemo(semana: number): string {
 }
 
 export function datosDemo(aviso: DatosPanel["aviso"] = null): DatosPanel {
-  const personas = PLANTILLA_COAPA.map((p) => ({ ...p, detalle: "Piso de venta" }));
+  // La columna reacomodada sale del motor con el tope del panel (mismo 46 h que la portada).
+  const { personas, resumen: reacomodo } = reacomodoDe(
+    PLANTILLA_BASE.map((p) => ({ ...p, detalle: "Piso de venta" })),
+    TOPE_2027,
+  );
   const semana = semanaDesdeLunes(LUNES_DEMO);
   return {
     origen: "demo",
@@ -51,7 +61,7 @@ export function datosDemo(aviso: DatosPanel["aviso"] = null): DatosPanel {
     tope2030: TOPE_2030,
     personas,
     antes: resumenDe(personas, "hoy", TOPE_2027),
-    despues: resumenDe(personas, "reacomodada", TOPE_2027),
+    despues: resumenDespues(personas, reacomodo),
     antes2030: resumenDe(personas, "hoy", TOPE_2030),
     semanas: SEMANAS.map((s) => ({
       inicio: lunesDeSemanaDemo(s.semana),

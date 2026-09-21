@@ -56,6 +56,9 @@ export function JornadaHero({
           horasAlDoble2030={antes2030.horasAlDoble}
           costoHora={costoHora}
           activo={enAntes}
+          horasAbsorbidas={despues.horasAbsorbidas}
+          vacantes={despues.vacantes}
+          tope={tope}
         />
         <div className="mt-8 md:mt-auto md:pt-8">
           <Button

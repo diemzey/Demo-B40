@@ -41,6 +41,10 @@ export default async function DashboardPage() {
   const semanaPrevia = semanas.length >= 2 ? semanas[semanas.length - 2] : undefined;
   const semanaIso = semana?.iso ?? semanas[semanas.length - 1]?.iso;
   const nombreSucursal = datos.sucursal?.nombre ?? "sin sucursal";
+  // Lo que el reacomodo no pudo absorber con la plantilla actual.
+  const vacantes = despues.vacantes ?? 0;
+  const sinCubrir = despues.horasSinCubrir ?? 0;
+  const etiquetaVacantes = `${vacantes} ${vacantes === 1 ? "vacante" : "vacantes"}`;
   const deltaTope =
     datos.topeAnterior !== null && datos.topeAnterior !== tope
       ? `${tope - datos.topeAnterior > 0 ? "+" : "−"}${Math.abs(tope - datos.topeAnterior)} h vs. ${datos.topeAnio - 1}`
@@ -101,7 +105,7 @@ export default async function DashboardPage() {
           label="Fuera de norma"
           value={String(antes.fueraDeNorma)}
           unit={`de ${personas.length}`}
-          hint={`Quedan ${despues.fueraDeNorma} tras el reacomodo`}
+          hint={`Quedan ${despues.fueraDeNorma} tras el reacomodo${vacantes > 0 ? ` · ${etiquetaVacantes}` : ""}`}
           delta={`${despues.fueraDeNorma - antes.fueraDeNorma}`}
           deltaTone="good"
           tone="destructive"
@@ -141,6 +145,7 @@ export default async function DashboardPage() {
               <CardTitle className="text-[13px] font-semibold">Antes vs. reacomodada</CardTitle>
               <CardDescription className="text-xs">
                 Exceso sobre el tope con los mismos contratos
+                {sinCubrir > 0 && <> · Sin cubrir: {fmtH.format(sinCubrir)} h → {etiquetaVacantes}</>}
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-1">
