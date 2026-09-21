@@ -20,7 +20,7 @@ export type JornadaLogoProps = Omit<
   label?: string;
 };
 
-const VIEW_W = 244;
+const VIEW_W = 258;
 const VIEW_H = 64;
 
 // Ring geometry (viewBox units).
@@ -31,8 +31,8 @@ const RING_STROKE = 6.5;
 // 8 segments, each 20° of arc on a 45° pitch. With round caps the visible
 // arc grows by ~8° per side, leaving a ~9° gap between neighbours.
 const SEGMENT_ARC = 20;
-// Offset the dash pattern so a gap (not a segment) sits at 3 o'clock, where
-// the "J" tucks into the ring.
+// Offset the dash pattern so a gap (not a segment) sits at 3 o'clock, facing
+// the wordmark.
 const SEGMENT_OFFSET = 32.5;
 
 const AMBER = "#f0a63a";
@@ -43,15 +43,15 @@ const GREY = "#8a8a85";
 // font that is slightly wider or narrower stays centered in its slot rather
 // than accumulating drift.
 const LETTERS: ReadonlyArray<{ ch: string; x: number; amber?: boolean }> = [
-  { ch: "J", x: 67 },
-  { ch: "o", x: 86.2 },
-  { ch: "r", x: 104.3 },
-  { ch: "n", x: 123.5 },
-  { ch: "a", x: 143.8 },
-  { ch: "d", x: 164.1 },
-  { ch: "a", x: 184.5 },
-  { ch: "4", x: 203.7, amber: true },
-  { ch: "0", x: 222.9, amber: true },
+  { ch: "J", x: 81.0 },
+  { ch: "o", x: 100.2 },
+  { ch: "r", x: 118.3 },
+  { ch: "n", x: 137.5 },
+  { ch: "a", x: 157.8 },
+  { ch: "d", x: 178.1 },
+  { ch: "a", x: 198.5 },
+  { ch: "4", x: 217.7, amber: true },
+  { ch: "0", x: 236.9, amber: true },
 ];
 const LETTER_STAGGER_MS = 60;
 const TEXT_BASELINE_Y = 46;
@@ -60,7 +60,10 @@ const STYLES = `
 .j40-spin {
   transform-box: view-box;
   transform-origin: ${RING_CX}px ${RING_CY}px;
-  animation: j40-spin 1.2s steps(8, end) infinite;
+  animation: j40-spin 8s steps(8, end) infinite;
+}
+.j40-tick {
+  animation: j40-blink 1s ease-in-out infinite;
 }
 .j40-letter {
   transform-box: fill-box;
@@ -79,16 +82,20 @@ const STYLES = `
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+@keyframes j40-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
 @keyframes j40-rise {
   0% { opacity: 0; transform: translateY(14px) scale(0.94); }
   45% { opacity: 1; }
   70% { transform: translateY(-3px) scale(1.02); }
   100% { opacity: 1; transform: translateY(0) scale(1); }
 }
-.j40-static .j40-spin { animation: none; }
+.j40-static .j40-spin, .j40-static .j40-tick { animation: none; }
 .j40-static .j40-letter { animation: none; opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
-  .j40-spin { animation: none; }
+  .j40-spin, .j40-tick { animation: none; }
   .j40-letter { animation: none; opacity: 1; transform: none; }
 }
 `;
@@ -129,9 +136,10 @@ export function JornadaLogo({
         strokeDashoffset={SEGMENT_OFFSET}
       />
 
-      {/* Active amber segment, stepping around the ring */}
+      {/* Active amber segment: one tick per second, blinking like a clock */}
       <g className="j40-spin">
         <circle
+          className="j40-tick"
           cx={RING_CX}
           cy={RING_CY}
           r={RING_R}
