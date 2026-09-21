@@ -1,3 +1,4 @@
+import AlcanceDemo from "@/components/demo/alcance-demo";
 import ContactDemo from "@/components/demo/contact-demo";
 import FeaturesDemo from "@/components/demo/features-demo";
 import { Footer } from "@/components/demo/footer";
@@ -13,6 +14,7 @@ export default function Home() {
       <main className="flex-1 pt-20">
         <JornadaDemo />
         <ReduccionTimelineDemo />
+        <AlcanceDemo />
         <FeaturesDemo />
         <ContactDemo />
         <LogoCloudDemo />
