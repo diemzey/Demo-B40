@@ -1,0 +1,114 @@
+/*
+ * Transiciones entre pantallas (View Transitions API).
+ *
+ * Las clases `j40-page-enter` / `j40-page-exit` las pone React en las
+ * capturas del `<ViewTransition>` de `page-transition.tsx`. Solo se anima
+ * la captura (pseudo-elementos `::view-transition-*`), nunca el DOM vivo.
+ */
+
+:root {
+  /* "expo-out": arranca decidido y frena con suavidad. */
+  --j40-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Salida corta y limpia. */
+  --j40-ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --j40-vt-exit: 200ms;
+  --j40-vt-enter: 420ms;
+  --j40-vt-enter-delay: 60ms;
+}
+
+/* El envoltorio es un bloque normal para que sea capturable
+   (un `display: contents` no genera caja y no se puede fotografiar). */
+.j40-page {
+  display: block;
+  min-width: 0;
+}
+
+/* Que la capa de la transición no se trague los clics mientras anima. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* La pantalla saliente: se desvanece y sube apenas. */
+::view-transition-old(.j40-page-exit) {
+  animation: var(--j40-vt-exit) var(--j40-ease-in) both j40-page-out;
+}
+
+/* La pantalla entrante: entra desde 12px abajo, escala 0.98 → 1 y aparece
+   un poco después de que la saliente empezó a irse. El origen del escalado
+   se ancla al centro del viewport (la pantalla nueva llega con scroll 0). */
+::view-transition-new(.j40-page-enter) {
+  transform-origin: 50% 50vh;
+  animation:
+    var(--j40-vt-enter) var(--j40-ease-out) var(--j40-vt-enter-delay) both
+      j40-page-in,
+    calc(var(--j40-vt-enter) * 0.75) ease-out var(--j40-vt-enter-delay) both
+      j40-page-fade-in;
+}
+
+@keyframes j40-page-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes j40-page-in {
+  from {
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes j40-page-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * Elemento compartido: el logo. Se nombra desde aquí con selectores (no
+ * editamos header.tsx ni auth-shell.tsx). Cada pantalla muestra a lo sumo
+ * un logo con este nombre (los ocultos con `display: none` no se capturan),
+ * así que el navegador puede "morfar" el del header de la landing hacia el
+ * del panel amarillo de /login y /registro, y de vuelta.
+ */
+header svg[aria-label="Jornada40"],
+aside.bg-yellow-400 > svg[aria-label="Jornada40"],
+main .lg\:hidden > svg[aria-label="Jornada40"] {
+  view-transition-name: jornada-logo;
+}
+
+::view-transition-group(jornada-logo) {
+  animation-duration: var(--j40-vt-enter);
+  animation-timing-function: var(--j40-ease-out);
+  z-index: 10;
+}
+
+::view-transition-old(jornada-logo),
+::view-transition-new(jornada-logo) {
+  animation-duration: calc(var(--j40-vt-enter) * 0.6);
+  animation-timing-function: ease-out;
+  /* Una captura del logo puede tener otra proporción; que no se estire. */
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Sin movimiento: cambio instantáneo. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-image-pair(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}
