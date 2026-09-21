@@ -34,7 +34,12 @@ export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
   despues: JornadaResumen;
   /** Milisegundos que se muestra cada estado antes de cambiar. */
   intervalo?: number;
+  /** Modo controlado: fase y barrido los aporta el padre. */
+  fase?: Fase;
+  barriendo?: boolean;
 };
+
+export type { Fase as JornadaFase };
 
 type Fase = "antes" | "despues";
 type Estado = "excede" | "limite" | "cumple";
@@ -146,11 +151,12 @@ function Barra({
  * Alterna entre el estado actual y el reacomodado: un destello recorre la
  * tabla y, a mitad del barrido, las barras y cifras pasan al otro estado.
  */
-function useFaseCiclica(intervalo: number) {
+export function useFaseCiclica(intervalo: number) {
   const [fase, setFase] = useState<Fase>("antes");
   const [barriendo, setBarriendo] = useState(false);
 
   useEffect(() => {
+    if (intervalo <= 0) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       setFase("despues");
       return;
@@ -196,10 +202,14 @@ export function JornadaArtefacto({
   antes,
   despues,
   intervalo = 3500,
+  fase: faseControlada,
+  barriendo: barridoControlado,
   className,
   ...props
 }: JornadaArtefactoProps) {
-  const { fase, barriendo } = useFaseCiclica(intervalo);
+  const interno = useFaseCiclica(faseControlada === undefined ? intervalo : 0);
+  const fase = faseControlada ?? interno.fase;
+  const barriendo = barridoControlado ?? interno.barriendo;
   const optimizada = fase === "despues";
   const resumen = optimizada ? despues : antes;
   const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
