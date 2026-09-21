@@ -18,7 +18,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
-const ICON = { size: 16, strokeWidth: 2, className: "opacity-60", "aria-hidden": true } as const;
+const ICON = {
+  size: 16,
+  strokeWidth: 2,
+  className: "opacity-60",
+  "aria-hidden": true,
+} as const;
 
 export function ProfileMenu({
   align = "end",
@@ -42,8 +47,10 @@ export function ProfileMenu({
             aria-label="Abrir menú de cuenta"
           >
             <Avatar className="size-9">
-              <AvatarImage src={user.foto} alt="" />
-              <AvatarFallback className="text-xs font-medium">{iniciales(user.nombre)}</AvatarFallback>
+              <AvatarImage src={user.foto || undefined} alt="" />
+              <AvatarFallback className="text-xs font-medium">
+                {iniciales(user.nombre)}
+              </AvatarFallback>
             </Avatar>
           </button>
         )}
@@ -51,14 +58,16 @@ export function ProfileMenu({
       <DropdownMenuContent className="max-w-64" align={align}>
         <DropdownMenuLabel className="flex items-start gap-3">
           <Avatar className="size-8 shrink-0">
-            <AvatarImage src={user.foto} alt="" />
+            <AvatarImage src={user.foto || undefined} alt="" />
             <AvatarFallback className="text-[0.625rem] font-medium">
               {iniciales(user.nombre)}
             </AvatarFallback>
           </Avatar>
           <div className="flex min-w-0 flex-col">
             <span className="truncate text-sm font-medium text-foreground">{user.nombre}</span>
-            <span className="truncate text-xs font-normal text-muted-foreground">{user.correo}</span>
+            <span className="truncate text-xs font-normal text-muted-foreground">
+              {user.correo}
+            </span>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
@@ -100,8 +109,12 @@ export function ProfileMenu({
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onSelect={() => {
-            signOut();
-            router.push("/");
+            // Con Supabase `signOut` es asíncrono: esperamos a que se limpie
+            // la cookie y luego refrescamos para que el servidor lo vea.
+            void signOut().finally(() => {
+              router.push("/");
+              router.refresh();
+            });
           }}
         >
           <LogOut {...ICON} />
@@ -123,7 +136,7 @@ export function UserChip({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2", className)}>
       <Avatar className="size-8">
-        <AvatarImage src={user.foto} alt="" />
+        <AvatarImage src={user.foto || undefined} alt="" />
         <AvatarFallback className="text-xs font-medium">{iniciales(user.nombre)}</AvatarFallback>
       </Avatar>
       <span className="flex min-w-0 flex-col items-start text-left leading-tight">

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 import { AuthShell } from "@/components/auth/auth-shell";
 import { LoginForm } from "@/components/auth/login-form";
@@ -18,7 +19,11 @@ export default function LoginPage() {
         <p className="mt-1 mb-6 text-sm text-muted-foreground">
           Usa el correo con el que registraste tu sucursal.
         </p>
-        <LoginForm />
+        {/* `LoginForm` lee `?next=` / `?error=` con `useSearchParams`, que en
+            una ruta estática exige un límite de Suspense por encima. */}
+        <Suspense fallback={<div className="min-h-72" aria-hidden="true" />}>
+          <LoginForm />
+        </Suspense>
       </div>
     </AuthShell>
   );
