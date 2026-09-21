@@ -232,8 +232,10 @@ export function JornadaArtefacto({
           {optimizada ? "reacomodada, mismos contratos" : "como está hoy"}
         </span>
       </div>
+      {/* El contenedor propio de Table hace el scroll, así la cabecera sticky sí se ancla. */}
+      <div className="relative [&_[data-slot=table-container]]:max-h-[27rem] [&_[data-slot=table-container]]:overflow-y-auto [&_[data-slot=table-container]]:overscroll-contain [&_[data-slot=table-container]]:[scrollbar-width:thin]">
       <Table>
-        <TableHeader>
+        <TableHeader className="sticky top-0 z-10 bg-card">
           <TableRow>
             <TableHead>Colaborador</TableHead>
             <TableHead>Horas</TableHead>
@@ -258,6 +260,17 @@ export function JornadaArtefacto({
             );
           })}
         </TableBody>
+      </Table>
+        {/* Degradado que insinúa que hay más filas */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent"
+          aria-hidden="true"
+        />
+      </div>
+      <p className="mt-2 px-2.5 text-muted-foreground text-xs">
+        {personas.length} colaboradores · desplázate para ver toda la plantilla
+      </p>
+      <Table>
         <TableFooter>
           <TableRow>
             <TableCell colSpan={3} className="py-4">

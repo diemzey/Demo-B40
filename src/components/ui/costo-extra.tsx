@@ -8,10 +8,12 @@ export type CostoExtraProps = {
   horasAlDoble: number;
   /** Costo por hora ordinaria, en MXN. */
   costoHora: number;
-  /** Si es false, la cifra baja a cero. */
+  /** true: costo extra (antes). false: ahorro con la semana reacomodada. */
   activo: boolean;
   className?: string;
 };
+
+const SEMANAS_POR_MES = 52 / 12;
 
 const mxn = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -19,10 +21,13 @@ const mxn = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 0,
 });
 
-/** Anima un número hacia su objetivo con easing suave. */
-function useContador(objetivo: number, duracion = 1400) {
+/**
+ * Anima un número de 0 a su objetivo con easing suave. Cambiar `reinicio`
+ * vuelve a empezar la cuenta desde cero.
+ */
+function useContador(objetivo: number, reinicio: string, duracion = 1400) {
   const [valor, setValor] = useState(0);
-  const desde = useRef(0);
+  const raf = useRef(0);
 
   useEffect(() => {
     const reducido = window.matchMedia(
@@ -33,27 +38,24 @@ function useContador(objetivo: number, duracion = 1400) {
       return;
     }
     const inicio = performance.now();
-    const origen = desde.current;
-    let raf = 0;
     const paso = (ahora: number) => {
       const t = Math.min(1, (ahora - inicio) / duracion);
       const ease = 1 - Math.pow(1 - t, 3);
-      const actual = origen + (objetivo - origen) * ease;
-      desde.current = actual;
-      setValor(actual);
-      if (t < 1) raf = requestAnimationFrame(paso);
+      setValor(objetivo * ease);
+      if (t < 1) raf.current = requestAnimationFrame(paso);
     };
-    raf = requestAnimationFrame(paso);
-    return () => cancelAnimationFrame(raf);
-  }, [objetivo, duracion]);
+    raf.current = requestAnimationFrame(paso);
+    return () => cancelAnimationFrame(raf.current);
+  }, [objetivo, reinicio, duracion]);
 
   return valor;
 }
 
 /**
  * Costo humano de las horas que se pagan al doble: cada hora extra cuesta
- * dos veces la hora ordinaria, así que el gasto de la semana es
- * horas × costo por hora × 2.
+ * dos veces la hora ordinaria. La cifra principal es mensual
+ * (semana × 52 / 12); en la vista reacomodada el mismo monto se muestra
+ * como ahorro, porque esas horas dejan de pagarse al doble.
  */
 export function CostoExtra({
   horasAlDoble,
@@ -62,14 +64,14 @@ export function CostoExtra({
   className,
 }: CostoExtraProps) {
   const semanal = horasAlDoble * costoHora * 2;
-  const objetivo = activo ? semanal : 0;
-  const valor = useContador(objetivo);
+  const mensual = semanal * SEMANAS_POR_MES;
   const anual = semanal * 52;
+  const valor = useContador(mensual, activo ? "antes" : "despues");
 
   return (
     <div className={cn("flex flex-col gap-1", className)} aria-live="polite">
       <p className="text-neutral-400 text-xs uppercase tracking-wider">
-        {activo ? "Costo extra de esta semana" : "Costo extra reacomodada"}
+        {activo ? "Costo extra al mes" : "Ahorro al mes, reacomodada"}
       </p>
       <p
         className={cn(
@@ -83,8 +85,8 @@ export function CostoExtra({
         </span>
       </p>
       <p className="text-neutral-500 text-xs">
-        {horasAlDoble.toFixed(1)} h al doble × {mxn.format(costoHora)}/h ·
-        estimado, ≈ {mxn.format(anual)} al año
+        {horasAlDoble.toFixed(1)} h al doble por semana × {mxn.format(costoHora)}
+        /h · ≈ {mxn.format(semanal)} a la semana, {mxn.format(anual)} al año
       </p>
     </div>
   );

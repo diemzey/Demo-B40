@@ -7,20 +7,14 @@ import {
   TOPE_2027,
   type Colaborador,
 } from "@/components/dashboard/colaboradores-table";
+import { PLANTILLA_COAPA, resumenDe } from "@/components/demo/plantilla-coapa";
 
 // El layout raíz aplica la plantilla "%s · Jornada40"; `absolute` evita duplicar el sufijo.
 export const metadata: Metadata = { title: { absolute: "Panel · Jornada40" } };
 
-const colaboradores: Colaborador[] = [
-  { nombre: "Ortega Bruno", foto: "/avatars/ortega-bruno.jpg", hoy: 49.0, reacomodada: 40.0 },
-  { nombre: "Cárdenas Ismael", foto: "/avatars/cardenas-ismael.jpg", hoy: 49.0, reacomodada: 39.5 },
-  { nombre: "Quintero Diego", foto: "/avatars/quintero-diego.jpg", hoy: 49.0, reacomodada: 31.5 },
-  { nombre: "Téllez Rodrigo", foto: "/avatars/tellez-rodrigo.jpg", hoy: 49.0, reacomodada: 40.0 },
-  { nombre: "Nájera Paola", foto: "/avatars/najera-paola.jpg", hoy: 48.5, reacomodada: 46.0 },
-  { nombre: "Olvera Héctor", foto: "/avatars/olvera-hector.jpg", hoy: 44.0, reacomodada: 36.0 },
-  { nombre: "Escobar Tomás", foto: "/avatars/escobar-tomas.jpg", hoy: 25.0, reacomodada: 23.5 },
-  { nombre: "Molina Rocío", foto: "/avatars/molina-rocio.jpg", hoy: 24.5, reacomodada: 21.0 },
-];
+// Misma plantilla sintética que usa la portada; las cifras se derivan de ella.
+const colaboradores: Colaborador[] = PLANTILLA_COAPA;
+const antes = resumenDe(PLANTILLA_COAPA, "hoy", TOPE_2027);
 
 export default function DashboardPage() {
   return (
@@ -34,7 +28,7 @@ export default function DashboardPage() {
             Sucursal Coapa · semana 31
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            30 colaboradores · turnos del 28 de julio al 3 de agosto
+            {PLANTILLA_COAPA.length} colaboradores · turnos del 28 de julio al 3 de agosto
           </p>
         </div>
         <Button className="bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300">
@@ -46,15 +40,15 @@ export default function DashboardPage() {
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Horas al doble"
-          value="100.4"
+          value={antes.horasAlDoble.toFixed(1)}
           unit="h"
           hint="Arriba de la hora 47 esta semana"
           tone="destructive"
         />
         <StatCard
           label="Fuera de norma"
-          value="27"
-          unit="de 30"
+          value={String(antes.fueraDeNorma)}
+          unit={`de ${PLANTILLA_COAPA.length}`}
           hint="Colaboradores que exceden el tope"
           tone="destructive"
         />
