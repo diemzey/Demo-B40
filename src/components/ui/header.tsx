@@ -111,7 +111,7 @@ function Header1() {
                 </div>
                 <div className="flex lg:justify-center">
                     <Link href="/" aria-label="Jornada40, inicio">
-                        <JornadaLogo size={30} className="text-foreground" />
+                        <JornadaLogo size={40} className="h-8 w-auto text-foreground md:h-10" />
                     </Link>
                 </div>
                 <div className="flex justify-end w-full gap-4">
@@ -137,10 +137,11 @@ function Header1() {
                         </ProfileMenu>
                     ) : (
                         <>
-                            <Button variant="outline" asChild>
+                            {/* En móvil estos accesos viven en el cajón del menú. */}
+                            <Button variant="outline" className="hidden md:inline-flex" asChild>
                                 <Link href="/login">Entrar</Link>
                             </Button>
-                            <Button className="bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300" asChild>
+                            <Button className="hidden bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300 md:inline-flex" asChild>
                                 <Link href="/registro">Crear cuenta</Link>
                             </Button>
                         </>
