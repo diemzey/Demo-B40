@@ -23,7 +23,7 @@ export function LogoCloud({ className, ...props }: LogoCloudProps) {
 
       <LogoCard
         className="relative border-r border-b bg-secondary dark:bg-secondary/30"
-        logo={{ src: "/logos/bimbo.svg", alt: "Bimbo" }}
+        logo={{ src: "/logos/bimbo.svg", alt: "Bimbo", width: 43, height: 20 }}
       >
         <PlusIcon
           className="-right-[12.5px] -bottom-[12.5px] absolute z-10 size-6"
@@ -33,12 +33,12 @@ export function LogoCloud({ className, ...props }: LogoCloudProps) {
 
       <LogoCard
         className="border-b md:border-r"
-        logo={{ src: "/logos/cemex.svg", alt: "CEMEX" }}
+        logo={{ src: "/logos/cemex.svg", alt: "CEMEX", width: 73, height: 20 }}
       />
 
       <LogoCard
         className="relative border-r border-b md:bg-secondary dark:md:bg-secondary/30"
-        logo={{ src: "/logos/telcel.svg", alt: "Telcel" }}
+        logo={{ src: "/logos/telcel.svg", alt: "Telcel", width: 71, height: 20 }}
       >
         <PlusIcon
           className="-right-[12.5px] -bottom-[12.5px] absolute z-10 size-6"
@@ -52,12 +52,12 @@ export function LogoCloud({ className, ...props }: LogoCloudProps) {
 
       <LogoCard
         className="relative border-b bg-secondary md:bg-background dark:bg-secondary/30 md:dark:bg-background"
-        logo={{ src: "/logos/oxxo.svg", alt: "OXXO" }}
+        logo={{ src: "/logos/oxxo.svg", alt: "OXXO", width: 39, height: 20 }}
       />
 
       <LogoCard
         className="relative border-r border-b bg-secondary md:border-b-0 md:bg-background dark:bg-secondary/30 md:dark:bg-background"
-        logo={{ src: "/logos/aeromexico.svg", alt: "Aeroméxico" }}
+        logo={{ src: "/logos/aeromexico.svg", alt: "Aeroméxico", width: 181, height: 20 }}
       >
         <PlusIcon
           className="-right-[12.5px] -bottom-[12.5px] md:-left-[12.5px] absolute z-10 size-6 md:hidden"
@@ -67,17 +67,17 @@ export function LogoCloud({ className, ...props }: LogoCloudProps) {
 
       <LogoCard
         className="border-b bg-background md:border-r md:border-b-0 md:bg-secondary dark:md:bg-secondary/30"
-        logo={{ src: "/logos/grupo-modelo.svg", alt: "Grupo Modelo" }}
+        logo={{ src: "/logos/grupo-mexico.svg", alt: "Grupo México", width: 104, height: 20 }}
       />
 
       <LogoCard
         className="border-r"
-        logo={{ src: "/logos/kavak.svg", alt: "Kavak" }}
+        logo={{ src: "/logos/kavak.svg", alt: "Kavak", width: 76, height: 20 }}
       />
 
       <LogoCard
         className="bg-secondary dark:bg-secondary/30"
-        logo={{ src: "/logos/bitso.svg", alt: "Bitso" }}
+        logo={{ src: "/logos/bitso.svg", alt: "Bitso", width: 73, height: 20 }}
       />
 
       <div className="-translate-x-1/2 -bottom-px pointer-events-none absolute left-1/2 w-screen border-b" />
@@ -98,14 +98,16 @@ function LogoCard({ logo, className, children, ...props }: LogoCardProps) {
       )}
       {...props}
     >
-      {/* Static SVG wordmarks served from /public; no optimization needed. */}
+      {/* Optimized brand SVGs served from /public with intrinsic sizes to avoid layout shift. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         alt={logo.alt}
-        className="pointer-events-none h-4 select-none md:h-5 dark:brightness-0 dark:invert"
-        height={logo.height || "auto"}
+        className="pointer-events-none h-4 w-auto max-w-full select-none md:h-5 dark:grayscale dark:invert"
+        decoding="async"
+        height={logo.height}
+        loading="lazy"
         src={logo.src}
-        width={logo.width || "auto"}
+        width={logo.width}
       />
       {children}
     </div>

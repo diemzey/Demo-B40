@@ -1,3 +1,4 @@
+import ContactDemo from "@/components/demo/contact-demo";
 import { Footer } from "@/components/demo/footer";
 import { HeaderDemo } from "@/components/demo/header-demo";
 import LogoCloudDemo from "@/components/demo/logo-cloud-demo";
@@ -17,6 +18,7 @@ export default function Home() {
           </section>
           <TableServers />
         </div>
+        <ContactDemo />
         <LogoCloudDemo />
       </main>
       <Footer />
