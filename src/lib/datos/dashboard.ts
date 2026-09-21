@@ -129,45 +129,52 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
   const tope = topeDe(catalogo, semana.anio);
   const topeAnterior = topeDe(catalogo, semana.anio - 1);
 
-  const [{ data: filasHoras }, { data: filasEmpleados }] = await Promise.all([
-    supabase
-      .from("v_horas_semana")
-      .select("empleado_id, horas_semana")
-      .eq("sucursal_id", elegida.id)
-      .eq("semana_iso", semana.inicio),
-    supabase
-      .from("empleados")
-      .select("id, nombre, apellido, puesto, foto_url")
-      .eq("sucursal_id", elegida.id)
-      .eq("activo", true)
-      .order("apellido")
-      .order("nombre"),
-  ]);
+  // El motor de reacomodo vive en Postgres (public.reacomodar_semana): quien
+  // excede el tope cede, quien tiene capacidad recibe, y lo que no cabe en la
+  // plantilla se reporta como horas sin cubrir → vacantes sugeridas.
+  const [{ data: filasReacomodo }, { data: filasBalance }, { data: filasEmpleados }] =
+    await Promise.all([
+      supabase.rpc("reacomodar_semana", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
+      supabase.rpc("resumen_reacomodo", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
+      supabase
+        .from("empleados")
+        .select("id, nombre, apellido, puesto, foto_url")
+        .eq("sucursal_id", elegida.id)
+        .eq("activo", true)
+        .order("apellido")
+        .order("nombre"),
+    ]);
 
-  const horasPorEmpleado = new Map<string, number>();
-  for (const h of filasHoras ?? []) {
-    if (h.empleado_id) horasPorEmpleado.set(h.empleado_id, h.horas_semana ?? 0);
+  const propuesta = new Map<string, { hoy: number; reacomodada: number }>();
+  for (const r of filasReacomodo ?? []) {
+    propuesta.set(r.empleado_id, { hoy: r.horas_hoy, reacomodada: r.horas_reacomodadas });
   }
 
   // Sólo colaboradores activos con horas esa semana: así el conteo coincide
   // con `colaboradores` de la vista y con las cifras del pie de la tabla.
   const personas: JornadaPersona[] = (filasEmpleados ?? []).flatMap((e) => {
-    const hoy = horasPorEmpleado.get(e.id);
-    if (hoy === undefined) return [];
+    const fila = propuesta.get(e.id);
+    if (!fila) return [];
     return [
       {
         nombre: nombreCompleto(e),
         foto: e.foto_url ?? "",
         detalle: e.puesto ?? undefined,
-        hoy,
-        // Reacomodo simple mientras no existe el motor: recorte al tope.
-        reacomodada: Math.min(hoy, tope),
+        hoy: fila.hoy,
+        reacomodada: fila.reacomodada,
       },
     ];
   });
 
+  const balance = filasBalance?.[0];
+  const reacomodo = {
+    horasAbsorbidas: redondea(balance?.horas_absorbidas ?? 0),
+    horasSinCubrir: redondea(balance?.horas_sin_cubrir ?? 0),
+    vacantes: balance?.vacantes_sugeridas ?? 0,
+  };
+
   const antes = resumenDe(personas, "hoy", tope);
-  const despues = resumenDe(personas, "reacomodada", tope);
+  const despues = { ...resumenDe(personas, "reacomodada", tope), ...reacomodo };
   const antes2030 = resumenDe(personas, "hoy", TOPE_2030);
 
   // La tarjeta de la sucursal elegida usa las mismas cifras que el panel.

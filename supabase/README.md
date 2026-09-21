@@ -22,7 +22,8 @@ supabase/
 │   ├── 0001_extensiones_y_tipos.sql      pgcrypto + enums
 │   ├── 0002_esquema_base.sql             tablas, triggers, handle_new_user()
 │   ├── 0003_rls.sql                      RLS, funciones auxiliares, políticas
-│   └── 0004_vistas_y_semilla_topes.sql   topes, vistas, RPC resumen_sucursal
+│   ├── 0004_vistas_y_semilla_topes.sql   topes, vistas, RPC resumen_sucursal
+│   └── 0005_reacomodo.sql                motor de reacomodo (RPC)
 ├── seed.sql                              datos demo (Grupo Solmar)
 ├── plantillas/
 │   └── turnos-ejemplo.csv                ejemplo del CSV que importa la app
@@ -38,7 +39,8 @@ Aplicar con el MCP de Supabase (`apply_migration`) o con `supabase db push`,
 2. `0002_esquema_base.sql`
 3. `0003_rls.sql`
 4. `0004_vistas_y_semilla_topes.sql`
-5. (opcional) `seed.sql` — datos de demostración. Ejecutarlo con el rol
+5. `0005_reacomodo.sql`
+6. (opcional) `seed.sql` — datos de demostración. Ejecutarlo con el rol
    `postgres`/service role (RLS no aplica). Es idempotente: si ya existe la
    empresa "Grupo Solmar" no inserta nada.
 
@@ -163,6 +165,49 @@ por el mismo motivo.
 const { data } = await supabase.rpc('resumen_sucursal', {
   p_sucursal: sucursalId,
   p_semana: '2026-07-29', // cualquier día de la semana
+});
+```
+
+## Motor de reacomodo (`0005_reacomodo.sql`)
+
+Principio: **las horas de cobertura de la sucursal no desaparecen.** Un
+reacomodo que sólo recorta al tope esconde carga; el motor la reparte y, si no
+cabe, la hace visible como vacantes.
+
+1. **Ceden.** Quien tiene `horas > tope` queda en el tope. La *bolsa* es la
+   suma de esos excesos.
+2. **Reciben, fase 1 (deuda de contrato).** Quien está por debajo de su
+   `jornada_contratada_horas` sube primero hasta `min(contrato, tope)`, en
+   orden de mayor déficit.
+3. **Reciben, fase 2 (nivelación).** La bolsa restante se reparte de 0.5 h en
+   0.5 h dando siempre a quien menos horas tiene, hasta su límite: el tope, o
+   `min(tope, max(contrato, hoy) + p_margen_contrato)` si se fija un margen
+   (para no convertir a un medio tiempo en tiempo completo sin avisar).
+4. **Sobra.** Lo que queda en la bolsa son *horas sin cubrir*;
+   `vacantes_sugeridas = ⌈sin cubrir / tope⌉`. Si no se contrata, esas horas
+   seguirán pagándose al doble.
+
+- **`reacomodar_semana(p_sucursal, p_semana, p_tope default null, p_margen_contrato default null)`**
+  → una fila por colaborador activo con horas esa semana:
+  `(empleado_id, nombre, apellido, puesto, foto_url, jornada_contratada,
+  horas_hoy, horas_reacomodadas, delta, rol ∈ cede|recibe|igual)`.
+  `p_tope` nulo usa `tope_semanal(año)`; pásalo explícito (p. ej. 40) para
+  proyectar 2030.
+- **`resumen_reacomodo(…)`** (mismos parámetros) → una fila:
+  `(semana_iso, tope_horas, colaboradores, horas_totales, horas_excedentes,
+  horas_absorbidas, horas_sin_cubrir, vacantes_sugeridas,
+  fuera_de_norma_antes, fuera_de_norma_despues)`.
+
+Ambas son `security invoker` (respetan RLS). La app replica la misma lógica en
+`src/lib/reacomodo/index.ts` para el modo demo; ambas implementaciones deben
+dar el mismo resultado (verificado con la semilla: tope 48 → Escobar 25→27 y
+Molina 24.5→27, 0 h sin cubrir; tope 40 → 18 h sin cubrir, 1 vacante).
+
+```ts
+const { data } = await supabase.rpc('resumen_reacomodo', {
+  p_sucursal: sucursalId,
+  p_semana: '2026-07-29',
+  p_tope: 40, // opcional
 });
 ```
 

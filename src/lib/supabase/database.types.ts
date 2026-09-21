@@ -393,6 +393,46 @@ export type Database = {
       empresa_actual: { Args: never; Returns: string }
       es_admin: { Args: never; Returns: boolean }
       puede_editar: { Args: never; Returns: boolean }
+      reacomodar_semana: {
+        Args: {
+          p_margen_contrato?: number
+          p_semana: string
+          p_sucursal: string
+          p_tope?: number
+        }
+        Returns: {
+          apellido: string
+          delta: number
+          empleado_id: string
+          foto_url: string
+          horas_hoy: number
+          horas_reacomodadas: number
+          jornada_contratada: number
+          nombre: string
+          puesto: string
+          rol: string
+        }[]
+      }
+      resumen_reacomodo: {
+        Args: {
+          p_margen_contrato?: number
+          p_semana: string
+          p_sucursal: string
+          p_tope?: number
+        }
+        Returns: {
+          colaboradores: number
+          fuera_de_norma_antes: number
+          fuera_de_norma_despues: number
+          horas_absorbidas: number
+          horas_excedentes: number
+          horas_sin_cubrir: number
+          horas_totales: number
+          semana_iso: string
+          tope_horas: number
+          vacantes_sugeridas: number
+        }[]
+      }
       resumen_sucursal: {
         Args: { p_semana: string; p_sucursal: string }
         Returns: {
