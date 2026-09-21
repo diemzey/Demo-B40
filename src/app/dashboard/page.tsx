@@ -16,18 +16,14 @@ import {
   HorasPorPersonaChart,
 } from "@/components/dashboard/charts";
 import { SEMANAS, SEMANA_ACTUAL } from "@/components/dashboard/semanas-data";
-import {
-  ColaboradoresTable,
-  TOPE_2027,
-  type Colaborador,
-} from "@/components/dashboard/colaboradores-table";
+import { DiagnosticoTabla } from "@/components/dashboard/diagnostico-tabla";
+import { TOPE_2027 } from "@/components/dashboard/colaboradores-table";
 import { PLANTILLA_COAPA, resumenDe } from "@/components/demo/plantilla-coapa";
 
 // El layout raíz aplica la plantilla "%s · Jornada40"; `absolute` evita duplicar el sufijo.
 export const metadata: Metadata = { title: { absolute: "Panel · Jornada40" } };
 
 // Misma plantilla sintética que usa la portada; las cifras se derivan de ella.
-const colaboradores: Colaborador[] = PLANTILLA_COAPA;
 const antes = resumenDe(PLANTILLA_COAPA, "hoy", TOPE_2027);
 const despues = resumenDe(PLANTILLA_COAPA, "reacomodada", TOPE_2027);
 
@@ -148,22 +144,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <Card id="tabla-colaboradores" className="scroll-mt-20 border-border shadow-lg shadow-black/5">
-        <CardHeader className="flex-row items-baseline justify-between space-y-0 p-4 pb-2">
-          <div className="space-y-0.5">
-            <CardTitle className="text-[13px] font-semibold">Colaboradores</CardTitle>
-            <CardDescription className="text-xs">
-              Estado calculado contra el tope de {TOPE_2027} h
-            </CardDescription>
-          </div>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {colaboradores.length} personas
-          </span>
-        </CardHeader>
-        <CardContent className="p-0">
-          <ColaboradoresTable rows={colaboradores} />
-        </CardContent>
-      </Card>
+      <DiagnosticoTabla />
     </div>
   );
 }

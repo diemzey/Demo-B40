@@ -175,9 +175,11 @@
   pointer-events: none;
   background: linear-gradient(
     105deg,
-    transparent 35%,
-    color-mix(in srgb, var(--foreground) 9%, transparent) 50%,
-    transparent 65%
+    transparent 30%,
+    color-mix(in srgb, var(--foreground) 14%, transparent) 44%,
+    color-mix(in srgb, var(--foreground) 30%, transparent) 50%,
+    color-mix(in srgb, var(--foreground) 14%, transparent) 56%,
+    transparent 70%
   );
   animation: j40-shimmer 1.2s ease-in-out 1 both;
 }

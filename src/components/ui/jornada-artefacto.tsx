@@ -14,7 +14,10 @@ import {
 
 export type JornadaPersona = {
   nombre: string;
+  /** Ruta del retrato; vacío muestra iniciales. */
   foto: string;
+  /** Línea secundaria opcional (puesto, contrato...). */
+  detalle?: string;
   hoy: number;
   reacomodada: number;
 };
@@ -46,7 +49,9 @@ type Estado = "excede" | "limite" | "cumple";
 
 const SHIMMER_MS = 1200;
 
-function estadoDe(horas: number, tope: number): Estado {
+export type { Estado as JornadaEstado };
+
+export function estadoDe(horas: number, tope: number): Estado {
   if (horas > tope) return "excede";
   if (horas === tope) return "limite";
   return "cumple";
@@ -68,7 +73,16 @@ const badgeLabel: Record<Estado, string> = {
 
 const fmt = (h: number) => `${h.toFixed(1)} h`;
 
-function Badge({ estado }: { estado: Estado }) {
+function iniciales(nombre: string) {
+  return nombre
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .join("");
+}
+
+export function EstadoBadge({ estado }: { estado: Estado }) {
   return (
     <span
       className={cn(
@@ -81,26 +95,46 @@ function Badge({ estado }: { estado: Estado }) {
   );
 }
 
-function Persona({ nombre, foto }: Pick<JornadaPersona, "nombre" | "foto">) {
+export function Persona({
+  nombre,
+  foto,
+  detalle,
+}: Pick<JornadaPersona, "nombre" | "foto" | "detalle">) {
   return (
     <div className="flex items-center gap-2.5">
-      {/* Retratos estáticos de /public, 72px para 36px @2x. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        alt=""
-        className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border"
-        decoding="async"
-        height={36}
-        loading="lazy"
-        src={foto}
-        width={36}
-      />
-      <span className="font-medium text-sm">{nombre}</span>
+      {foto ? (
+        // Retratos estáticos de /public, 72px para 36px @2x.
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          alt=""
+          className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border"
+          decoding="async"
+          height={36}
+          loading="lazy"
+          src={foto}
+          width={36}
+        />
+      ) : (
+        <span
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted font-medium text-[11px] text-muted-foreground ring-1 ring-border"
+          aria-hidden="true"
+        >
+          {iniciales(nombre)}
+        </span>
+      )}
+      <span className="min-w-0">
+        <span className="block truncate font-medium text-sm">{nombre}</span>
+        {detalle && (
+          <span className="block truncate text-[11px] text-muted-foreground">
+            {detalle}
+          </span>
+        )}
+      </span>
     </div>
   );
 }
 
-function Barra({
+export function Barra({
   horas,
   tope,
   escala,
@@ -158,8 +192,8 @@ export function useFaseCiclica(intervalo: number) {
   useEffect(() => {
     if (intervalo <= 0) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setFase("despues");
-      return;
+      const raf = requestAnimationFrame(() => setFase("despues"));
+      return () => cancelAnimationFrame(raf);
     }
     let cancelado = false;
     const timers: number[] = [];
@@ -194,6 +228,153 @@ export function useFaseCiclica(intervalo: number) {
   return { fase, barriendo };
 }
 
+export type JornadaTablaProps = {
+  personas: JornadaPersona[];
+  clave: "hoy" | "reacomodada";
+  tope: number;
+  escala?: number;
+  /** Altura máxima del área con scroll (valor CSS, p. ej. "27rem"). */
+  maxAltura?: string;
+  /** Altura máxima a partir de md; por defecto la misma. */
+  maxAlturaMd?: string;
+  /** Texto bajo la tabla; null lo oculta. */
+  nota?: React.ReactNode | null;
+  /** Contenido extra a la derecha del badge de estado. */
+  accion?: (persona: JornadaPersona) => React.ReactNode;
+  /** Mensaje cuando no hay filas. */
+  vacio?: React.ReactNode;
+};
+
+/** La tabla de la portada, reutilizable: cabecera fija, scroll interno y degradado. */
+export function JornadaTabla({
+  personas,
+  clave,
+  tope,
+  escala = 52,
+  maxAltura = "27rem",
+  maxAlturaMd = maxAltura,
+  nota,
+  accion,
+  vacio,
+}: JornadaTablaProps) {
+  const notaFinal =
+    nota === undefined
+      ? `${personas.length} colaboradores · desplázate para ver toda la plantilla`
+      : nota;
+  return (
+    <>
+      {/* El contenedor propio de Table hace el scroll, así la cabecera sticky sí se ancla. */}
+      <div
+        className="relative [&_[data-slot=table-container]]:max-h-[var(--tabla-max)] [&_[data-slot=table-container]]:overflow-y-auto [&_[data-slot=table-container]]:overscroll-contain [&_[data-slot=table-container]]:[scrollbar-width:thin] md:[&_[data-slot=table-container]]:max-h-[var(--tabla-max-md)]"
+        style={
+          {
+            "--tabla-max": maxAltura,
+            "--tabla-max-md": maxAlturaMd,
+          } as React.CSSProperties
+        }
+      >
+        <Table>
+          <TableHeader className="sticky top-0 z-10 bg-card">
+            <TableRow>
+              <TableHead>Colaborador</TableHead>
+              <TableHead>Horas</TableHead>
+              <TableHead className="text-right">Estado</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {personas.map((p) => {
+              const horas = p[clave];
+              return (
+                <TableRow key={p.nombre}>
+                  <TableCell>
+                    <Persona nombre={p.nombre} foto={p.foto} detalle={p.detalle} />
+                  </TableCell>
+                  <TableCell>
+                    <Barra horas={horas} tope={tope} escala={escala} />
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <span className="inline-flex items-center justify-end gap-1.5">
+                      <EstadoBadge estado={estadoDe(horas, tope)} />
+                      {accion?.(p)}
+                    </span>
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+            {personas.length === 0 && vacio && (
+              <TableRow>
+                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground text-xs">
+                  {vacio}
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+        {/* Degradado que insinúa que hay más filas */}
+        <div
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent"
+          aria-hidden="true"
+        />
+      </div>
+      {notaFinal && (
+        <p className="mt-2 px-2.5 text-muted-foreground text-xs">{notaFinal}</p>
+      )}
+    </>
+  );
+}
+
+/** Pie de totales de la tabla (horas al doble y fuera de norma). */
+export function JornadaTotales({
+  resumen,
+  colaboradores,
+}: {
+  resumen: JornadaResumen;
+  colaboradores: number;
+}) {
+  const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
+  return (
+    <Table>
+      <TableFooter>
+        <TableRow>
+          <TableCell colSpan={3} className="py-4">
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                  Horas al doble
+                </p>
+                <p
+                  className={cn(
+                    "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
+                    alerta && "text-destructive",
+                  )}
+                >
+                  {fmt(resumen.horasAlDoble)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                  Fuera de norma
+                </p>
+                <p
+                  className={cn(
+                    "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
+                    alerta && "text-destructive",
+                  )}
+                >
+                  {resumen.fueraDeNorma}
+                  <span className="ml-1 font-normal text-muted-foreground text-base">
+                    de {colaboradores}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </TableCell>
+        </TableRow>
+      </TableFooter>
+    </Table>
+  );
+}
+
 export function JornadaArtefacto({
   tope,
   escala = 52,
@@ -212,7 +393,6 @@ export function JornadaArtefacto({
   const barriendo = barridoControlado ?? interno.barriendo;
   const optimizada = fase === "despues";
   const resumen = optimizada ? despues : antes;
-  const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
 
   return (
     <div
@@ -232,83 +412,15 @@ export function JornadaArtefacto({
           {optimizada ? "reacomodada, mismos contratos" : "como está hoy"}
         </span>
       </div>
-      {/* El contenedor propio de Table hace el scroll, así la cabecera sticky sí se ancla. */}
-      <div className="relative [&_[data-slot=table-container]]:max-h-[27rem] [&_[data-slot=table-container]]:overflow-y-auto [&_[data-slot=table-container]]:overscroll-contain [&_[data-slot=table-container]]:[scrollbar-width:thin]">
-      <Table>
-        <TableHeader className="sticky top-0 z-10 bg-card">
-          <TableRow>
-            <TableHead>Colaborador</TableHead>
-            <TableHead>Horas</TableHead>
-            <TableHead className="text-right">Estado</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {personas.map((p) => {
-            const horas = optimizada ? p.reacomodada : p.hoy;
-            return (
-              <TableRow key={p.nombre}>
-                <TableCell>
-                  <Persona nombre={p.nombre} foto={p.foto} />
-                </TableCell>
-                <TableCell>
-                  <Barra horas={horas} tope={tope} escala={escala} />
-                </TableCell>
-                <TableCell className="text-right">
-                  <Badge estado={estadoDe(horas, tope)} />
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-        {/* Degradado que insinúa que hay más filas */}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent"
-          aria-hidden="true"
-        />
-      </div>
-      <p className="mt-2 px-2.5 text-muted-foreground text-xs">
-        {personas.length} colaboradores · desplázate para ver toda la plantilla
-      </p>
-      <Table>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3} className="py-4">
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                    Horas al doble
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                      alerta && "text-destructive",
-                    )}
-                  >
-                    {fmt(resumen.horasAlDoble)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                    Fuera de norma
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                      alerta && "text-destructive",
-                    )}
-                  >
-                    {resumen.fueraDeNorma}
-                    <span className="ml-1 font-normal text-muted-foreground text-base">
-                      de {colaboradores}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
+      <JornadaTabla
+        personas={personas}
+        clave={optimizada ? "reacomodada" : "hoy"}
+        tope={tope}
+        escala={escala}
+        maxAltura="27rem"
+        maxAlturaMd="32rem"
+      />
+      <JornadaTotales resumen={resumen} colaboradores={colaboradores} />
     </div>
   );
 }

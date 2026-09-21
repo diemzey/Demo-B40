@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export type CostoExtraProps = {
-  /** Horas que hoy se pagan al doble en la semana. */
+  /** Horas que hoy se pagan al doble en la semana, con el tope vigente. */
   horasAlDoble: number;
+  /** Horas que se pagarían al doble en 2030 (tope de 40 h) con los turnos de hoy. */
+  horasAlDoble2030: number;
   /** Costo por hora ordinaria, en MXN. */
   costoHora: number;
   /** true: costo extra (antes). false: ahorro con la semana reacomodada. */
@@ -34,8 +36,8 @@ function useContador(objetivo: number, reinicio: string, duracion = 1400) {
       "(prefers-reduced-motion: reduce)",
     ).matches;
     if (reducido) {
-      setValor(objetivo);
-      return;
+      raf.current = requestAnimationFrame(() => setValor(objetivo));
+      return () => cancelAnimationFrame(raf.current);
     }
     const inicio = performance.now();
     const paso = (ahora: number) => {
@@ -53,25 +55,30 @@ function useContador(objetivo: number, reinicio: string, duracion = 1400) {
 
 /**
  * Costo humano de las horas que se pagan al doble: cada hora extra cuesta
- * dos veces la hora ordinaria. La cifra principal es mensual
- * (semana × 52 / 12); en la vista reacomodada el mismo monto se muestra
- * como ahorro, porque esas horas dejan de pagarse al doble.
+ * dos veces la hora ordinaria. La cifra principal proyecta el escenario de
+ * 2030 (tope de 40 h) con los turnos de hoy, en mensual (semana × 52 / 12);
+ * en la vista reacomodada baja a cero y se recuerda lo que costaría no hacerlo.
  */
 export function CostoExtra({
   horasAlDoble,
+  horasAlDoble2030,
   costoHora,
   activo,
   className,
 }: CostoExtraProps) {
-  const semanal = horasAlDoble * costoHora * 2;
+  const semanal = horasAlDoble2030 * costoHora * 2;
   const mensual = semanal * SEMANAS_POR_MES;
   const anual = semanal * 52;
-  const valor = useContador(mensual, activo ? "antes" : "despues");
+  const mensualHoy = horasAlDoble * costoHora * 2 * SEMANAS_POR_MES;
+  const objetivo = activo ? mensual : 0;
+  const valor = useContador(objetivo, activo ? "antes" : "despues");
 
   return (
     <div className={cn("flex flex-col gap-1", className)} aria-live="polite">
       <p className="text-neutral-400 text-xs uppercase tracking-wider">
-        {activo ? "Costo extra al mes" : "Ahorro al mes, reacomodada"}
+        {activo
+          ? "Sin Jornada40, en 2030 pagarías al mes"
+          : "Con Jornada40, en 2030 pagarías al mes"}
       </p>
       <p
         className={cn(
@@ -85,8 +92,18 @@ export function CostoExtra({
         </span>
       </p>
       <p className="text-neutral-500 text-xs">
-        {horasAlDoble.toFixed(1)} h al doble por semana × {mxn.format(costoHora)}
-        /h · ≈ {mxn.format(semanal)} a la semana, {mxn.format(anual)} al año
+        {activo ? (
+          <>
+            Con el tope de 40 h, {horasAlDoble2030.toFixed(1)} h al doble por
+            semana × {mxn.format(costoHora)}/h · {mxn.format(anual)} al año.
+            Hoy ya son {mxn.format(mensualHoy)} al mes.
+          </>
+        ) : (
+          <>
+            Mismos contratos, turnos reacomodados. Sin reacomodar serían{" "}
+            {mxn.format(mensual)} al mes, {mxn.format(anual)} al año.
+          </>
+        )}
       </p>
     </div>
   );

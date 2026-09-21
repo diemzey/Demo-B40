@@ -16,6 +16,8 @@ type JornadaHeroProps = {
   colaboradores: number;
   antes: JornadaResumen;
   despues: JornadaResumen;
+  /** Resumen con el tope de 2030 (40 h) y los turnos de hoy. */
+  antes2030: JornadaResumen;
   /** Costo por hora ordinaria usado para la estimación, en MXN. */
   costoHora: number;
 };
@@ -26,6 +28,7 @@ export function JornadaHero({
   colaboradores,
   antes,
   despues,
+  antes2030,
   costoHora,
 }: JornadaHeroProps) {
   const { fase, barriendo } = useFaseCiclica(3500);
@@ -50,6 +53,7 @@ export function JornadaHero({
         <CostoExtra
           className="mt-6"
           horasAlDoble={antes.horasAlDoble}
+          horasAlDoble2030={antes2030.horasAlDoble}
           costoHora={costoHora}
           activo={enAntes}
         />

@@ -4,18 +4,37 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * Premium finish shared by the filled variants (default / destructive /
+ * secondary). Everything here is independent of the background color so it
+ * layers correctly on top of call-site overrides such as `bg-yellow-400`:
+ *  - a vertical white-to-transparent gradient (background-image, so it
+ *    coexists with any `bg-<color>`),
+ *  - an inner top highlight + inner bottom shade + 1px outer hairline, all
+ *    via box-shadow (follows `rounded-*` automatically).
+ */
+const filledFinish =
+  "bg-linear-to-b from-white/12 to-white/0 hover:from-white/20 active:translate-y-px active:from-white/5 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.18),inset_0_-1px_0_0_rgb(0_0_0/0.18),0_0_0_1px_rgb(0_0_0/0.3)]"
+
 const buttonVariants = cva(
-  "inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "relative isolate inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        destructive:
+        default: cn(
+          "bg-primary text-primary-foreground hover:bg-primary/90",
+          filledFinish,
+        ),
+        destructive: cn(
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
+          filledFinish,
+        ),
         outline:
-          "border border-input bg-background hover:bg-accent hover:text-accent-foreground",
-        secondary:
+          "border border-border/80 bg-background bg-linear-to-b from-white/6 to-white/0 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.08),0_1px_2px_0_rgb(0_0_0/0.3)] hover:bg-accent hover:text-accent-foreground hover:from-white/10 active:translate-y-px active:from-white/3",
+        secondary: cn(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+          filledFinish,
+        ),
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },
