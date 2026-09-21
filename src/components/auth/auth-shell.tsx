@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { CalendarClock } from "lucide-react";
+
 import { JornadaLogo } from "@/components/ui/jornada-logo";
 
 export type AuthShellProps = {
@@ -26,15 +28,21 @@ export function AuthShell({ headline, subline, children }: AuthShellProps) {
       style={{ colorScheme: "dark" }}
     >
       {/* Panel de marca: solo en escritorio */}
-      <aside className="hidden flex-col justify-between bg-yellow-400 p-10 text-neutral-950 lg:flex xl:p-14">
-        {/* En amarillo, el "40" ámbar del logo no se lee: todas las letras heredan el negro. */}
+      <aside className="hidden flex-col bg-yellow-400 p-10 text-neutral-950 lg:flex xl:p-14">
+        {/* Sobre amarillo, el logo va monocromático en negro. */}
         <JornadaLogo
-          size={36}
-          className="text-neutral-950 [&_text]:fill-current"
+          size={56}
+          variant="mono"
+          className="text-neutral-950"
           animated={false}
         />
 
-        <div className="max-w-md">
+        <div className="my-auto max-w-md">
+          <CalendarClock
+            className="mb-6 size-12 xl:size-14"
+            strokeWidth={1.5}
+            aria-hidden="true"
+          />
           <h2 className="text-balance text-4xl font-semibold leading-tight tracking-tight xl:text-5xl">
             {headline}
           </h2>
@@ -42,11 +50,6 @@ export function AuthShell({ headline, subline, children }: AuthShellProps) {
             {subline}
           </p>
         </div>
-
-        <p className="text-xs text-neutral-950/60">
-          Cifras: sucursal sintética Coapa, 30 colaboradores. Ningún cliente
-          real.
-        </p>
       </aside>
 
       {/* Área de la tarjeta */}

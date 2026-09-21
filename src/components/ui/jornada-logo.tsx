@@ -16,6 +16,8 @@ export type JornadaLogoProps = Omit<
   size?: number;
   /** Run the ring loader and the letter reveal. */
   animated?: boolean;
+  /** "mono": aro y "40" heredan currentColor (para fondos de marca). */
+  variant?: "default" | "mono";
   /** Accessible name announced by screen readers. */
   label?: string;
 };
@@ -103,6 +105,7 @@ const STYLES = `
 export function JornadaLogo({
   size = 40,
   animated = true,
+  variant = "default",
   label = "Jornada40",
   className,
   ...props
@@ -128,7 +131,8 @@ export function JornadaLogo({
         cy={RING_CY}
         r={RING_R}
         fill="none"
-        stroke={GREY}
+        stroke={variant === "mono" ? "currentColor" : GREY}
+        opacity={variant === "mono" ? 0.35 : 1}
         strokeWidth={RING_STROKE}
         strokeLinecap="round"
         pathLength={360}
@@ -144,7 +148,7 @@ export function JornadaLogo({
           cy={RING_CY}
           r={RING_R}
           fill="none"
-          stroke={AMBER}
+          stroke={variant === "mono" ? "currentColor" : AMBER}
           strokeWidth={RING_STROKE}
           strokeLinecap="round"
           pathLength={360}
@@ -166,7 +170,7 @@ export function JornadaLogo({
               x={letter.x}
               y={TEXT_BASELINE_Y}
               textAnchor="middle"
-              fill={letter.amber ? AMBER : "currentColor"}
+              fill={letter.amber && variant !== "mono" ? AMBER : "currentColor"}
             >
               {letter.ch}
             </text>
