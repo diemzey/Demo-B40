@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useContador } from "@/lib/use-contador";
 
 export type CostoExtraProps = {
   /** Horas que hoy se pagan al doble en la semana, con el tope vigente. */
@@ -24,36 +24,6 @@ const mxn = new Intl.NumberFormat("es-MX", {
 });
 
 /**
- * Anima un número de 0 a su objetivo con easing suave. Cambiar `reinicio`
- * vuelve a empezar la cuenta desde cero.
- */
-function useContador(objetivo: number, reinicio: string, duracion = 1400) {
-  const [valor, setValor] = useState(0);
-  const raf = useRef(0);
-
-  useEffect(() => {
-    const reducido = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reducido) {
-      raf.current = requestAnimationFrame(() => setValor(objetivo));
-      return () => cancelAnimationFrame(raf.current);
-    }
-    const inicio = performance.now();
-    const paso = (ahora: number) => {
-      const t = Math.min(1, (ahora - inicio) / duracion);
-      const ease = 1 - Math.pow(1 - t, 3);
-      setValor(objetivo * ease);
-      if (t < 1) raf.current = requestAnimationFrame(paso);
-    };
-    raf.current = requestAnimationFrame(paso);
-    return () => cancelAnimationFrame(raf.current);
-  }, [objetivo, reinicio, duracion]);
-
-  return valor;
-}
-
-/**
  * Costo humano de las horas que se pagan al doble: cada hora extra cuesta
  * dos veces la hora ordinaria. La cifra principal proyecta el escenario de
  * 2030 (tope de 40 h) con los turnos de hoy, en mensual (semana × 52 / 12);
@@ -71,7 +41,8 @@ export function CostoExtra({
   const anual = semanal * 52;
   const mensualHoy = horasAlDoble * costoHora * 2 * SEMANAS_POR_MES;
   const objetivo = activo ? mensual : 0;
-  const valor = useContador(objetivo, activo ? "antes" : "despues");
+  // Arranca en cero para que la primera vista cuente hacia arriba.
+  const valor = useContador(objetivo, 1400, 0);
 
   return (
     <div className={cn("flex flex-col gap-1", className)} aria-live="polite">

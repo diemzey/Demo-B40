@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
+import { useContador } from "@/lib/use-contador";
 import {
   Table,
   TableBody,
@@ -340,6 +341,9 @@ export function JornadaTotales({
   proyeccion2030?: JornadaResumen | null;
 }) {
   const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
+  const horas = useContador(resumen.horasAlDoble, 900);
+  const fuera = useContador(resumen.fueraDeNorma, 900);
+  const horas2030 = useContador(proyeccion2030?.horasAlDoble ?? 0, 900);
   return (
     <Table>
       <TableFooter>
@@ -361,7 +365,7 @@ export function JornadaTotales({
                     alerta && "text-destructive",
                   )}
                 >
-                  {fmt(resumen.horasAlDoble)}
+                  {fmt(horas)}
                 </p>
               </div>
               <div>
@@ -374,7 +378,7 @@ export function JornadaTotales({
                     alerta && "text-destructive",
                   )}
                 >
-                  {resumen.fueraDeNorma}
+                  {Math.round(fuera)}
                   <span className="ml-1 font-normal text-muted-foreground text-base">
                     de {colaboradores}
                   </span>
@@ -386,7 +390,7 @@ export function JornadaTotales({
                     2030 · tope 40 h
                   </p>
                   <p className="mt-1 font-semibold text-2xl text-rose-300 tabular-nums md:text-3xl">
-                    {fmt(proyeccion2030.horasAlDoble)}
+                    {fmt(horas2030)}
                   </p>
                 </div>
               )}
