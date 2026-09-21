@@ -1,0 +1,13 @@
+clave,nombre,apellido,puesto,jornada_contratada,fecha,hora_inicio,hora_fin,minutos_descanso
+EMP-001,Bruno,Ortega,Encargado de piso,48,2026-07-27,09:00,18:00,60
+EMP-001,Bruno,Ortega,Encargado de piso,48,2026-07-28,09:00,18:00,60
+EMP-001,Bruno,Ortega,Encargado de piso,48,2026-07-29,09:00,18:00,60
+EMP-001,Bruno,Ortega,Encargado de piso,48,2026-08-01,08:00,17:30,30
+EMP-003,Diego,Quintero,Vendedor,48,2026-07-27,08:00,13:00,0
+EMP-003,Diego,Quintero,Vendedor,48,2026-07-27,15:00,19:00,0
+EMP-003,Diego,Quintero,Vendedor,48,2026-07-28,08:00,13:00,0
+EMP-003,Diego,Quintero,Vendedor,48,2026-07-28,15:00,19:00,0
+EMP-004,Rodrigo,Téllez,Vigilante,48,2026-07-27,22:00,07:00,60
+EMP-004,Rodrigo,Téllez,Vigilante,48,2026-07-28,22:00,07:00,60
+EMP-004,Rodrigo,Téllez,Vigilante,48,2026-07-29,22:00,07:00,60
+EMP-004,Rodrigo,Téllez,Vigilante,48,2026-08-01,21:00,06:30,30

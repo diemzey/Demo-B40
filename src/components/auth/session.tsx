@@ -221,22 +221,35 @@ async function sbApplyUser(user: User | null, force = false) {
   if (!force && sbLoadedUserId === user.id && sbSnapshot.user) return;
 
   const token = ++sbLoadToken;
+  // Publicamos de inmediato una sesión provisional con lo que ya sabemos del
+  // usuario (metadata y correo): así el encabezado muestra a la persona
+  // conectada aunque la carga del perfil tarde o falle.
+  sbLoadedUserId = user.id;
+  sbSet({ user: sbSessionProvisional(user), loaded: true });
+
   let session: Session;
   try {
     session = await sbBuildSession(user);
   } catch {
-    const correo = user.email ?? "";
-    session = {
-      nombre: nombreDesdeCorreo(correo),
-      correo,
-      empresa: "",
-      sucursal: "",
-      foto: "",
-    };
+    return; // nos quedamos con la provisional
   }
   if (token !== sbLoadToken) return; // llegó una carga más reciente
-  sbLoadedUserId = user.id;
   sbSet({ user: session, loaded: true });
+}
+
+/** Sesión mínima a partir de `auth.users` (sin consultar tablas). */
+function sbSessionProvisional(user: User): Session {
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const metaStr = (k: string) => (typeof meta[k] === "string" ? (meta[k] as string).trim() : "");
+  const correo = user.email ?? "";
+  const nombre = metaStr("nombre") || nombreDesdeCorreo(correo);
+  return {
+    nombre: [nombre, metaStr("apellido")].filter(Boolean).join(" "),
+    correo,
+    empresa: metaStr("empresa"),
+    sucursal: metaStr("sucursal"),
+    foto: "",
+  };
 }
 
 function sbStart() {
