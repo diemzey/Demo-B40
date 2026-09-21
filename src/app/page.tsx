@@ -1,4 +1,5 @@
 import ContactDemo from "@/components/demo/contact-demo";
+import FeaturesDemo from "@/components/demo/features-demo";
 import { Footer } from "@/components/demo/footer";
 import { HeaderDemo } from "@/components/demo/header-demo";
 import JornadaDemo from "@/components/demo/jornada-demo";
@@ -10,6 +11,7 @@ export default function Home() {
       <HeaderDemo />
       <main className="flex-1 pt-20">
         <JornadaDemo />
+        <FeaturesDemo />
         <ContactDemo />
         <LogoCloudDemo />
       </main>

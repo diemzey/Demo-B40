@@ -12,6 +12,7 @@ import {
 import { Menu, MoveRight, X } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { JornadaLogo } from "@/components/ui/jornada-logo";
 
 type NavItem = {
     title: string;
@@ -102,7 +103,9 @@ function Header1() {
                     </NavigationMenu>
                 </div>
                 <div className="flex lg:justify-center">
-                    <p className="font-semibold">TWBlocks</p>
+                    <Link href="/" aria-label="Jornada40, inicio">
+                        <JornadaLogo size={30} className="text-foreground" />
+                    </Link>
                 </div>
                 <div className="flex justify-end w-full gap-4">
                     <Button variant="ghost" className="hidden md:inline">
