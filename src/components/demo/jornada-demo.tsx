@@ -18,13 +18,17 @@ const personas: JornadaPersona[] = [
 export default function JornadaDemo() {
   return (
     <RippleBackground className="px-4 py-16 md:py-24">
-      <div className="mx-auto w-full max-w-5xl">
-        <header className="mb-8 rounded-2xl bg-neutral-950 px-6 py-6 text-neutral-50 shadow-lg md:px-10 md:py-8">
-          <h2 className="text-balance text-center font-semibold text-2xl leading-tight tracking-tight md:text-4xl">
+      <div className="mx-auto grid w-full max-w-6xl items-center gap-8 md:grid-cols-2 md:gap-12">
+        <header className="min-w-0 rounded-2xl bg-neutral-950 px-6 py-8 text-neutral-50 shadow-lg md:px-10 md:py-12">
+          <h2 className="text-balance font-semibold text-3xl leading-tight tracking-tight md:text-5xl">
             A partir de enero, la{" "}
             <span className="text-amber-400">hora 47</span> de cada semana se
             paga <span className="text-amber-400">al doble</span>.
           </h2>
+          <p className="mt-4 text-neutral-400 text-sm md:text-base">
+            Jornada40 reacomoda los turnos de tu sucursal con los mismos
+            contratos. Mira cómo cambia la semana.
+          </p>
         </header>
         <JornadaArtefacto
           tope={46}

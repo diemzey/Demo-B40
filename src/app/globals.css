@@ -179,7 +179,7 @@
     color-mix(in srgb, var(--foreground) 9%, transparent) 50%,
     transparent 65%
   );
-  animation: j40-shimmer 2.6s ease-in-out infinite;
+  animation: j40-shimmer 1.2s ease-in-out 1 both;
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,4 +1,6 @@
-import { MoveRight } from "lucide-react";
+"use client";
+
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -30,9 +32,14 @@ export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
   colaboradores: number;
   antes: JornadaResumen;
   despues: JornadaResumen;
+  /** Milisegundos que se muestra cada estado antes de cambiar. */
+  intervalo?: number;
 };
 
+type Fase = "antes" | "despues";
 type Estado = "excede" | "limite" | "cumple";
+
+const SHIMMER_MS = 1200;
 
 function estadoDe(horas: number, tope: number): Estado {
   if (horas > tope) return "excede";
@@ -60,7 +67,7 @@ function Badge({ estado }: { estado: Estado }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center whitespace-nowrap rounded-md border px-2 py-0.5 font-medium text-xs",
+        "inline-flex items-center whitespace-nowrap rounded-md border px-2 py-0.5 font-medium text-xs transition-colors duration-500",
         badgeStyles[estado],
       )}
     >
@@ -108,7 +115,7 @@ function Barra({
       >
         <div
           className={cn(
-            "h-full rounded-full",
+            "h-full rounded-full transition-[width,background-color] duration-700 ease-out",
             estado === "excede" ? "bg-destructive" : "bg-primary",
           )}
           style={{ width: pct(horas) }}
@@ -121,7 +128,7 @@ function Barra({
       </div>
       <span
         className={cn(
-          "w-12 text-right text-xs tabular-nums",
+          "w-12 text-right text-xs tabular-nums transition-colors duration-500",
           estado === "excede"
             ? "text-destructive"
             : estado === "limite"
@@ -135,42 +142,85 @@ function Barra({
   );
 }
 
-type PanelProps = {
-  etiqueta: string;
-  glosa: string;
-  shimmer?: boolean;
-  personas: JornadaPersona[];
-  tope: number;
-  escala: number;
-  clave: "hoy" | "reacomodada";
-  resumen: JornadaResumen;
-  colaboradores: number;
-};
+/**
+ * Alterna entre el estado actual y el reacomodado: un destello recorre la
+ * tabla y, a mitad del barrido, las barras y cifras pasan al otro estado.
+ */
+function useFaseCiclica(intervalo: number) {
+  const [fase, setFase] = useState<Fase>("antes");
+  const [barriendo, setBarriendo] = useState(false);
 
-function Panel({
-  etiqueta,
-  glosa,
-  shimmer,
-  personas,
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setFase("despues");
+      return;
+    }
+    let cancelado = false;
+    const timers: number[] = [];
+    const ciclo = () => {
+      timers.push(
+        window.setTimeout(() => {
+          if (cancelado) return;
+          setBarriendo(true);
+          timers.push(
+            window.setTimeout(() => {
+              if (cancelado) return;
+              setFase((f) => (f === "antes" ? "despues" : "antes"));
+            }, SHIMMER_MS / 2),
+          );
+          timers.push(
+            window.setTimeout(() => {
+              if (cancelado) return;
+              setBarriendo(false);
+              ciclo();
+            }, SHIMMER_MS),
+          );
+        }, intervalo),
+      );
+    };
+    ciclo();
+    return () => {
+      cancelado = true;
+      timers.forEach(window.clearTimeout);
+    };
+  }, [intervalo]);
+
+  return { fase, barriendo };
+}
+
+export function JornadaArtefacto({
   tope,
-  escala,
-  clave,
-  resumen,
+  escala = 52,
+  personas,
   colaboradores,
-}: PanelProps) {
+  antes,
+  despues,
+  intervalo = 3500,
+  className,
+  ...props
+}: JornadaArtefactoProps) {
+  const { fase, barriendo } = useFaseCiclica(intervalo);
+  const optimizada = fase === "despues";
+  const resumen = optimizada ? despues : antes;
   const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
+
   return (
     <div
       className={cn(
-        "rounded-2xl border bg-card p-5 text-card-foreground shadow-lg",
-        shimmer && "j40-shimmer",
+        "min-w-0 rounded-2xl border bg-card p-5 text-card-foreground shadow-lg",
+        barriendo && "j40-shimmer",
+        className,
       )}
+      aria-live="polite"
+      {...props}
     >
       <div className="mb-3 flex items-baseline justify-between px-2.5">
         <span className="font-semibold text-sm uppercase tracking-wider">
-          {etiqueta}
+          {optimizada ? "Después" : "Antes"}
         </span>
-        <span className="text-muted-foreground text-xs">{glosa}</span>
+        <span className="text-muted-foreground text-xs">
+          {optimizada ? "reacomodada, mismos contratos" : "como está hoy"}
+        </span>
       </div>
       <Table>
         <TableHeader>
@@ -181,19 +231,22 @@ function Panel({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {personas.map((p) => (
-            <TableRow key={p.nombre}>
-              <TableCell>
-                <Persona nombre={p.nombre} foto={p.foto} />
-              </TableCell>
-              <TableCell>
-                <Barra horas={p[clave]} tope={tope} escala={escala} />
-              </TableCell>
-              <TableCell className="text-right">
-                <Badge estado={estadoDe(p[clave], tope)} />
-              </TableCell>
-            </TableRow>
-          ))}
+          {personas.map((p) => {
+            const horas = optimizada ? p.reacomodada : p.hoy;
+            return (
+              <TableRow key={p.nombre}>
+                <TableCell>
+                  <Persona nombre={p.nombre} foto={p.foto} />
+                </TableCell>
+                <TableCell>
+                  <Barra horas={horas} tope={tope} escala={escala} />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Badge estado={estadoDe(horas, tope)} />
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
         <TableFooter>
           <TableRow>
@@ -205,7 +258,7 @@ function Panel({
                   </p>
                   <p
                     className={cn(
-                      "mt-1 font-semibold text-2xl tabular-nums md:text-3xl",
+                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
                       alerta && "text-destructive",
                     )}
                   >
@@ -218,7 +271,7 @@ function Panel({
                   </p>
                   <p
                     className={cn(
-                      "mt-1 font-semibold text-2xl tabular-nums md:text-3xl",
+                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
                       alerta && "text-destructive",
                     )}
                   >
@@ -233,55 +286,6 @@ function Panel({
           </TableRow>
         </TableFooter>
       </Table>
-    </div>
-  );
-}
-
-export function JornadaArtefacto({
-  tope,
-  escala = 52,
-  personas,
-  colaboradores,
-  antes,
-  despues,
-  className,
-  ...props
-}: JornadaArtefactoProps) {
-  return (
-    <div
-      className={cn(
-        "grid items-start gap-6 md:grid-cols-[1fr_auto_1fr] md:gap-4",
-        className,
-      )}
-      {...props}
-    >
-      <Panel
-        etiqueta="Antes"
-        glosa="como está hoy"
-        shimmer
-        personas={personas}
-        tope={tope}
-        escala={escala}
-        clave="hoy"
-        resumen={antes}
-        colaboradores={colaboradores}
-      />
-      <div
-        className="flex items-center justify-center self-center text-neutral-900/70"
-        aria-hidden="true"
-      >
-        <MoveRight className="size-6 rotate-90 md:rotate-0" strokeWidth={1.5} />
-      </div>
-      <Panel
-        etiqueta="Después"
-        glosa="reacomodada, mismos contratos"
-        personas={personas}
-        tope={tope}
-        escala={escala}
-        clave="reacomodada"
-        resumen={despues}
-        colaboradores={colaboradores}
-      />
     </div>
   );
 }
