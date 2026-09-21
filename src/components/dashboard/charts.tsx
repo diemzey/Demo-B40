@@ -31,8 +31,8 @@ import {
  *   colaboradores en la misma página).
  */
 
-/** Tope transitorio 2027 (h/semana). */
-const TOPE = 46;
+/** Tope por defecto (transitorio 2027, h/semana); la página pasa el vigente. */
+const TOPE_DEFAULT = 46;
 /** Ámbar de marca (mismo que `text-amber-400` en el resto del panel). */
 const AMBAR = "#f0a63a";
 const DESTRUCTIVO = "var(--destructive)";
@@ -143,12 +143,21 @@ function TooltipPersona({ active, payload }: TooltipContentProps) {
   );
 }
 
-export function HorasPorPersonaChart({ personas }: { personas: PersonaHoras[] }) {
+export function HorasPorPersonaChart({
+  personas,
+  tope = TOPE_DEFAULT,
+  topeAnio,
+}: {
+  personas: PersonaHoras[];
+  tope?: number;
+  /** Año del tope para la leyenda ("Tope 2027"). */
+  topeAnio?: number;
+}) {
   const data: PersonaDatum[] = [...personas]
     .sort((a, b) => b.hoy - a.hoy)
     .map((p) => ({
       ...p,
-      exceso: Math.max(0, p.hoy - TOPE),
+      exceso: Math.max(0, p.hoy - tope),
       etiqueta: `${fmtH.format(p.hoy)} h`,
     }));
   const fuera = data.filter((d) => d.exceso > 0).length;
@@ -158,7 +167,7 @@ export function HorasPorPersonaChart({ personas }: { personas: PersonaHoras[] })
     <figure>
       <div
         role="img"
-        aria-label={`Horas semanales de ${data.length} colaboradores ordenadas de mayor a menor; ${fuera} superan el tope de ${TOPE} horas.`}
+        aria-label={`Horas semanales de ${data.length} colaboradores ordenadas de mayor a menor; ${fuera} superan el tope de ${tope} horas.`}
         style={{ height: alto }}
         className="w-full"
       >
@@ -194,12 +203,12 @@ export function HorasPorPersonaChart({ personas }: { personas: PersonaHoras[] })
               isAnimationActive={false}
             />
             <ReferenceLine
-              x={TOPE}
+              x={tope}
               stroke={AMBAR}
               strokeWidth={1.5}
               ifOverflow="visible"
               label={{
-                value: `Tope ${TOPE} h`,
+                value: `Tope ${tope} h`,
                 position: "top",
                 fill: "var(--foreground)",
                 fontSize: 11,
@@ -224,7 +233,7 @@ export function HorasPorPersonaChart({ personas }: { personas: PersonaHoras[] })
           Dentro del tope
         </Leyenda>
         <Leyenda color={AMBAR} tipo="line">
-          Tope 2027 ({TOPE} h)
+          {topeAnio ? `Tope ${topeAnio} (${tope} h)` : `Tope (${tope} h)`}
         </Leyenda>
       </figcaption>
     </figure>
@@ -402,12 +411,24 @@ function TooltipCosto({ active, payload }: TooltipContentProps) {
 
 const fmtEjeMXN = (v: number) => (v >= 1000 ? `$${Math.round(v / 1000)}k` : `$${v}`);
 
-export function CostoSemanalChart({ semanas }: { semanas: SemanaHoras[] }) {
+export function CostoSemanalChart({
+  semanas,
+  nota,
+}: {
+  semanas: SemanaHoras[];
+  /** Pie de la gráfica; por defecto la nota de los datos de muestra. */
+  nota?: ReactNode;
+}) {
   const [{ costoHora }] = useConfig();
   const serie: CostoSemana[] = semanas.map((s) => ({ ...s, costo: s.horas * costoHora * 2 }));
+  if (serie.length === 0) {
+    return (
+      <p className="py-8 text-center text-xs text-muted-foreground">Aún no hay semanas para esta sucursal.</p>
+    );
+  }
   const ultimo = serie[serie.length - 1];
   const max = Math.max(...serie.map((s) => s.costo));
-  const techo = Math.ceil((max * 1.15) / 5000) * 5000;
+  const techo = Math.max(5000, Math.ceil((max * 1.15) / 5000) * 5000);
 
   return (
     <figure>
@@ -482,8 +503,12 @@ export function CostoSemanalChart({ semanas }: { semanas: SemanaHoras[] }) {
         </ResponsiveContainer>
       </div>
       <figcaption className="mt-2 text-[11px] text-muted-foreground">
-        Semanas {serie[0].semana}–{ultimo.semana - 1}: datos de muestra; la semana {ultimo.semana} es
-        la real (horas al doble × ${costoHora} × 2).
+        {nota ?? (
+          <>
+            Semanas {serie[0].semana}–{ultimo.semana - 1}: datos de muestra; la semana {ultimo.semana}{" "}
+            es la real (horas al doble × ${costoHora} × 2).
+          </>
+        )}
       </figcaption>
     </figure>
   );

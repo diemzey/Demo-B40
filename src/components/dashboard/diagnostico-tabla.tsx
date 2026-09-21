@@ -2,20 +2,30 @@
 
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
-import { PLANTILLA_COAPA, resumenDe } from "@/components/demo/plantilla-coapa";
-import { TOPE_2027 } from "@/components/dashboard/colaboradores-table";
 import {
   JornadaArtefacto,
   type JornadaFase,
+  type JornadaPersona,
+  type JornadaResumen,
 } from "@/components/ui/jornada-artefacto";
 
 const SHIMMER_MS = 1200;
 
+export type DiagnosticoTablaProps = {
+  personas: JornadaPersona[];
+  tope: number;
+  antes: JornadaResumen;
+  despues: JornadaResumen;
+  /** Mismos turnos con el tope de 2030 (40 h); se muestra en "Antes". */
+  antes2030?: JornadaResumen;
+};
+
 /**
  * La misma tabla de la portada, pero con el cambio Antes / Después a mano
- * en lugar del ciclo automático.
+ * en lugar del ciclo automático. Los datos (plantilla, tope y resúmenes)
+ * llegan de la página para que coincidan con las tarjetas y las gráficas.
  */
-export function DiagnosticoTabla() {
+export function DiagnosticoTabla({ personas, tope, antes, despues, antes2030 }: DiagnosticoTablaProps) {
   const [fase, setFase] = useState<JornadaFase>("antes");
   const [barriendo, setBarriendo] = useState(false);
   const timer = useRef(0);
@@ -31,9 +41,6 @@ export function DiagnosticoTabla() {
       timer.current = window.setTimeout(() => setBarriendo(false), SHIMMER_MS / 2);
     }, SHIMMER_MS / 2);
   };
-
-  const antes = resumenDe(PLANTILLA_COAPA, "hoy", TOPE_2027);
-  const despues = resumenDe(PLANTILLA_COAPA, "reacomodada", TOPE_2027);
 
   return (
     <section id="tabla-colaboradores" className="scroll-mt-20">
@@ -68,11 +75,12 @@ export function DiagnosticoTabla() {
         </div>
       </div>
       <JornadaArtefacto
-        tope={TOPE_2027}
-        personas={PLANTILLA_COAPA}
-        colaboradores={PLANTILLA_COAPA.length}
+        tope={tope}
+        personas={personas}
+        colaboradores={personas.length}
         antes={antes}
         despues={despues}
+        antes2030={antes2030}
         fase={fase}
         barriendo={barriendo}
       />

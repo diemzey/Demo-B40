@@ -13,6 +13,9 @@ import {
   type PillTone,
 } from "@/components/dashboard/tabs/ui";
 import { nuevoId, useLocalStore } from "@/components/dashboard/tabs/use-local-store";
+import { SUCURSALES_DEMO } from "@/lib/datos/demo";
+import { usePanel } from "@/lib/datos/panel-context";
+import type { SucursalPanel } from "@/lib/datos/tipos";
 
 export type Sucursal = {
   id: string;
@@ -25,11 +28,26 @@ export type Sucursal = {
   propia?: boolean;
 };
 
-export const SUCURSALES_SEMILLA: Sucursal[] = [
-  { id: "coapa", nombre: "Coapa", ciudad: "Ciudad de México", personas: 30, estado: "27 fuera de norma", tono: "bad" },
-  { id: "polanco", nombre: "Polanco", ciudad: "Ciudad de México", personas: 22, estado: "En norma", tono: "good" },
-  { id: "satelite", nombre: "Satélite", ciudad: "Naucalpan", personas: 18, estado: "3 fuera de norma", tono: "warn" },
-];
+/** Tarjeta a partir de una sucursal del panel: el estado se deriva de sus cifras. */
+function aSucursal(s: SucursalPanel): Sucursal {
+  const sinDatos = s.personas === 0;
+  const proporcion = sinDatos ? 0 : s.fueraDeNorma / s.personas;
+  return {
+    id: s.id,
+    nombre: s.nombre,
+    ciudad: s.ciudad ?? s.hub,
+    personas: s.personas,
+    estado: sinDatos
+      ? "Sin diagnóstico"
+      : s.fueraDeNorma === 0
+        ? "En norma"
+        : `${s.fueraDeNorma} fuera de norma`,
+    tono: sinDatos ? "neutral" : s.fueraDeNorma === 0 ? "good" : proporcion <= 0.25 ? "warn" : "bad",
+  };
+}
+
+/** Sucursales de muestra (modo demo); también las usa la pestaña Configuración. */
+export const SUCURSALES_SEMILLA: Sucursal[] = SUCURSALES_DEMO.map(aSucursal);
 
 export const SUCURSALES_KEY = "j40:sucursales";
 const VACIO: Sucursal[] = [];
@@ -78,12 +96,17 @@ function SucursalCard({ s, onDelete }: { s: Sucursal; onDelete?: () => void }) {
 }
 
 export function SucursalesTab() {
+  const datos = usePanel();
+  const demo = datos.origen === "demo";
   const [propias, setPropias] = useSucursalesPropias();
   const [nombre, setNombre] = useState("");
   const [ciudad, setCiudad] = useState("");
   const [personas, setPersonas] = useState("");
 
-  const todas = [...SUCURSALES_SEMILLA, ...propias];
+  // En demo se conservan las sucursales guardadas en este navegador; con
+  // Supabase se muestran sólo las reales de la empresa.
+  const reales = datos.sucursales.map(aSucursal);
+  const todas = demo ? [...reales, ...propias] : reales;
 
   function agregar(e: FormEvent) {
     e.preventDefault();
@@ -112,8 +135,8 @@ export function SucursalesTab() {
     <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
       <TabHeader
         eyebrow="Sucursales"
-        title="Sucursales"
-        subtitle={`${todas.length} sucursales · ${todas.reduce((a, s) => a + s.personas, 0)} colaboradores en total`}
+        title={datos.empresa ? `Sucursales · ${datos.empresa.nombre}` : "Sucursales"}
+        subtitle={`${todas.length} ${todas.length === 1 ? "sucursal" : "sucursales"} · ${todas.reduce((a, s) => a + s.personas, 0)} colaboradores en total`}
       />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -123,7 +146,7 @@ export function SucursalesTab() {
               key={s.id}
               s={s}
               onDelete={
-                s.propia
+                demo && s.propia
                   ? () => setPropias((prev) => prev.filter((x) => x.id !== s.id))
                   : undefined
               }
@@ -131,52 +154,65 @@ export function SucursalesTab() {
           ))}
         </div>
 
-        <Panel className="self-start">
-          <PanelHeader
-            title="Agregar sucursal"
-            description="Se guarda en este navegador y aparece en la lista."
-          />
-          <form onSubmit={agregar} className="flex flex-col gap-3 p-4 pt-2">
-            <Campo label="Nombre" htmlFor="suc-nombre">
-              <input
-                id="suc-nombre"
-                className={inputClass}
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
-                placeholder="Ej. Del Valle"
-                required
-              />
-            </Campo>
-            <Campo label="Ciudad" htmlFor="suc-ciudad">
-              <input
-                id="suc-ciudad"
-                className={inputClass}
-                value={ciudad}
-                onChange={(e) => setCiudad(e.target.value)}
-                placeholder="Ej. Ciudad de México"
-                required
-              />
-            </Campo>
-            <Campo label="Colaboradores" htmlFor="suc-personas">
-              <input
-                id="suc-personas"
-                className={inputClass}
-                type="number"
-                min={0}
-                step={1}
-                inputMode="numeric"
-                value={personas}
-                onChange={(e) => setPersonas(e.target.value)}
-                placeholder="0"
-                required
-              />
-            </Campo>
-            <button type="submit" className={botonPrimario}>
-              <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
-              Agregar sucursal
-            </button>
-          </form>
-        </Panel>
+        {demo ? (
+          <Panel className="self-start">
+            <PanelHeader
+              title="Agregar sucursal"
+              description="Se guarda en este navegador y aparece en la lista."
+            />
+            <form onSubmit={agregar} className="flex flex-col gap-3 p-4 pt-2">
+              <Campo label="Nombre" htmlFor="suc-nombre">
+                <input
+                  id="suc-nombre"
+                  className={inputClass}
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="Ej. Del Valle"
+                  required
+                />
+              </Campo>
+              <Campo label="Ciudad" htmlFor="suc-ciudad">
+                <input
+                  id="suc-ciudad"
+                  className={inputClass}
+                  value={ciudad}
+                  onChange={(e) => setCiudad(e.target.value)}
+                  placeholder="Ej. Ciudad de México"
+                  required
+                />
+              </Campo>
+              <Campo label="Colaboradores" htmlFor="suc-personas">
+                <input
+                  id="suc-personas"
+                  className={inputClass}
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  value={personas}
+                  onChange={(e) => setPersonas(e.target.value)}
+                  placeholder="0"
+                  required
+                />
+              </Campo>
+              <button type="submit" className={botonPrimario}>
+                <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
+                Agregar sucursal
+              </button>
+            </form>
+          </Panel>
+        ) : (
+          <Panel className="self-start">
+            <PanelHeader
+              title="Sucursales de la empresa"
+              description="Las cifras salen de la semana más reciente importada en cada sucursal."
+            />
+            <p className="px-4 pb-4 text-xs text-muted-foreground">
+              Las sucursales se crean al registrar la empresa; para agregar otra escríbenos y la
+              damos de alta en tu cuenta.
+            </p>
+          </Panel>
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore, type ComponentType } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   Building2,
@@ -28,29 +28,38 @@ import { ColaboradoresTab } from "@/components/dashboard/tabs/colaboradores";
 import { SemanasTab } from "@/components/dashboard/tabs/semanas";
 import { ReportesTab } from "@/components/dashboard/tabs/reportes";
 import { ConfiguracionTab } from "@/components/dashboard/tabs/configuracion";
+import { usePanel } from "@/lib/datos/panel-context";
+import { COOKIE_SUCURSAL } from "@/lib/datos/tipos";
 import { cn } from "@/lib/utils";
 
-const SUCURSALES = ["Coapa", "Polanco", "Satélite"];
-
-const NAV_GROUPS: NavGroupData[] = [
-  {
-    items: [
-      { id: "search", title: "Buscar", icon: Search, shortcut: "⌘K" },
-      { id: "diagnostico", title: "Diagnóstico", icon: Activity, href: "/dashboard" },
-      { id: "sucursales", title: "Sucursales", icon: Building2, href: "/dashboard#sucursales" },
-      { id: "semanas", title: "Semanas", icon: CalendarDays, href: "/dashboard#semanas" },
-      { id: "colaboradores", title: "Colaboradores", icon: Users, href: "/dashboard#colaboradores", badge: 30 },
-      { id: "reportes", title: "Reportes", icon: FileBarChart2, href: "/dashboard#reportes" },
-    ],
-  },
-];
+/** Menú principal; el badge de Colaboradores se rellena con la plantilla cargada. */
+function navGroups(colaboradores: number): NavGroupData[] {
+  return [
+    {
+      items: [
+        { id: "search", title: "Buscar", icon: Search, shortcut: "⌘K" },
+        { id: "diagnostico", title: "Diagnóstico", icon: Activity, href: "/dashboard" },
+        { id: "sucursales", title: "Sucursales", icon: Building2, href: "/dashboard#sucursales" },
+        { id: "semanas", title: "Semanas", icon: CalendarDays, href: "/dashboard#semanas" },
+        {
+          id: "colaboradores",
+          title: "Colaboradores",
+          icon: Users,
+          href: "/dashboard#colaboradores",
+          badge: colaboradores,
+        },
+        { id: "reportes", title: "Reportes", icon: FileBarChart2, href: "/dashboard#reportes" },
+      ],
+    },
+  ];
+}
 
 const BOTTOM_ITEMS: NavItemData[] = [
   { id: "configuracion", title: "Configuración", icon: Settings, href: "/dashboard#configuracion", shortcut: "⌘," },
 ];
 
 const ALL_ITEMS = flattenNavItems([
-  ...NAV_GROUPS.flatMap((g) => g.items),
+  ...navGroups(0).flatMap((g) => g.items),
   ...BOTTOM_ITEMS,
 ]);
 
@@ -108,7 +117,7 @@ function idFromLocation(pathname: string, hash: string): string {
   return "diagnostico";
 }
 
-function UserBlock() {
+function UserBlock({ org }: { org: string }) {
   return (
     <ProfileMenu align="start">
       <button
@@ -129,7 +138,7 @@ function UserBlock() {
             {USER.name}
           </span>
           <span className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
-            {USER.org}
+            {org}
           </span>
         </div>
       </button>
@@ -139,10 +148,15 @@ function UserBlock() {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const datos = usePanel();
   const [isOpen, setIsOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [activeWorkspace, setActiveWorkspace] = useState(SUCURSALES[0]);
+  // Sucursales reales (o de muestra) del panel; la activa es la seleccionada en el servidor.
+  const sucursales = datos.sucursales.map((s) => s.nombre);
+  const [workspaceLocal, setWorkspaceLocal] = useState<string | null>(null);
+  const activeWorkspace = workspaceLocal ?? datos.sucursal?.nombre ?? sucursales[0] ?? "";
   const hash = useSyncExternalStore(subscribeHash, getHash, getServerHash);
   // El item activo se deriva siempre de la URL (pathname + hash); así los
   // enlaces del menú de perfil y el botón "atrás" también cambian de pestaña.
@@ -167,6 +181,19 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const activeItem = ALL_ITEMS.find((i) => i.id === activeId);
   const activeTitle = activeItem ? activeItem.title : "Panel";
 
+  /**
+   * Cambiar de sucursal: con Supabase se guarda en la cookie `j40_sucursal`
+   * y se vuelve a pedir el panel al servidor; en demo sólo cambia el texto.
+   */
+  const handleWorkspaceSelect = (nombre: string) => {
+    setWorkspaceLocal(nombre);
+    if (datos.origen !== "supabase") return;
+    const sucursal = datos.sucursales.find((s) => s.nombre === nombre);
+    if (!sucursal) return;
+    document.cookie = `${COOKIE_SUCURSAL}=${encodeURIComponent(sucursal.id)}; path=/; max-age=31536000; samesite=lax`;
+    router.refresh();
+  };
+
   const handleSelect = (id: string) => {
     if (id === "search") {
       setIsSearchOpen(true);
@@ -178,13 +205,13 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const sidebar = (
     <SidebarNav
       className="w-[260px] border-none bg-transparent"
-      groups={NAV_GROUPS}
+      groups={navGroups(datos.personas.length)}
       bottomItems={BOTTOM_ITEMS}
       activeId={activeId}
       onSelect={handleSelect}
-      workspaces={SUCURSALES}
+      workspaces={sucursales}
       activeWorkspace={activeWorkspace}
-      onWorkspaceSelect={setActiveWorkspace}
+      onWorkspaceSelect={handleWorkspaceSelect}
       header={
         <div className="mb-2 flex items-center justify-between px-2 pt-1 pb-2">
           <JornadaLogo size={28} animated={false} />
@@ -198,7 +225,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       }
-      footer={<UserBlock />}
+      footer={<UserBlock org={datos.empresa?.nombre ?? USER.org} />}
     />
   );
 

@@ -21,7 +21,7 @@ const fmtH = new Intl.NumberFormat("es-MX", {
 
 /**
  * Tarjeta "Costo extra semanal": lee el costo por hora de la configuración
- * guardada (60 MXN si no hay) y compara contra la semana anterior.
+ * guardada (60 MXN si no hay) y compara contra la semana anterior, si la hay.
  */
 export function CostoKpi({
   horasActual,
@@ -29,19 +29,22 @@ export function CostoKpi({
   semanaPrevia,
 }: {
   horasActual: number;
-  horasPrevia: number;
-  semanaPrevia: number;
+  /** Horas al doble de la semana anterior; sin ella no se muestra el delta. */
+  horasPrevia?: number;
+  /** Número de la semana anterior (para "vs. S30"). */
+  semanaPrevia?: number;
 }) {
   const [{ costoHora }] = useConfig();
   const costo = horasActual * costoHora * FACTOR_DOBLE;
-  const previo = horasPrevia * costoHora * FACTOR_DOBLE;
+  const hayPrevia = horasPrevia !== undefined && semanaPrevia !== undefined;
+  const previo = (horasPrevia ?? 0) * costoHora * FACTOR_DOBLE;
   const delta = previo > 0 ? (costo - previo) / previo : 0;
   return (
     <StatCard
       label="Costo extra semanal"
       value={fmtMXN.format(costo)}
       hint={`${fmtH.format(horasActual)} h × $${costoHora} × ${FACTOR_DOBLE}`}
-      delta={`${fmtPct.format(delta)} vs. S${semanaPrevia}`}
+      delta={hayPrevia ? `${fmtPct.format(delta)} vs. S${semanaPrevia}` : undefined}
       deltaTone={delta > 0 ? "bad" : delta < 0 ? "good" : "neutral"}
     />
   );
