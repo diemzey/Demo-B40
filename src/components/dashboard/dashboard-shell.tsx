@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore, type ComponentType } from "react";
 import { usePathname } from "next/navigation";
 import {
   Activity,
@@ -22,6 +22,12 @@ import {
 } from "@/components/ui/dashboard-sidebar";
 import { JornadaLogo } from "@/components/ui/jornada-logo";
 import { CommandSearch } from "@/components/dashboard/command-search";
+import { ProfileMenu } from "@/components/auth/profile-menu";
+import { SucursalesTab } from "@/components/dashboard/tabs/sucursales";
+import { ColaboradoresTab } from "@/components/dashboard/tabs/colaboradores";
+import { SemanasTab } from "@/components/dashboard/tabs/semanas";
+import { ReportesTab } from "@/components/dashboard/tabs/reportes";
+import { ConfiguracionTab } from "@/components/dashboard/tabs/configuracion";
 import { cn } from "@/lib/utils";
 
 const SUCURSALES = ["Coapa", "Polanco", "Satélite"];
@@ -48,50 +54,86 @@ const ALL_ITEMS = flattenNavItems([
   ...BOTTOM_ITEMS,
 ]);
 
+/**
+ * Pestañas del panel por `id` (= hash de la URL). "diagnostico" (o sin hash)
+ * muestra `children`, la página de servidor.
+ */
+const TABS: Record<string, ComponentType> = {
+  sucursales: SucursalesTab,
+  colaboradores: ColaboradoresTab,
+  semanas: SemanasTab,
+  reportes: ReportesTab,
+  configuracion: ConfiguracionTab,
+};
+
 const USER = {
   name: "Cesar González",
   org: "Grupo Solmar",
   avatar: "/avatars/ortega-bruno.jpg",
 };
 
+/**
+ * Observa el hash. `next/link` cambia el hash con `history.pushState`, que no
+ * dispara `hashchange`, así que también se envuelven `pushState` y
+ * `replaceState` mientras el panel está montado.
+ */
 function subscribeHash(onChange: () => void) {
   window.addEventListener("hashchange", onChange);
   window.addEventListener("popstate", onChange);
+  const { pushState, replaceState } = window.history;
+  window.history.pushState = function (...args) {
+    pushState.apply(this, args);
+    onChange();
+  };
+  window.history.replaceState = function (...args) {
+    replaceState.apply(this, args);
+    onChange();
+  };
   return () => {
     window.removeEventListener("hashchange", onChange);
     window.removeEventListener("popstate", onChange);
+    window.history.pushState = pushState;
+    window.history.replaceState = replaceState;
   };
 }
 const getHash = () => window.location.hash;
 const getServerHash = () => "";
 
 function idFromLocation(pathname: string, hash: string): string {
+  const slug = hash.replace(/^#/, "");
+  if (slug === "" || slug === "home" || slug === "diagnostico") return "diagnostico";
+  if (slug in TABS) return slug;
   const exact = ALL_ITEMS.find((i) => i.href === `${pathname}${hash}`);
   if (exact) return exact.id;
-  const byPath = ALL_ITEMS.find((i) => i.href === pathname);
-  return byPath?.id ?? "diagnostico";
+  return "diagnostico";
 }
 
 function UserBlock() {
   return (
-    <div className="mt-2 flex items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={USER.avatar}
-        alt=""
-        width={32}
-        height={32}
-        className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border/60"
-      />
-      <div className="flex min-w-0 flex-col">
-        <span className="truncate text-[13px] font-medium leading-none text-foreground">
-          {USER.name}
-        </span>
-        <span className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
-          {USER.org}
-        </span>
-      </div>
-    </div>
+    <ProfileMenu align="start">
+      <button
+        type="button"
+        className="mt-2 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+        aria-label={`Cuenta de ${USER.name}`}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={USER.avatar}
+          alt=""
+          width={32}
+          height={32}
+          className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border/60"
+        />
+        <div className="flex min-w-0 flex-col">
+          <span className="truncate text-[13px] font-medium leading-none text-foreground">
+            {USER.name}
+          </span>
+          <span className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
+            {USER.org}
+          </span>
+        </div>
+      </button>
+    </ProfileMenu>
   );
 }
 
@@ -102,13 +144,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeWorkspace, setActiveWorkspace] = useState(SUCURSALES[0]);
   const hash = useSyncExternalStore(subscribeHash, getHash, getServerHash);
-  // Selección hecha por clic; se descarta al cambiar de ruta y entonces el
-  // item activo se deriva de la URL (pathname + hash).
-  const [selection, setSelection] = useState<{ pathname: string; id: string } | null>(null);
-  const activeId =
-    selection && selection.pathname === pathname
-      ? selection.id
-      : idFromLocation(pathname, hash);
+  // El item activo se deriva siempre de la URL (pathname + hash); así los
+  // enlaces del menú de perfil y el botón "atrás" también cambian de pestaña.
+  const activeId = idFromLocation(pathname, hash);
+  const ActiveTab = TABS[activeId];
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -133,7 +172,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       setIsSearchOpen(true);
       return;
     }
-    setSelection({ pathname, id });
     setMobileOpen(false);
   };
 
@@ -239,19 +277,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 ⌘K
               </kbd>
             </button>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={USER.avatar}
-              alt={USER.name}
-              width={32}
-              height={32}
-              className="size-8 rounded-full border border-primary/20 object-cover"
-            />
+            <ProfileMenu align="end" />
           </div>
         </div>
 
-        <main className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-          {children}
+        <main
+          key={activeId}
+          className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]"
+        >
+          {ActiveTab ? <ActiveTab /> : children}
         </main>
       </div>
 
