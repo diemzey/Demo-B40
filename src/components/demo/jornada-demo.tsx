@@ -22,11 +22,11 @@ const personas: JornadaPersona[] = [
 ];
 
 const pasos: JornadaPaso[] = [
-  { etiqueta: "Hoy · 2026", horas: 48, horaDoble: 49, actual: true },
-  { etiqueta: "Desde enero de 2027", horas: 46, horaDoble: 47 },
-  { etiqueta: "Desde enero de 2028", horas: 44, horaDoble: 45 },
-  { etiqueta: "Desde enero de 2029", horas: 42, horaDoble: 43 },
-  { etiqueta: "Desde enero de 2030", horas: 40, horaDoble: 41 },
+  { anio: 2026, horas: 48, actual: true },
+  { anio: 2027, horas: 46 },
+  { anio: 2028, horas: 44 },
+  { anio: 2029, horas: 42 },
+  { anio: 2030, horas: 40 },
 ];
 
 export default function JornadaDemo() {
@@ -65,7 +65,7 @@ export default function JornadaDemo() {
           despues={{ horasAlDoble: 0, fueraDeNorma: 0 }}
         />
       </div>
-      <div className="mx-auto mt-8 w-full max-w-6xl md:mt-12">
+      <div className="mx-auto mt-12 w-full max-w-4xl md:mt-16">
         <JornadaTimeline pasos={pasos} />
       </div>
     </RippleBackground>
