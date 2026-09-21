@@ -2,8 +2,10 @@
 
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
+import { DEMO_USER, useSession } from "@/components/auth/session";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +15,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MIN_PASSWORD = 8;
 // Tiempo simulado de "petición" al enviar (no hay backend).
 const FAKE_LATENCY_MS = 800;
+// Pausa breve para que se alcance a leer el mensaje de éxito antes de ir al panel.
+const REDIRECT_DELAY_MS = 600;
 
 type Field = "name" | "company" | "email" | "password" | "confirm" | "privacy";
 type Errors = Partial<Record<Field, string>>;
@@ -78,6 +82,9 @@ export function RegisterForm() {
   const [errors, setErrors] = useState<Errors>({});
   const [status, setStatus] = useState<Status>("idle");
 
+  const router = useRouter();
+  const { signIn } = useSession();
+
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Limpia el temporizador simulado si el componente se desmonta a medias.
@@ -110,7 +117,17 @@ export function RegisterForm() {
     // petición y mostramos un mensaje de éxito sin enviar nada a ningún lado.
     setStatus("pending");
     timerRef.current = setTimeout(() => {
+      // Guardamos una sesión de demostración con los datos del formulario.
+      signIn({
+        ...DEMO_USER,
+        nombre: values.name.trim(),
+        empresa: values.company.trim(),
+        correo: values.email.trim(),
+      });
       setStatus("success");
+      timerRef.current = setTimeout(() => {
+        router.push("/dashboard");
+      }, REDIRECT_DELAY_MS);
     }, FAKE_LATENCY_MS);
   }
 
