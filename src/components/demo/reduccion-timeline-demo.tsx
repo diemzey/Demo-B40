@@ -1,3 +1,4 @@
+import type React from "react";
 import { CalendarDays, Clock } from "lucide-react";
 import { Timeline, type TimelineItem } from "@/components/ui/timeline";
 
@@ -39,6 +40,14 @@ const items: TimelineItem[] = [
   },
 ];
 
+function Mark({ children }: { children: React.ReactNode }) {
+  return (
+    <mark className="rounded-sm bg-yellow-400 px-1 py-0.5 font-medium text-neutral-950 box-decoration-clone">
+      {children}
+    </mark>
+  );
+}
+
 export default function ReduccionTimelineDemo() {
   return (
     <section className="container mx-auto px-4 py-16 md:py-24">
@@ -47,11 +56,28 @@ export default function ReduccionTimelineDemo() {
           <h2 className="font-semibold text-3xl tracking-tight">
             El tope baja dos horas cada enero
           </h2>
-          <p className="mt-3 text-muted-foreground">
-            La jornada legal pasa de 48 a 40 horas semanales entre 2026 y
-            2030. Todo lo que se trabaje por encima del tope de cada año se
-            paga al doble.
-          </p>
+          <div className="mt-5 space-y-4 text-muted-foreground leading-relaxed">
+            <p>
+              La reforma publicada el{" "}
+              <Mark>3 de marzo de 2026</Mark> baja el tope de la semana{" "}
+              <Mark>dos horas cada 1.º de enero</Mark> hasta llegar a 40 en
+              2030, y <Mark>prohíbe bajar el salario</Mark>.
+            </p>
+            <p>
+              Para la nómina eso no se siente como menos horas: se siente
+              como <Mark>un umbral que baja</Mark>. La hora que hoy es
+              ordinaria pasa a pagarse <Mark>al doble</Mark> en cuanto cruza
+              el tope del año, y más arriba <Mark>al triple</Mark>, hasta un
+              tope absoluto que ya no se puede cruzar. Nada cambia en el
+              piso; cambia el precio de lo que ya se trabaja.
+            </p>
+            <p>
+              La misma reforma obliga al{" "}
+              <Mark>registro electrónico de asistencia</Mark>. Con él,{" "}
+              <Mark>la carga de la prueba pasa al patrón</Mark>: cada hora
+              por encima del tope queda escrita.
+            </p>
+          </div>
         </div>
         <Timeline items={items} variant="spacious" showTimestamps={false} />
       </div>
