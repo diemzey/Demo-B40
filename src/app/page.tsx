@@ -1,6 +1,6 @@
 import AlcanceDemo from "@/components/demo/alcance-demo";
 import ContactDemo from "@/components/demo/contact-demo";
-import FeaturesDemo from "@/components/demo/features-demo";
+import FAQDemo from "@/components/demo/faq-demo";
 import { Footer } from "@/components/demo/footer";
 import { HeaderDemo } from "@/components/demo/header-demo";
 import JornadaDemo from "@/components/demo/jornada-demo";
@@ -15,7 +15,7 @@ export default function Home() {
         <JornadaDemo />
         <ReduccionTimelineDemo />
         <AlcanceDemo />
-        <FeaturesDemo />
+        <FAQDemo />
         <ContactDemo />
         <LogoCloudDemo />
       </main>
