@@ -8,10 +8,10 @@ type ContactInfoProps = React.ComponentProps<'div'> & {
 	value: string;
 };
 
-type ContactCardProps = React.ComponentProps<'div'> & {
+type ContactCardProps = Omit<React.ComponentProps<'div'>, 'title'> & {
 	// Content props
-	title?: string;
-	description?: string;
+	title?: React.ReactNode;
+	description?: React.ReactNode;
 	contactInfo?: ContactInfoProps[];
 	formSectionClassName?: string;
 };
