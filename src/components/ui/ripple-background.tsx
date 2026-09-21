@@ -18,7 +18,7 @@ export function RippleBackground({
   return (
     <section
       className={cn(
-        "relative isolate overflow-hidden bg-yellow-400 text-neutral-900",
+        "relative isolate overflow-hidden bg-ambar text-neutral-950",
         className,
       )}
       {...props}
@@ -27,7 +27,7 @@ export function RippleBackground({
         {Array.from({ length: rings }).map((_, i) => (
           <span
             key={i}
-            className="ripple-ring absolute top-1/2 left-1/2 aspect-square w-[60vmax] rounded-full border-[3px] border-yellow-700/25"
+            className="ripple-ring absolute top-1/2 left-1/2 aspect-square w-[60vmax] rounded-full border-[3px] border-ambar-hondo/25"
             style={{ animationDelay: `${(i * 7) / rings}s` }}
           />
         ))}

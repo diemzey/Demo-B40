@@ -22,6 +22,7 @@ export type JornadaPersona = {
 export type JornadaResumen = {
   horasAlDoble: number;
   fueraDeNorma: number;
+  sinCubrir: number;
 };
 
 export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
@@ -48,9 +49,9 @@ function estadoDe(horas: number, tope: number): Estado {
 }
 
 const badgeStyles: Record<Estado, string> = {
-  excede: "border-transparent bg-destructive/15 text-destructive",
+  excede: "border-transparent bg-terracota/15 text-terracota",
   limite:
-    "border-transparent bg-amber-500/15 text-amber-600 dark:text-amber-400",
+    "border-transparent bg-ambar/15 text-ambar-hondo dark:text-ambar",
   cumple:
     "border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
 };
@@ -109,19 +110,19 @@ function Barra({
   return (
     <div className="flex items-center gap-2">
       <div
-        className="relative h-1.5 w-20 rounded-full bg-muted"
+        className="relative h-1.5 w-20 rounded-full bg-pista"
         role="img"
         aria-label={`${fmt(horas)} de ${tope} h`}
       >
         <div
           className={cn(
             "h-full rounded-full transition-[width,background-color] duration-700 ease-out",
-            estado === "excede" ? "bg-destructive" : "bg-primary",
+            estado === "excede" ? "bg-terracota" : "bg-relleno",
           )}
           style={{ width: pct(horas) }}
         />
         <span
-          className="absolute -inset-y-0.5 w-px bg-amber-500"
+          className="absolute -inset-y-0.5 w-0.5 rounded-px bg-ambar"
           style={{ left: pct(tope) }}
           aria-hidden="true"
         />
@@ -130,9 +131,9 @@ function Barra({
         className={cn(
           "w-12 text-right text-xs tabular-nums transition-colors duration-500",
           estado === "excede"
-            ? "text-destructive"
+            ? "text-terracota"
             : estado === "limite"
-              ? "text-amber-600 dark:text-amber-400"
+              ? "text-ambar-hondo dark:text-ambar"
               : "text-muted-foreground",
         )}
       >
@@ -152,8 +153,9 @@ function useFaseCiclica(intervalo: number) {
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setFase("despues");
-      return;
+      // Sin animación: mostrar el estado optimizado directamente.
+      const id = window.setTimeout(() => setFase("despues"), 0);
+      return () => window.clearTimeout(id);
     }
     let cancelado = false;
     const timers: number[] = [];
@@ -251,7 +253,7 @@ export function JornadaArtefacto({
         <TableFooter>
           <TableRow>
             <TableCell colSpan={3} className="py-4">
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-muted-foreground text-xs uppercase tracking-wider">
                     Horas al doble
@@ -259,7 +261,7 @@ export function JornadaArtefacto({
                   <p
                     className={cn(
                       "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                      alerta && "text-destructive",
+                      alerta && "text-terracota",
                     )}
                   >
                     {fmt(resumen.horasAlDoble)}
@@ -272,13 +274,21 @@ export function JornadaArtefacto({
                   <p
                     className={cn(
                       "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                      alerta && "text-destructive",
+                      alerta && "text-terracota",
                     )}
                   >
                     {resumen.fueraDeNorma}
                     <span className="ml-1 font-normal text-muted-foreground text-base">
                       de {colaboradores}
                     </span>
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Sin cubrir
+                  </p>
+                  <p className="mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl">
+                    {fmt(resumen.sinCubrir)}
                   </p>
                 </div>
               </div>

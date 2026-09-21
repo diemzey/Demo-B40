@@ -1,56 +1,106 @@
 import { ContactCard } from "@/components/ui/contact-card";
-import { MailIcon, PhoneIcon, MapPinIcon } from "lucide-react";
+import { Mail, MapPin, Clock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
+const DESCRIPCION =
+  "Veinte minutos por videollamada. Te mandamos antes el formato de los archivos y en la llamada ves el diagnóstico de tu semana, no una presentación." +
+  " " +
+  "Si la plantilla no alcanza, te lo decimos ahí mismo con la cifra exacta. Es la misma honestidad que vas a encontrar en el producto.";
 
 export default function ContactDemo() {
   return (
-    <section className="relative flex w-full items-center justify-center px-4 py-16">
-      <div className="mx-auto w-full max-w-5xl">
+    <section id="contacto" className="scroll-mt-24 py-16 md:py-24">
+      <div className="container mx-auto max-w-6xl px-4">
+        <p className="mb-6 font-mono text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+          Empieza por una sucursal
+        </p>
         <ContactCard
-          title="Get in touch"
-          description="If you have any questions regarding our Services or need help, please fill out the form here. We do our best to respond within 1 business day."
+          className="rounded-xl"
+          title="Una semana de tu sucursal, con el tope de 2027 encima."
+          description={DESCRIPCION}
           contactInfo={[
             {
-              icon: MailIcon,
-              label: "Email",
-              value: "hola@example.com",
+              icon: Mail,
+              label: "Correo",
+              value: "contacto@aivena.ai",
             },
             {
-              icon: PhoneIcon,
-              label: "Phone",
-              value: "+52 55 1234 5678",
+              icon: MapPin,
+              label: "Sede",
+              value: "AIvena Inc. · Ciudad de México",
             },
             {
-              icon: MapPinIcon,
-              label: "Address",
-              value: "Ciudad de México, México",
+              icon: Clock,
+              label: "Duración",
+              value: "20 minutos por videollamada",
               className: "col-span-2",
             },
           ]}
         >
           <form className="w-full space-y-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="contact-name">Name</Label>
-              <Input id="contact-name" name="name" type="text" />
+              <Label htmlFor="contact-nombre">Nombre</Label>
+              <Input
+                id="contact-nombre"
+                name="nombre"
+                type="text"
+                autoComplete="name"
+              />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="contact-email">Email</Label>
-              <Input id="contact-email" name="email" type="email" />
+              <Label htmlFor="contact-empresa">Empresa</Label>
+              <Input
+                id="contact-empresa"
+                name="empresa"
+                type="text"
+                autoComplete="organization"
+              />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="contact-phone">Phone</Label>
-              <Input id="contact-phone" name="phone" type="tel" />
+              <Label htmlFor="contact-correo">Correo de trabajo</Label>
+              <Input
+                id="contact-correo"
+                name="correo"
+                type="email"
+                autoComplete="email"
+              />
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="contact-message">Message</Label>
-              <Textarea id="contact-message" name="message" />
+              <Label htmlFor="contact-sucursales">Sucursales</Label>
+              <Input
+                id="contact-sucursales"
+                name="sucursales"
+                type="number"
+                min={1}
+                defaultValue={1}
+                inputMode="numeric"
+                className="tabular-nums"
+              />
             </div>
-            <Button className="w-full" type="button">
-              Submit
+            {/* Honeypot: los humanos no lo ven ni lo llenan. */}
+            <div className="sr-only" aria-hidden="true">
+              <Label htmlFor="contact-puesto">Puesto</Label>
+              <Input
+                id="contact-puesto"
+                name="puesto"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                className="sr-only"
+              />
+            </div>
+            <Button
+              type="button"
+              className="w-full bg-ambar text-neutral-950 hover:bg-ambar/90 h-11 px-6"
+            >
+              Agendar diagnóstico de una sucursal
             </Button>
+            <p className="text-xs text-muted-foreground">
+              Usamos tus datos solo para contactarte. No compartimos nada con
+              terceros.
+            </p>
           </form>
         </ContactCard>
       </div>
