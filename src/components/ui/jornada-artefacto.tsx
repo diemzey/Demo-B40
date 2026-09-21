@@ -1,3 +1,4 @@
+import { MoveRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Table,
@@ -9,27 +10,26 @@ import {
   TableRow,
 } from "@/components/ui/cnippet-table";
 
-export type JornadaFila = {
+export type JornadaPersona = {
   nombre: string;
+  foto: string;
   hoy: number;
   reacomodada: number;
 };
 
-export type JornadaTotales = {
-  horasAlDoble: { hoy: number; reacomodada: number };
-  fueraDeNorma: { hoy: number; reacomodada: number };
-  colaboradores: number;
+export type JornadaResumen = {
+  horasAlDoble: number;
+  fueraDeNorma: number;
 };
 
 export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
-  sucursal: string;
-  semana: number;
-  anio: number;
   tope: number;
   /** Máximo de la escala de la barra, en horas. */
   escala?: number;
-  filas: JornadaFila[];
-  totales: JornadaTotales;
+  personas: JornadaPersona[];
+  colaboradores: number;
+  antes: JornadaResumen;
+  despues: JornadaResumen;
 };
 
 type Estado = "excede" | "limite" | "cumple";
@@ -69,6 +69,25 @@ function Badge({ estado }: { estado: Estado }) {
   );
 }
 
+function Persona({ nombre, foto }: Pick<JornadaPersona, "nombre" | "foto">) {
+  return (
+    <div className="flex items-center gap-2.5">
+      {/* Retratos estáticos de /public, 72px para 36px @2x. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        alt=""
+        className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border"
+        decoding="async"
+        height={36}
+        loading="lazy"
+        src={foto}
+        width={36}
+      />
+      <span className="font-medium text-sm">{nombre}</span>
+    </div>
+  );
+}
+
 function Barra({
   horas,
   tope,
@@ -83,7 +102,7 @@ function Barra({
   return (
     <div className="flex items-center gap-2">
       <div
-        className="relative h-1.5 w-24 rounded-full bg-muted"
+        className="relative h-1.5 w-20 rounded-full bg-muted"
         role="img"
         aria-label={`${fmt(horas)} de ${tope} h`}
       >
@@ -116,53 +135,62 @@ function Barra({
   );
 }
 
-export function JornadaArtefacto({
-  sucursal,
-  semana,
-  anio,
+type PanelProps = {
+  etiqueta: string;
+  glosa: string;
+  shimmer?: boolean;
+  personas: JornadaPersona[];
+  tope: number;
+  escala: number;
+  clave: "hoy" | "reacomodada";
+  resumen: JornadaResumen;
+  colaboradores: number;
+};
+
+function Panel({
+  etiqueta,
+  glosa,
+  shimmer,
+  personas,
   tope,
-  escala = 52,
-  filas,
-  totales,
-  className,
-  ...props
-}: JornadaArtefactoProps) {
+  escala,
+  clave,
+  resumen,
+  colaboradores,
+}: PanelProps) {
+  const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
   return (
     <div
       className={cn(
-        "rounded-2xl border bg-card p-6 text-card-foreground shadow-lg md:p-8",
-        className,
+        "rounded-2xl border bg-card p-5 text-card-foreground shadow-lg",
+        shimmer && "j40-shimmer",
       )}
-      {...props}
     >
-      <section className="mb-6">
-        <h2 className="font-semibold text-2xl tracking-tight">{sucursal}</h2>
-        <p className="text-muted-foreground text-sm">
-          Semana {semana} · tope {anio}: {tope} h por persona
-        </p>
-      </section>
-
+      <div className="mb-3 flex items-baseline justify-between px-2.5">
+        <span className="font-semibold text-sm uppercase tracking-wider">
+          {etiqueta}
+        </span>
+        <span className="text-muted-foreground text-xs">{glosa}</span>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Colaborador</TableHead>
-            <TableHead>Hoy</TableHead>
-            <TableHead>Reacomodada</TableHead>
+            <TableHead>Horas</TableHead>
             <TableHead className="text-right">Estado</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filas.map((f) => (
-            <TableRow key={f.nombre}>
-              <TableCell className="font-medium text-sm">{f.nombre}</TableCell>
+          {personas.map((p) => (
+            <TableRow key={p.nombre}>
               <TableCell>
-                <Barra horas={f.hoy} tope={tope} escala={escala} />
+                <Persona nombre={p.nombre} foto={p.foto} />
               </TableCell>
               <TableCell>
-                <Barra horas={f.reacomodada} tope={tope} escala={escala} />
+                <Barra horas={p[clave]} tope={tope} escala={escala} />
               </TableCell>
               <TableCell className="text-right">
-                <Badge estado={estadoDe(f.reacomodada, tope)} />
+                <Badge estado={estadoDe(p[clave], tope)} />
               </TableCell>
             </TableRow>
           ))}
@@ -173,37 +201,74 @@ export function JornadaArtefacto({
               Horas al doble
             </TableCell>
             <TableCell
-              className={cn(
-                "font-mono text-sm",
-                totales.horasAlDoble.hoy > 0 && "text-destructive",
-              )}
+              className={cn("font-mono text-sm", alerta && "text-destructive")}
+              colSpan={2}
             >
-              {fmt(totales.horasAlDoble.hoy)}
+              {fmt(resumen.horasAlDoble)}
             </TableCell>
-            <TableCell className="font-mono text-sm">
-              {fmt(totales.horasAlDoble.reacomodada)}
-            </TableCell>
-            <TableCell />
           </TableRow>
           <TableRow>
             <TableCell className="text-muted-foreground text-xs">
               Fuera de norma
             </TableCell>
             <TableCell
-              className={cn(
-                "font-mono text-sm",
-                totales.fueraDeNorma.hoy > 0 && "text-destructive",
-              )}
+              className={cn("font-mono text-sm", alerta && "text-destructive")}
+              colSpan={2}
             >
-              {totales.fueraDeNorma.hoy} de {totales.colaboradores}
+              {resumen.fueraDeNorma} de {colaboradores}
             </TableCell>
-            <TableCell className="font-mono text-sm">
-              {totales.fueraDeNorma.reacomodada} de {totales.colaboradores}
-            </TableCell>
-            <TableCell />
           </TableRow>
         </TableFooter>
       </Table>
+    </div>
+  );
+}
+
+export function JornadaArtefacto({
+  tope,
+  escala = 52,
+  personas,
+  colaboradores,
+  antes,
+  despues,
+  className,
+  ...props
+}: JornadaArtefactoProps) {
+  return (
+    <div
+      className={cn(
+        "grid items-start gap-6 md:grid-cols-[1fr_auto_1fr] md:gap-4",
+        className,
+      )}
+      {...props}
+    >
+      <Panel
+        etiqueta="Antes"
+        glosa="como está hoy"
+        shimmer
+        personas={personas}
+        tope={tope}
+        escala={escala}
+        clave="hoy"
+        resumen={antes}
+        colaboradores={colaboradores}
+      />
+      <div
+        className="flex items-center justify-center self-center text-neutral-900/70"
+        aria-hidden="true"
+      >
+        <MoveRight className="size-6 rotate-90 md:rotate-0" strokeWidth={1.5} />
+      </div>
+      <Panel
+        etiqueta="Después"
+        glosa="reacomodada, mismos contratos"
+        personas={personas}
+        tope={tope}
+        escala={escala}
+        clave="reacomodada"
+        resumen={despues}
+        colaboradores={colaboradores}
+      />
     </div>
   );
 }
