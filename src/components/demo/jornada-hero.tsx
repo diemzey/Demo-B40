@@ -72,6 +72,7 @@ export function JornadaHero({
         colaboradores={colaboradores}
         antes={antes}
         despues={despues}
+        antes2030={antes2030}
         fase={fase}
         barriendo={barriendo}
       />

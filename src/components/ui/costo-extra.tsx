@@ -94,9 +94,10 @@ export function CostoExtra({
       <p className="text-neutral-500 text-xs">
         {activo ? (
           <>
-            Con el tope de 40 h, {horasAlDoble2030.toFixed(1)} h al doble por
-            semana × {mxn.format(costoHora)}/h · {mxn.format(anual)} al año.
-            Hoy ya son {mxn.format(mensualHoy)} al mes.
+            Hoy, con tope de 46 h: {horasAlDoble.toFixed(1)} h al doble por
+            semana, {mxn.format(mensualHoy)} al mes. En 2030, con tope de 40 h:{" "}
+            {horasAlDoble2030.toFixed(1)} h × {mxn.format(costoHora)}/h × 2 ·{" "}
+            {mxn.format(anual)} al año.
           </>
         ) : (
           <>

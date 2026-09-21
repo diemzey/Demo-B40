@@ -35,6 +35,8 @@ export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
   colaboradores: number;
   antes: JornadaResumen;
   despues: JornadaResumen;
+  /** Resumen con el tope de 2030 (40 h) y los turnos de hoy; se muestra en "Antes". */
+  antes2030?: JornadaResumen;
   /** Milisegundos que se muestra cada estado antes de cambiar. */
   intervalo?: number;
   /** Modo controlado: fase y barrido los aporta el padre. */
@@ -327,9 +329,15 @@ export function JornadaTabla({
 export function JornadaTotales({
   resumen,
   colaboradores,
+  tope,
+  proyeccion2030,
 }: {
   resumen: JornadaResumen;
   colaboradores: number;
+  /** Tope con el que se calculó el resumen. */
+  tope?: number;
+  /** Mismos turnos con el tope de 2030 (40 h); se muestra como tercera cifra. */
+  proyeccion2030?: JornadaResumen | null;
 }) {
   const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
   return (
@@ -337,10 +345,15 @@ export function JornadaTotales({
       <TableFooter>
         <TableRow>
           <TableCell colSpan={3} className="py-4">
-            <div className="grid grid-cols-2 gap-6">
+            <div
+              className={cn(
+                "grid gap-4 [&_p:first-child]:whitespace-nowrap",
+                proyeccion2030 ? "grid-cols-3" : "grid-cols-2",
+              )}
+            >
               <div>
                 <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Horas al doble
+                  {tope ? `Al doble · tope ${tope} h` : "Horas al doble"}
                 </p>
                 <p
                   className={cn(
@@ -367,6 +380,16 @@ export function JornadaTotales({
                   </span>
                 </p>
               </div>
+              {proyeccion2030 && (
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                    2030 · tope 40 h
+                  </p>
+                  <p className="mt-1 font-semibold text-2xl text-rose-300 tabular-nums md:text-3xl">
+                    {fmt(proyeccion2030.horasAlDoble)}
+                  </p>
+                </div>
+              )}
             </div>
           </TableCell>
         </TableRow>
@@ -382,6 +405,7 @@ export function JornadaArtefacto({
   colaboradores,
   antes,
   despues,
+  antes2030,
   intervalo = 3500,
   fase: faseControlada,
   barriendo: barridoControlado,
@@ -420,7 +444,12 @@ export function JornadaArtefacto({
         maxAltura="27rem"
         maxAlturaMd="32rem"
       />
-      <JornadaTotales resumen={resumen} colaboradores={colaboradores} />
+      <JornadaTotales
+        resumen={resumen}
+        colaboradores={colaboradores}
+        tope={tope}
+        proyeccion2030={optimizada ? null : antes2030}
+      />
     </div>
   );
 }

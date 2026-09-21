@@ -29,13 +29,8 @@ export function AuthShell({ headline, subline, children }: AuthShellProps) {
     >
       {/* Panel de marca: solo en escritorio */}
       <aside className="hidden flex-col bg-yellow-400 p-10 text-neutral-950 lg:flex xl:p-14">
-        {/* Sobre amarillo, el logo va monocromático en negro. */}
-        <JornadaLogo
-          size={56}
-          variant="mono"
-          className="text-neutral-950"
-          animated={false}
-        />
+        {/* Sobre amarillo, el logo va monocromático en negro, con su intro. */}
+        <JornadaLogo size={56} variant="mono" className="text-neutral-950" />
 
         <div className="my-auto max-w-md">
           <CalendarClock
@@ -56,7 +51,7 @@ export function AuthShell({ headline, subline, children }: AuthShellProps) {
       <main className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm">
           <div className="mb-8 flex justify-center lg:hidden">
-            <JornadaLogo size={32} animated={false} />
+            <JornadaLogo size={36} />
           </div>
           {children}
         </div>
