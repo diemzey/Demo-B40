@@ -5,10 +5,6 @@ import {
   type JornadaPersona,
 } from "@/components/ui/jornada-artefacto";
 import { RippleBackground } from "@/components/ui/ripple-background";
-import {
-  JornadaTimeline,
-  type JornadaPaso,
-} from "@/components/ui/jornada-timeline";
 
 const personas: JornadaPersona[] = [
   { nombre: "Ortega Bruno", foto: "/avatars/ortega-bruno.jpg", hoy: 49.0, reacomodada: 40.0 },
@@ -19,14 +15,6 @@ const personas: JornadaPersona[] = [
   { nombre: "Olvera Héctor", foto: "/avatars/olvera-hector.jpg", hoy: 44.0, reacomodada: 36.0 },
   { nombre: "Escobar Tomás", foto: "/avatars/escobar-tomas.jpg", hoy: 25.0, reacomodada: 23.5 },
   { nombre: "Molina Rocío", foto: "/avatars/molina-rocio.jpg", hoy: 24.5, reacomodada: 21.0 },
-];
-
-const pasos: JornadaPaso[] = [
-  { anio: 2026, horas: 48, actual: true },
-  { anio: 2027, horas: 46 },
-  { anio: 2028, horas: 44 },
-  { anio: 2029, horas: 42 },
-  { anio: 2030, horas: 40 },
 ];
 
 export default function JornadaDemo() {
@@ -64,9 +52,6 @@ export default function JornadaDemo() {
           antes={{ horasAlDoble: 100.4, fueraDeNorma: 27 }}
           despues={{ horasAlDoble: 0, fueraDeNorma: 0 }}
         />
-      </div>
-      <div className="mx-auto mt-12 w-full max-w-4xl md:mt-16">
-        <JornadaTimeline pasos={pasos} />
       </div>
     </RippleBackground>
   );

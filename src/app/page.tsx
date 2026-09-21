@@ -4,6 +4,7 @@ import { Footer } from "@/components/demo/footer";
 import { HeaderDemo } from "@/components/demo/header-demo";
 import JornadaDemo from "@/components/demo/jornada-demo";
 import LogoCloudDemo from "@/components/demo/logo-cloud-demo";
+import ReduccionTimelineDemo from "@/components/demo/reduccion-timeline-demo";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <HeaderDemo />
       <main className="flex-1 pt-20">
         <JornadaDemo />
+        <ReduccionTimelineDemo />
         <FeaturesDemo />
         <ContactDemo />
         <LogoCloudDemo />
