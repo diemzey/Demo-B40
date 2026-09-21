@@ -21,25 +21,12 @@ export default function ContactDemo() {
               Una semana de tu sucursal, con el tope de 2027 encima.
             </>
           }
-          description={
-            <>
-              <span className="block">
-                Veinte minutos por videollamada. Te mandamos antes el formato
-                de los archivos y en la llamada ves el diagnóstico de tu
-                semana, no una presentación.
-              </span>
-              <span className="mt-3 block">
-                Si la plantilla no alcanza, te lo decimos ahí mismo con la
-                cifra exacta. Es la misma honestidad que vas a encontrar en el
-                producto.
-              </span>
-            </>
-          }
+          description="Veinte minutos por videollamada: te mandamos el formato de los archivos y en la llamada ves el diagnóstico de tu semana, no una presentación. Si la plantilla no alcanza, te lo decimos ahí mismo con la cifra exacta."
           contactInfo={[
             {
               icon: VideoIcon,
               label: "Videollamada",
-              value: "20 minutos, con tu semana real",
+              value: "20 min con tu semana real",
             },
             {
               icon: MailIcon,
@@ -49,7 +36,7 @@ export default function ContactDemo() {
             {
               icon: MapPinIcon,
               label: "Oficina",
-              value: "AIvena Inc. · Ciudad de México",
+              value: "AIvena Inc. · CDMX",
               className: "col-span-2 lg:col-span-1",
             },
           ]}
