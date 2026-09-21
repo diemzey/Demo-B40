@@ -197,25 +197,38 @@ function Panel({
         </TableBody>
         <TableFooter>
           <TableRow>
-            <TableCell className="text-muted-foreground text-xs">
-              Horas al doble
-            </TableCell>
-            <TableCell
-              className={cn("font-mono text-sm", alerta && "text-destructive")}
-              colSpan={2}
-            >
-              {fmt(resumen.horasAlDoble)}
-            </TableCell>
-          </TableRow>
-          <TableRow>
-            <TableCell className="text-muted-foreground text-xs">
-              Fuera de norma
-            </TableCell>
-            <TableCell
-              className={cn("font-mono text-sm", alerta && "text-destructive")}
-              colSpan={2}
-            >
-              {resumen.fueraDeNorma} de {colaboradores}
+            <TableCell colSpan={3} className="py-4">
+              <div className="grid grid-cols-2 gap-6">
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Horas al doble
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1 font-semibold text-2xl tabular-nums md:text-3xl",
+                      alerta && "text-destructive",
+                    )}
+                  >
+                    {fmt(resumen.horasAlDoble)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                    Fuera de norma
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1 font-semibold text-2xl tabular-nums md:text-3xl",
+                      alerta && "text-destructive",
+                    )}
+                  >
+                    {resumen.fueraDeNorma}
+                    <span className="ml-1 font-normal text-muted-foreground text-base">
+                      de {colaboradores}
+                    </span>
+                  </p>
+                </div>
+              </div>
             </TableCell>
           </TableRow>
         </TableFooter>
