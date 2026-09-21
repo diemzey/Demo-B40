@@ -49,7 +49,7 @@ const Comparison03 = ({
   const headingId = "comparison-03-heading";
   return (
     <section
-      className={cn("bg-background py-20 sm:py-28", className)}
+      className={cn("bg-background py-16 md:py-24", className)}
       aria-labelledby={headingId}
       {...props}
     >
@@ -60,7 +60,7 @@ const Comparison03 = ({
           </p>
           <h2
             id={headingId}
-            className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl"
+            className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl"
           >
             {title}
           </h2>

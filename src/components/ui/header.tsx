@@ -108,12 +108,16 @@ function Header1() {
                     </Link>
                 </div>
                 <div className="flex justify-end w-full gap-4">
-                    <Button variant="ghost" className="hidden md:inline">
-                        Book a demo
+                    <Button variant="ghost" className="hidden md:inline-flex" asChild>
+                        <a href="#contacto">Agendar diagnóstico</a>
                     </Button>
                     <div className="border-r hidden md:inline"></div>
-                    <Button variant="outline">Sign in</Button>
-                    <Button>Get started</Button>
+                    <Button variant="outline" asChild>
+                        <Link href="/login">Entrar</Link>
+                    </Button>
+                    <Button className="bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300" asChild>
+                        <Link href="/registro">Crear cuenta</Link>
+                    </Button>
                 </div>
                 <div className="flex w-12 shrink lg:hidden items-end justify-end">
                     <Button variant="ghost" onClick={() => setOpen(!isOpen)}>

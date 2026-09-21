@@ -57,7 +57,10 @@ export default function ReduccionTimelineDemo() {
           className="order-2 md:order-1"
         />
         <div className="order-1 md:order-2">
-          <h2 className="font-semibold text-3xl tracking-tight">
+          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            Calendario
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-tight md:text-4xl">
             El tope baja dos horas cada enero
           </h2>
           <div className="mt-5 space-y-4 text-muted-foreground leading-relaxed">

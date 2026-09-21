@@ -9,7 +9,7 @@ export default function ContactDemo() {
   return (
     <section
       id="contacto"
-      className="relative flex w-full items-center justify-center px-4 py-16"
+      className="relative flex w-full items-center justify-center px-4 py-16 md:py-24"
     >
       <div className="mx-auto w-full max-w-5xl">
         <ContactCard
