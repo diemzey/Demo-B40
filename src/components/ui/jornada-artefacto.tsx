@@ -1,34 +1,35 @@
 import { cn } from "@/lib/utils";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/cnippet-table";
 
 export type JornadaFila = {
   nombre: string;
-  horas: number;
+  hoy: number;
+  reacomodada: number;
 };
 
-export type JornadaCifras = {
-  horasAlDoble: number;
-  fueraDeNorma: number;
-  sinCubrir: number;
+export type JornadaTotales = {
+  horasAlDoble: { hoy: number; reacomodada: number };
+  fueraDeNorma: { hoy: number; reacomodada: number };
+  colaboradores: number;
 };
 
-export type JornadaMitad = {
-  titulo: string;
-  glosa: string;
-  filas: JornadaFila[];
-  cifras: JornadaCifras;
-};
-
-export type JornadaArtefactoProps = React.ComponentProps<"figure"> & {
+export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
   sucursal: string;
   semana: number;
   anio: number;
   tope: number;
   /** Máximo de la escala de la barra, en horas. */
   escala?: number;
-  colaboradoresMostrados: number;
-  colaboradoresTotal: number;
-  mitades: [JornadaMitad, JornadaMitad];
-  pie: string;
+  filas: JornadaFila[];
+  totales: JornadaTotales;
 };
 
 type Estado = "excede" | "limite" | "cumple";
@@ -39,13 +40,81 @@ function estadoDe(horas: number, tope: number): Estado {
   return "cumple";
 }
 
-const colorTexto: Record<Estado, string> = {
-  excede: "text-destructive",
-  limite: "text-amber-600 dark:text-amber-400",
-  cumple: "text-foreground",
+const badgeStyles: Record<Estado, string> = {
+  excede: "border-transparent bg-destructive/15 text-destructive",
+  limite:
+    "border-transparent bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  cumple:
+    "border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+};
+
+const badgeLabel: Record<Estado, string> = {
+  excede: "Excede",
+  limite: "En el tope",
+  cumple: "Cumple",
 };
 
 const fmt = (h: number) => `${h.toFixed(1)} h`;
+
+function Badge({ estado }: { estado: Estado }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center whitespace-nowrap rounded-md border px-2 py-0.5 font-medium text-xs",
+        badgeStyles[estado],
+      )}
+    >
+      {badgeLabel[estado]}
+    </span>
+  );
+}
+
+function Barra({
+  horas,
+  tope,
+  escala,
+}: {
+  horas: number;
+  tope: number;
+  escala: number;
+}) {
+  const estado = estadoDe(horas, tope);
+  const pct = (h: number) => `${((h / escala) * 100).toFixed(3)}%`;
+  return (
+    <div className="flex items-center gap-2">
+      <div
+        className="relative h-1.5 w-24 rounded-full bg-muted"
+        role="img"
+        aria-label={`${fmt(horas)} de ${tope} h`}
+      >
+        <div
+          className={cn(
+            "h-full rounded-full",
+            estado === "excede" ? "bg-destructive" : "bg-primary",
+          )}
+          style={{ width: pct(horas) }}
+        />
+        <span
+          className="absolute -inset-y-0.5 w-px bg-amber-500"
+          style={{ left: pct(tope) }}
+          aria-hidden="true"
+        />
+      </div>
+      <span
+        className={cn(
+          "w-12 text-right text-xs tabular-nums",
+          estado === "excede"
+            ? "text-destructive"
+            : estado === "limite"
+              ? "text-amber-600 dark:text-amber-400"
+              : "text-muted-foreground",
+        )}
+      >
+        {fmt(horas)}
+      </span>
+    </div>
+  );
+}
 
 export function JornadaArtefacto({
   sucursal,
@@ -53,124 +122,88 @@ export function JornadaArtefacto({
   anio,
   tope,
   escala = 52,
-  colaboradoresMostrados,
-  colaboradoresTotal,
-  mitades,
-  pie,
+  filas,
+  totales,
   className,
   ...props
 }: JornadaArtefactoProps) {
-  const pct = (h: number) => `${((h / escala) * 100).toFixed(3)}%`;
-  const limite = pct(tope);
-
   return (
-    <figure
+    <div
       className={cn(
         "rounded-2xl border bg-card p-6 text-card-foreground shadow-lg md:p-8",
         className,
       )}
       {...props}
     >
-      <div className="flex flex-col gap-1 border-b pb-4 text-muted-foreground text-xs uppercase tracking-wider sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          {sucursal} · semana {semana} · tope {anio}: {tope} h
-        </span>
-        <span>
-          {colaboradoresMostrados} de {colaboradoresTotal} colaboradores
-        </span>
-      </div>
+      <section className="mb-6">
+        <h2 className="font-semibold text-2xl tracking-tight">{sucursal}</h2>
+        <p className="text-muted-foreground text-sm">
+          Semana {semana} · tope {anio}: {tope} h por persona
+        </p>
+      </section>
 
-      <div className="mt-6 grid gap-10 md:grid-cols-2 md:gap-8">
-        {mitades.map((mitad) => (
-          <div key={mitad.titulo}>
-            <h3 className="mb-4 font-semibold text-lg tracking-tight">
-              {mitad.titulo}{" "}
-              <span className="font-normal text-muted-foreground text-sm">
-                {mitad.glosa}
-              </span>
-            </h3>
-
-            <div className="flex flex-col gap-2.5">
-              {mitad.filas.map((fila) => {
-                const estado = estadoDe(fila.horas, tope);
-                return (
-                  <div
-                    key={fila.nombre}
-                    className="grid grid-cols-[minmax(0,7.5rem)_1fr_3.5rem] items-center gap-3 text-sm"
-                  >
-                    <span className="truncate">{fila.nombre}</span>
-                    <span
-                      className="relative h-2 overflow-visible rounded-full bg-muted"
-                      role="img"
-                      aria-label={`${fmt(fila.horas)} de ${tope} h`}
-                    >
-                      <span
-                        className={cn(
-                          "absolute inset-y-0 left-0 rounded-full",
-                          estado === "excede" ? "bg-destructive" : "bg-primary",
-                        )}
-                        style={{ width: pct(fila.horas) }}
-                      />
-                      <span
-                        className="absolute -inset-y-1 w-0.5 bg-amber-500"
-                        style={{ left: limite }}
-                        aria-hidden="true"
-                      />
-                    </span>
-                    <span
-                      className={cn(
-                        "text-right font-medium tabular-nums",
-                        colorTexto[estado],
-                      )}
-                    >
-                      {fmt(fila.horas)}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            <dl className="mt-6 grid grid-cols-3 gap-4 border-t pt-4">
-              <div>
-                <dt className="text-muted-foreground text-xs">Horas al doble</dt>
-                <dd
-                  className={cn(
-                    "font-semibold tabular-nums",
-                    mitad.cifras.horasAlDoble > 0 && "text-destructive",
-                  )}
-                >
-                  {fmt(mitad.cifras.horasAlDoble)}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground text-xs">Fuera de norma</dt>
-                <dd
-                  className={cn(
-                    "font-semibold tabular-nums",
-                    mitad.cifras.fueraDeNorma > 0 && "text-destructive",
-                  )}
-                >
-                  {mitad.cifras.fueraDeNorma} de {colaboradoresTotal}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground text-xs">Sin cubrir</dt>
-                <dd className="font-semibold tabular-nums">
-                  {fmt(mitad.cifras.sinCubrir)}
-                </dd>
-              </div>
-            </dl>
-          </div>
-        ))}
-      </div>
-
-      <figcaption className="mt-6 flex items-start gap-2 border-t pt-4 text-muted-foreground text-xs leading-relaxed">
-        <i
-          className="mt-1.5 inline-block h-0.5 w-4 shrink-0 bg-amber-500"
-          aria-hidden="true"
-        />
-        <span>{pie}</span>
-      </figcaption>
-    </figure>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Colaborador</TableHead>
+            <TableHead>Hoy</TableHead>
+            <TableHead>Reacomodada</TableHead>
+            <TableHead className="text-right">Estado</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filas.map((f) => (
+            <TableRow key={f.nombre}>
+              <TableCell className="font-medium text-sm">{f.nombre}</TableCell>
+              <TableCell>
+                <Barra horas={f.hoy} tope={tope} escala={escala} />
+              </TableCell>
+              <TableCell>
+                <Barra horas={f.reacomodada} tope={tope} escala={escala} />
+              </TableCell>
+              <TableCell className="text-right">
+                <Badge estado={estadoDe(f.reacomodada, tope)} />
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+        <TableFooter>
+          <TableRow>
+            <TableCell className="text-muted-foreground text-xs">
+              Horas al doble
+            </TableCell>
+            <TableCell
+              className={cn(
+                "font-mono text-sm",
+                totales.horasAlDoble.hoy > 0 && "text-destructive",
+              )}
+            >
+              {fmt(totales.horasAlDoble.hoy)}
+            </TableCell>
+            <TableCell className="font-mono text-sm">
+              {fmt(totales.horasAlDoble.reacomodada)}
+            </TableCell>
+            <TableCell />
+          </TableRow>
+          <TableRow>
+            <TableCell className="text-muted-foreground text-xs">
+              Fuera de norma
+            </TableCell>
+            <TableCell
+              className={cn(
+                "font-mono text-sm",
+                totales.fueraDeNorma.hoy > 0 && "text-destructive",
+              )}
+            >
+              {totales.fueraDeNorma.hoy} de {totales.colaboradores}
+            </TableCell>
+            <TableCell className="font-mono text-sm">
+              {totales.fueraDeNorma.reacomodada} de {totales.colaboradores}
+            </TableCell>
+            <TableCell />
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </div>
   );
 }
