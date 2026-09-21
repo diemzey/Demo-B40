@@ -42,17 +42,21 @@ const items: TimelineItem[] = [
 
 function Mark({ children }: { children: React.ReactNode }) {
   return (
-    <mark className="rounded-sm bg-yellow-400 px-1 py-0.5 font-medium text-neutral-950 box-decoration-clone">
-      {children}
-    </mark>
+    <span className="font-medium text-yellow-400">{children}</span>
   );
 }
 
 export default function ReduccionTimelineDemo() {
   return (
     <section className="container mx-auto px-4 py-16 md:py-24">
-      <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[1fr_1.4fr] md:gap-16">
-        <div>
+      <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[1fr_1.2fr] md:gap-16">
+        <Timeline
+          items={items}
+          variant="spacious"
+          showTimestamps={false}
+          className="order-2 md:order-1"
+        />
+        <div className="order-1 md:order-2">
           <h2 className="font-semibold text-3xl tracking-tight">
             El tope baja dos horas cada enero
           </h2>
@@ -79,7 +83,6 @@ export default function ReduccionTimelineDemo() {
             </p>
           </div>
         </div>
-        <Timeline items={items} variant="spacious" showTimestamps={false} />
       </div>
     </section>
   );
