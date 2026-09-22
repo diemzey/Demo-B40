@@ -1,3 +1,4 @@
+import { reacomodar } from "@/lib/reacomodo";
 import { cache } from "react";
 import { cookies } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -427,44 +428,45 @@ async function cargarDesdeSupabase(
       ahorroPct: programacion.ahorroPct,
     };
   } else {
-    // Sin propuesta: el reacomodo de Postgres (public.reacomodar_semana) con
-    // el tope objetivo. Quien excede cede, quien tiene capacidad recibe, y lo
-    // que no cabe en la plantilla se reporta como horas sin cubrir → vacantes.
-    const [{ data: filasReacomodo }, { data: filasBalance }, { data: filasEmpleados }] =
-      await Promise.all([
-        supabase.rpc("reacomodar_semana", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
-        supabase.rpc("resumen_reacomodo", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
-        consultaEmpleados,
-      ]);
-
-    const propuesta = new Map<string, { hoy: number; reacomodada: number }>();
-    for (const r of filasReacomodo ?? []) {
-      propuesta.set(r.empleado_id, { hoy: r.horas_hoy, reacomodada: r.horas_reacomodadas });
+    // Sin propuesta todavía (la cola la está generando): el reacomodo se
+    // calcula aquí con `lib/reacomodo` (misma regla que public.reacomodar_semana)
+    // a partir de las horas de la semana. Antes eran dos RPC de ~2 s cada uno
+    // en cada cambio de sucursal.
+    const [{ data: filasHoy }, { data: filasEmpleados }] = await Promise.all([
+      supabase
+        .from("v_horas_semana")
+        .select("empleado_id, horas_semana")
+        .eq("sucursal_id", elegida.id)
+        .eq("semana_iso", semana.inicio),
+      consultaEmpleados,
+    ]);
+    const hoy = new Map<string, number>();
+    for (const h of filasHoy ?? []) {
+      if (h.empleado_id) hoy.set(h.empleado_id, num(h.horas_semana));
     }
-
     // Sólo colaboradores activos con horas esa semana: así el conteo coincide
     // con `colaboradores` de la vista y con las cifras del pie de la tabla.
-    personas = (filasEmpleados ?? []).flatMap((e) => {
-      const fila = propuesta.get(e.id);
-      if (!fila) return [];
-      return [
-        {
-          nombre: nombreCompleto(e),
-          foto: e.foto_url ?? "",
-          detalle: e.puesto ?? undefined,
-          hoy: fila.hoy,
-          reacomodada: fila.reacomodada,
-        },
-      ];
+    const entrada = (filasEmpleados ?? []).flatMap((e) => {
+      const horasHoy = hoy.get(e.id);
+      if (horasHoy === undefined) return [];
+      return [{ id: e.id, hoy: horasHoy, nombre: nombreCompleto(e), foto: e.foto_url ?? "", detalle: e.puesto ?? undefined }];
     });
+    const reacomodo = reacomodar(entrada, { tope });
+    personas = reacomodo.personas.map((r) => ({
+      nombre: r.nombre,
+      foto: r.foto,
+      detalle: r.detalle,
+      hoy: redondea(r.hoy),
+      reacomodada: redondea(r.reacomodada),
+    }));
 
-    const balance = filasBalance?.[0];
+    const balance = reacomodo.resumen;
     antes = resumenDe(personas, "hoy", tope);
     despues = {
       ...resumenDe(personas, "reacomodada", tope),
-      horasAbsorbidas: redondea(balance?.horas_absorbidas ?? 0),
-      horasSinCubrir: redondea(balance?.horas_sin_cubrir ?? 0),
-      vacantes: balance?.vacantes_sugeridas ?? 0,
+      horasAbsorbidas: redondea(balance.horasAbsorbidas),
+      horasSinCubrir: redondea(balance.horasSinCubrir),
+      vacantes: balance.vacantesSugeridas,
     };
   }
 

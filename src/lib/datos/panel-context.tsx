@@ -17,7 +17,8 @@ export function PanelProvider({
   children,
 }: {
   datos: DatosPanel;
-  reporte: DatosReporte;
+  /** null: se carga cuando se abre la pestaña Reportes (`cargarReporte`). */
+  reporte: DatosReporte | null;
   children: ReactNode;
 }) {
   return (
@@ -35,11 +36,11 @@ export function usePanel(): DatosPanel {
   return datos;
 }
 
-/** Reporte ejecutivo (pestaña Reportes), cargado junto al panel en el layout. */
-export function useReporte(): DatosReporte {
-  const reporte = useContext(ReporteContext);
-  if (!reporte) {
-    throw new Error("useReporte() debe usarse dentro de <PanelProvider> (src/app/dashboard/layout.tsx).");
-  }
-  return reporte;
+/**
+ * Reporte ejecutivo (pestaña Reportes). Es null hasta que la pestaña lo pide
+ * con `cargarReporte()`: `reporte_ejecutivo()` recorre todas las
+ * sucursal-semanas de la empresa y no debe pagarse en cada render del panel.
+ */
+export function useReporte(): DatosReporte | null {
+  return useContext(ReporteContext);
 }

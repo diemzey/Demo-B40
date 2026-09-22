@@ -4,7 +4,6 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Onboarding } from "@/components/dashboard/onboarding";
 import { obtenerDatosPanel } from "@/lib/datos/dashboard";
 import { PanelProvider } from "@/lib/datos/panel-context";
-import { obtenerReporte } from "@/lib/datos/reportes";
 import DashboardLoading from "./loading";
 
 // Los datos dependen de la sesión (cookies): siempre en tiempo de petición.
@@ -34,10 +33,11 @@ export default function DashboardLayout({ children }: LayoutProps<"/dashboard">)
 }
 
 async function PanelCargado({ children }: { children: ReactNode }) {
-  const [datos, reporte] = await Promise.all([obtenerDatosPanel(), obtenerReporte()]);
+  const datos = await obtenerDatosPanel();
   if (datos.sinSesion) redirect("/login?next=/dashboard");
+  // El reporte ejecutivo se carga sólo al abrir la pestaña Reportes.
   return (
-    <PanelProvider datos={datos} reporte={reporte}>
+    <PanelProvider datos={datos} reporte={null}>
       {datos.sinDatos ? <Onboarding /> : <DashboardShell>{children}</DashboardShell>}
     </PanelProvider>
   );

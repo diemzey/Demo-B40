@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Upload } from "lucide-react";
 import { AhorroPorSemanaChart, DesgloseAhorroBarra } from "@/components/dashboard/charts-reportes";
 import { Comparacion, type FilaComparacion } from "@/components/dashboard/comparacion";
@@ -8,6 +8,9 @@ import { mxnCompacto } from "@/lib/formato";
 import { Panel, PanelHeader, Pill, TabHeader, type PillTone } from "@/components/dashboard/tabs/ui";
 import { Button } from "@/components/ui/button";
 import { usePanel, useReporte } from "@/lib/datos/panel-context";
+import { cargarReporte } from "@/lib/datos/reportes-accion";
+import { LogoCargando } from "@/components/ui/logo-cargando";
+import type { DatosReporte } from "@/lib/datos/tipos";
 import { numeroSemanaIso, rangoCorto, semanaDesdeLunes } from "@/lib/datos/semana";
 import type { SucursalReporte } from "@/lib/datos/tipos";
 import { cn } from "@/lib/utils";
@@ -147,7 +150,41 @@ function ListaSucursales({ sucursales }: { sucursales: SucursalReporte[] }) {
 
 export function ReportesTab() {
   const panel = usePanel();
-  const reporte = useReporte();
+  const inicial = useReporte();
+  const [reporte, setReporte] = useState<DatosReporte | null>(inicial);
+  const [errorCarga, setErrorCarga] = useState<string | null>(null);
+  useEffect(() => {
+    if (reporte) return;
+    let cancelado = false;
+    cargarReporte()
+      .then((r) => {
+        if (!cancelado) setReporte(r);
+      })
+      .catch((e: unknown) => {
+        if (!cancelado) setErrorCarga(e instanceof Error ? e.message : "No pudimos cargar el reporte.");
+      });
+    return () => {
+      cancelado = true;
+    };
+  }, [reporte]);
+
+  if (!reporte) {
+    return (
+      <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
+        <TabHeader eyebrow="Reportes" title={panel.empresa?.nombre ? `Reporte · ${panel.empresa.nombre}` : "Reporte"} subtitle="Ahorro de todas tus sucursales." />
+        <Panel className="flex items-center gap-3 p-6">
+          {errorCarga ? (
+            <p className="j40-body text-rose-300">{errorCarga}</p>
+          ) : (
+            <>
+              <LogoCargando size={20} label="" className="text-foreground" />
+              <p className="j40-body text-muted-foreground">Calculando el reporte de todas tus sucursales…</p>
+            </>
+          )}
+        </Panel>
+      </div>
+    );
+  }
   const { total, semanas, porSucursal } = reporte;
   const demo = reporte.origen === "demo";
   const empresa = reporte.empresa?.nombre ?? panel.empresa?.nombre ?? null;

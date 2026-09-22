@@ -85,6 +85,10 @@ export function WorkspaceSwitcher({
   useEffect(() => {
     if (isOpen) listaRef.current?.focus();
   }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen) return;
+    listaRef.current?.querySelector<HTMLElement>(`#${CSS.escape(`${listId}-${activo}`)}`)?.scrollIntoView({ block: "nearest" });
+  }, [isOpen, activo, listId]);
 
   const unaSola = workspaces.length <= 1;
 
@@ -182,7 +186,8 @@ export function WorkspaceSwitcher({
               aria-label="Sucursales"
               aria-activedescendant={`${listId}-${activo}`}
               onKeyDown={onKeyLista}
-              className={cn("flex flex-col gap-0.5 rounded-md", FOCUS_RING)}
+              // Con decenas de sucursales la lista se desplaza dentro del menú.
+              className={cn("flex max-h-[min(60vh,26rem)] flex-col gap-0.5 overflow-y-auto overscroll-contain rounded-md", FOCUS_RING)}
             >
               {workspaces.map((ws, i) => {
                 const seleccionada = current === ws;

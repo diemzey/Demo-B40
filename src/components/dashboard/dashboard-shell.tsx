@@ -117,11 +117,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const activeWorkspace = workspaceLocal ?? datos.sucursal?.nombre ?? sucursales[0] ?? "";
 
   const semanasProgramadas = datos.semanas.filter((s) => s.programada).length;
+  // El reporte se carga al abrir su pestaña; si ya está, también cuenta.
   const conReportes =
     datos.sucursales.length > 1 ||
     semanasProgramadas > 1 ||
-    reporte.total.tiendas > 1 ||
-    reporte.total.semanas > 1;
+    (reporte?.total.tiendas ?? 0) > 1 ||
+    (reporte?.total.semanas ?? 0) > 1;
 
   // La pestaña activa es estado propio: no depende del router de Next ni de
   // interceptar pushState. Se lee del #hash al montar (enlaces profundos,
