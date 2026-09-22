@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 export default function RegistroPage() {
   return (
     <AuthShell
-      headline="Empieza por una sucursal."
+      headline="Empieza por tu empresa."
       subline="Crea tu cuenta y sube la primera semana en CSV."
     >
       <div className="rounded-2xl border bg-card p-6 shadow-lg">

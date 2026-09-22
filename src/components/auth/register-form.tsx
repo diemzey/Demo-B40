@@ -29,8 +29,6 @@ type Field =
   | "nombre"
   | "apellido"
   | "empresa"
-  | "sucursal"
-  | "ciudad"
   | "email"
   | "password"
   | "confirm"
@@ -43,8 +41,6 @@ type Values = {
   nombre: string;
   apellido: string;
   empresa: string;
-  sucursal: string;
-  ciudad: string;
   email: string;
   password: string;
   confirm: string;
@@ -55,8 +51,6 @@ const INITIAL: Values = {
   nombre: "",
   apellido: "",
   empresa: "",
-  sucursal: "",
-  ciudad: "",
   email: "",
   password: "",
   confirm: "",
@@ -68,8 +62,6 @@ const FIELD_ORDER: Field[] = [
   "nombre",
   "apellido",
   "empresa",
-  "sucursal",
-  "ciudad",
   "email",
   "password",
   "confirm",
@@ -81,7 +73,6 @@ function validate(v: Values): Errors {
   if (!v.nombre.trim()) errors.nombre = "Escribe tu nombre.";
   if (!v.apellido.trim()) errors.apellido = "Escribe tu apellido.";
   if (!v.empresa.trim()) errors.empresa = "Escribe el nombre de tu empresa.";
-  if (!v.sucursal.trim()) errors.sucursal = "Escribe el nombre de tu sucursal.";
   if (!v.email.trim()) {
     errors.email = "Escribe tu correo de trabajo.";
   } else if (!EMAIL_RE.test(v.email.trim())) {
@@ -107,8 +98,6 @@ export function RegisterForm() {
     nombre: `${id}-nombre`,
     apellido: `${id}-apellido`,
     empresa: `${id}-empresa`,
-    sucursal: `${id}-sucursal`,
-    ciudad: `${id}-ciudad`,
     email: `${id}-email`,
     password: `${id}-password`,
     confirm: `${id}-confirm`,
@@ -160,13 +149,12 @@ export function RegisterForm() {
       password: v.password,
       options: {
         // Claves que lee el trigger `handle_new_user` (ver supabase/README.md):
-        // crea el perfil, la empresa, el hub "Principal" y la sucursal.
+        // crea el perfil, la empresa y el hub "Principal"; las sucursales se
+        // dan de alta después desde el panel o el CSV.
         data: {
           nombre: v.nombre.trim(),
           apellido: v.apellido.trim(),
           empresa: v.empresa.trim(),
-          sucursal: v.sucursal.trim(),
-          ciudad: v.ciudad.trim() || undefined,
         },
         emailRedirectTo: `${origin}/auth/confirm?next=/dashboard`,
       },
@@ -204,7 +192,7 @@ export function RegisterForm() {
         ...DEMO_USER,
         nombre: `${v.nombre.trim()} ${v.apellido.trim()}`.trim(),
         empresa: v.empresa.trim(),
-        sucursal: v.sucursal.trim(),
+        sucursal: "",
         correo: v.email.trim(),
       });
       setStatus("success");
@@ -362,43 +350,6 @@ export function RegisterForm() {
             className={cn(errors.empresa && invalidClass)}
           />
           {fieldError("empresa")}
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor={ids.sucursal}>Sucursal</Label>
-            <Input
-              id={ids.sucursal}
-              name="sucursal"
-              type="text"
-              autoComplete="off"
-              placeholder="Centro"
-              value={values.sucursal}
-              onChange={(e) => setField("sucursal", e.target.value)}
-              aria-invalid={errors.sucursal ? true : undefined}
-              aria-describedby={describedBy("sucursal")}
-              className={cn(errors.sucursal && invalidClass)}
-            />
-            {fieldError("sucursal")}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={ids.ciudad}>
-              Ciudad <span className="font-normal text-muted-foreground">(opcional)</span>
-            </Label>
-            <Input
-              id={ids.ciudad}
-              name="ciudad"
-              type="text"
-              autoComplete="address-level2"
-              value={values.ciudad}
-              onChange={(e) => setField("ciudad", e.target.value)}
-              aria-invalid={errors.ciudad ? true : undefined}
-              aria-describedby={describedBy("ciudad")}
-              className={cn(errors.ciudad && invalidClass)}
-            />
-            {fieldError("ciudad")}
-          </div>
         </div>
 
         <div className="space-y-2">
