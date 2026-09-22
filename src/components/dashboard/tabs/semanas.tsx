@@ -3,6 +3,7 @@
 import { ImportarYProgramar } from "@/components/dashboard/importar-y-programar";
 import { Panel, PanelHeader, Pill, TabHeader } from "@/components/dashboard/tabs/ui";
 import { TendenciaSemanas } from "@/components/dashboard/tendencia-semanas";
+import { VerSemana } from "@/components/dashboard/selector-semana";
 import { usePanel } from "@/lib/datos/panel-context";
 import { rangoCorto, semanaDesdeLunes } from "@/lib/datos/semana";
 import type { SemanaHistorial } from "@/lib/datos/tipos";
@@ -133,6 +134,7 @@ export function SemanasTab() {
                             <span className="inline-flex items-center gap-2">
                               S{s.iso}
                               {esActual && <Pill tone="marca">Actual</Pill>}
+                              <VerSemana inicio={s.inicio} actual={esActual} />
                             </span>
                           </td>
                           <td className="px-2.5 py-2.5 text-muted-foreground">{rangoCorto(semanaDesdeLunes(s.inicio))}</td>
@@ -165,8 +167,9 @@ export function SemanasTab() {
                         aria-current={esActual ? "true" : undefined}
                       >
                         <div className="min-w-0">
-                          <p className="j40-body font-medium tabular-nums">
+                          <p className="j40-body flex items-center gap-2 font-medium tabular-nums">
                             S{s.iso} <span className="font-normal text-muted-foreground">· {rangoCorto(semanaDesdeLunes(s.inicio))}</span>
+                            <VerSemana inicio={s.inicio} actual={esActual} />
                           </p>
                           <p className="j40-muted mt-0.5 flex items-center gap-2">
                             {fmtInt.format(s.colaboradores)} colaboradores

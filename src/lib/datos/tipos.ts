@@ -5,6 +5,8 @@ export const TOPE_2030 = 40;
 
 /** Nombre de la cookie con la sucursal elegida en el panel (uuid de `sucursales`). */
 export const COOKIE_SUCURSAL = "j40_sucursal";
+/** Cookie con la semana elegida en el panel (lunes `YYYY-MM-DD`). */
+export const COOKIE_SEMANA = "j40_semana";
 
 /** Empresa del usuario con sus parámetros de programación (`empresas`). */
 export type EmpresaPanel = {

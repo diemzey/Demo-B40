@@ -9,6 +9,7 @@ import type { Database, Tables } from "@/lib/supabase/database.types";
 import { datosDemo } from "@/lib/datos/demo";
 import { numeroSemanaIso, semanaDesdeLunes } from "@/lib/datos/semana";
 import {
+  COOKIE_SEMANA,
   COOKIE_SUCURSAL,
   TOPE_2030,
   type CoberturaPanel,
@@ -260,7 +261,11 @@ function nombreCompleto(e: Pick<Tables<"empleados">, "nombre" | "apellido">): st
   return `${e.apellido} ${e.nombre}`.trim();
 }
 
-async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | undefined): Promise<DatosPanel> {
+async function cargarDesdeSupabase(
+  supabase: Supabase,
+  sucursalPedida: string | undefined,
+  semanaPedida: string | undefined,
+): Promise<DatosPanel> {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -336,7 +341,9 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
   if (!elegida) return vacio();
 
   const historial = resumen.filter((r) => r.sucursal_id === elegida.id);
-  const semana = semanaDesdeLunes(historial[0].semana_iso);
+  // Semana: la pedida (cookie/selector) si la sucursal la tiene; si no, la más reciente.
+  const filaSemana = historial.find((r) => r.semana_iso === semanaPedida) ?? historial[0];
+  const semana = semanaDesdeLunes(filaSemana.semana_iso);
   const topeLegal = topeDe(catalogo, semana.anio);
   const topeAnterior = topeDe(catalogo, semana.anio - 1);
 
@@ -523,8 +530,10 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
 const cargarPanel = cache(async (sucursalId: string | undefined): Promise<DatosPanel> => {
   if (!hasSupabaseEnv()) return datosDemo();
   const supabase = await createClient();
-  const pedida = sucursalId ?? (await cookies()).get(COOKIE_SUCURSAL)?.value;
-  return cargarDesdeSupabase(supabase, pedida || undefined);
+  const jar = await cookies();
+  const pedida = sucursalId ?? jar.get(COOKIE_SUCURSAL)?.value;
+  const semanaPedida = jar.get(COOKIE_SEMANA)?.value;
+  return cargarDesdeSupabase(supabase, pedida || undefined, semanaPedida || undefined);
 });
 
 /**

@@ -7,6 +7,7 @@ import { CoberturaSemana } from "@/components/dashboard/cobertura-semana";
 import { DeltasPersona } from "@/components/dashboard/deltas-persona";
 import { DiagnosticoTabla } from "@/components/dashboard/diagnostico-tabla";
 import { ProgramarSemana } from "@/components/dashboard/programar-semana";
+import { SelectorSemana } from "@/components/dashboard/selector-semana";
 import { obtenerDatosPanel } from "@/lib/datos/dashboard";
 import { rangoLargo } from "@/lib/datos/semana";
 
@@ -62,6 +63,7 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+          <SelectorSemana />
           {programacion && <ProgramarSemana />}
           {subirSemana}
         </div>
