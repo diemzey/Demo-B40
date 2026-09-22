@@ -1,6 +1,6 @@
 # Jornada40 · Resultados del motor de programación (tope 40 h)
 
-> Generado el 2026-09-22T00:22:23.322Z por `scripts/motor/index.ts` a partir de `scripts/sintetico/salida`.
+> Generado el 2026-09-22T00:26:13.749Z por `scripts/motor/index.ts` a partir de `scripts/sintetico/salida`.
 > Salida detallada por tienda-semana en `scripts/motor/salida/<sucursal>/<semana>.json` y agregados en `scripts/motor/salida/resumen.json`.
 
 ## 1. Resumen ejecutivo
@@ -11,7 +11,7 @@
 - **Ahorro**: **$29,444,813.78 (45.64 %)** frente al objetivo de ≥ 8 % → **objetivo cumplido**.
 - **Subdotación en pico**: 107 tienda-semanas con déficit pico (291.0 h en total; ver §6).
 - **Reglas duras**: la propuesta respeta tope 40 h, ≤ 8 h/día, ≤ 6 días, ≥ 12 h entre turnos, disponibilidad y habilidad en el 100 % de las asignaciones (re-validadas por `validarReglasDuras`). El baseline registra la realidad: 22048 violaciones (principalmente tope semanal) en 200 tienda-semanas.
-- **Tiempo de cómputo**: 98.2 s en total; 489 ms promedio por tienda-semana (máx. 742 ms), de los cuales 484 ms son de optimización.
+- **Tiempo de cómputo**: 98.4 s en total; 490 ms promedio por tienda-semana (máx. 761 ms), de los cuales 485 ms son de optimización.
 
 ## 2. Método
 
@@ -280,3 +280,39 @@ Cada número de este reporte se calcula localmente en `scripts/motor/evaluar.ts`
 | Costo total, ahorro MXN y % | `resumen.json → filas[] / totales` | `v_ahorro_escenario` (baseline vs propuesta publicados de la misma `sucursal_id + semana_iso`); `reporte_ejecutivo(empresa, semana)` agrega |
 
 Con `npm run motor -- --cargar` el motor inserta pronóstico, demanda, escenarios y asignaciones, llama `resumir_escenario` y compara `v_ahorro_escenario` contra la evaluación local: ambas deben coincidir al peso. La verificación del lado de la base (consultas SQL ejecutadas sobre el proyecto) la añade el coordinador en una sección posterior.
+
+## 8. Verificación en la base de datos (Supabase, proyecto Jornada40)
+
+Tras cargar las 200 tienda-semanas con `npm run motor -- --tiendas 50 --cargar` (408 escenarios publicados: 200 baseline + 200 propuestas, más las 8 de la prueba previa de T001; 170,746 asignaciones; 34,272 intervalos de demanda; 68,544 filas de cobertura; 408 resúmenes; 171,562 filas de auditoría), la comparación campo por campo de `resumen_escenario` y `v_ahorro_escenario` contra la evaluación local dio **400 de 400 verificaciones "coincide al peso"**. La consulta agregada sobre `v_ahorro_escenario` (misma agregación que `reporte_ejecutivo()`), ejecutada directamente en Postgres:
+
+```sql
+select semana_iso, count(*) tiendas,
+       sum(costo_total_baseline) costo_baseline, sum(costo_total_propuesta) costo_propuesta,
+       sum(ahorro_mxn) ahorro_mxn, round(100.0*sum(ahorro_mxn)/sum(costo_total_baseline),2) ahorro_pct,
+       sum(ahorro_dobles) ahorro_dobles, sum(ahorro_sobrestaffing) ahorro_sobrestaffing,
+       round(avg(cobertura_pico_baseline_pct),2) cob_pico_base, round(avg(cobertura_pico_propuesta_pct),2) cob_pico_prop,
+       count(*) filter (where deficit_pico_horas_propuesta > 0) tiendas_con_subdotacion,
+       sum(deficit_pico_horas_propuesta) deficit_pico_h
+from v_ahorro_escenario group by semana_iso order by semana_iso;
+```
+
+| Semana | Tiendas | Costo baseline | Costo propuesta | Ahorro MXN | Ahorro % | Ahorro dobles | Ahorro sobrestaffing | Cob. pico base → prop. | Tiendas con déficit pico | Déficit pico (h) |
+|---|---:|---:|---:|---:|---:|---:|---:|---|---:|---:|
+| 2026-07-06 | 50 | $16,429,927.04 | $8,366,011.44 | $8,063,915.60 | 49.08 | $2,902,816 | $3,483,548.35 | 53.73 % → 99.83 % | 3 | 2.0 |
+| 2026-07-13 | 50 | $15,824,082.55 | $9,132,556.44 | $6,691,526.11 | 42.29 | $2,902,816 | $2,908,779.86 | 47.77 % → 96.21 % | 50 | 139.5 |
+| 2026-07-20 | 50 | $16,431,949.64 | $8,452,723.50 | $7,979,226.14 | 48.56 | $2,902,816 | $3,462,329.14 | 54.28 % → 99.77 % | 4 | 2.0 |
+| 2026-07-27 | 50 | $15,829,275.74 | $9,119,129.81 | $6,710,145.93 | 42.39 | $2,902,816 | $2,910,858.68 | 47.91 % → 96.39 % | 50 | 147.5 |
+| **Total** | **200** | **$64,515,234.97** | **$35,070,421.19** | **$29,444,813.78** | **45.64** | **$11,611,264** | **$12,765,516.03** | | | **291.0** |
+
+El total en SQL ($64,515,234.97 → $35,070,421.19; ahorro $29,444,813.78 = 45.64 %) es idéntico a `resumen.json`. La cobertura pico de esta vista es "intervalos pico cubiertos / intervalos pico" (definición de `v_ahorro_escenario`); la métrica Σ min(asignado, requerido) / Σ requerido de §4 da 99.8 %. Las semanas del 13 y 27 de julio son las de quincena (×1.15 de tráfico): ahí el sábado exige más empleados-día distintos de los que tiene la plantilla (§6), y por eso concentran el déficit residual.
+
+## 9. Escenario con vacantes cubiertas (subdotación cero)
+
+El déficit residual de 291.0 h-persona en pico (305 h-persona de vacantes en pico; 3490 h-persona de vacantes en total en las 200 tienda-semanas) no es un límite del motor sino de la plantilla: la cota exacta de `capacidad.ts` prueba que en 116 tienda-semanas faltan empleados-día con habilidad de piso/caja el sábado (918 empleados-día en total). Si esas horas se cubren con vacantes de medio tiempo de fin de semana pagadas a la tarifa media ponderada ($63.7/h), el costo adicional es de **$222,313.00** en las 200 tienda-semanas, el déficit pico queda en 0 y el ahorro neto es **$29,222,500.78 = 45.3 %** del costo laboral baseline, muy por encima del objetivo de 8 %. Equivale a ~0.7 vacantes de 24 h por tienda-semana en promedio, concentradas en sábados.
+
+## 10. Conclusión
+
+- Tope duro de 40 h por empleado: garantizado por la base (EXCLUDE + constraint trigger diferido) y re-validado por el motor; 0 horas dobles y 0 triples en las 200 propuestas.
+- Ahorro demostrado y trazable: 45.64 % ($29.44 M MXN en 4 semanas para 50 tiendas), reconstruible fila a fila desde `asignaciones` hasta `reporte_ejecutivo()`; 0 tienda-semanas por debajo del 8 %.
+- Cobertura en picos: de 85.1 % a 99.8 % (Σ min/Σ req) con la plantilla actual; 100 % con 0.7 vacantes de medio tiempo por tienda-semana.
+- El 45 % es alto porque el baseline sintético reproduce una programación rígida (48 h × 6 días en dos turnos fijos, domingo dotado como día entre semana); con un baseline ya ajustado a la demanda el ahorro se acercaría al componente de horas extra (≈ 18 % del baseline en estos datos).

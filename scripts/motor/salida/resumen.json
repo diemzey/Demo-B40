@@ -1,5 +1,5 @@
 {
-  "generado_en": "2026-09-22T00:22:23.322Z",
+  "generado_en": "2026-09-22T00:26:13.749Z",
   "semanas": [
     "2026-07-06",
     "2026-07-13",
@@ -109,10 +109,10 @@
     }
   ],
   "tiempo": {
-    "ms_total": 98221,
-    "ms_promedio_tienda_semana": 489,
-    "ms_max_tienda_semana": 742,
-    "ms_optimizacion_promedio": 484
+    "ms_total": 98371,
+    "ms_promedio_tienda_semana": 490,
+    "ms_max_tienda_semana": 761,
+    "ms_optimizacion_promedio": 485
   },
   "filas": [
     {
@@ -188,8 +188,8 @@
       "horas_requeridas": 2435,
       "horas_capacidad": 3168,
       "violaciones_baseline": 126,
-      "ms_optimizacion": 648,
-      "ms_total": 666
+      "ms_optimizacion": 688,
+      "ms_total": 703
     },
     {
       "sucursal_clave": "T001",
@@ -279,8 +279,8 @@
       "horas_requeridas": 2716.5,
       "horas_capacidad": 3168,
       "violaciones_baseline": 126,
-      "ms_optimizacion": 669,
-      "ms_total": 681
+      "ms_optimizacion": 620,
+      "ms_total": 631
     },
     {
       "sucursal_clave": "T001",
@@ -355,8 +355,8 @@
       "horas_requeridas": 2439,
       "horas_capacidad": 3168,
       "violaciones_baseline": 126,
-      "ms_optimizacion": 465,
-      "ms_total": 472
+      "ms_optimizacion": 466,
+      "ms_total": 473
     },
     {
       "sucursal_clave": "T001",
@@ -431,8 +431,8 @@
       "horas_requeridas": 2713.5,
       "horas_capacidad": 3168,
       "violaciones_baseline": 126,
-      "ms_optimizacion": 728,
-      "ms_total": 735
+      "ms_optimizacion": 753,
+      "ms_total": 761
     },
     {
       "sucursal_clave": "T002",
@@ -491,8 +491,8 @@
       "horas_requeridas": 1852,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 301,
-      "ms_total": 307
+      "ms_optimizacion": 317,
+      "ms_total": 324
     },
     {
       "sucursal_clave": "T002",
@@ -567,8 +567,8 @@
       "horas_requeridas": 2063.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 460,
-      "ms_total": 465
+      "ms_optimizacion": 463,
+      "ms_total": 469
     },
     {
       "sucursal_clave": "T002",
@@ -627,8 +627,8 @@
       "horas_requeridas": 1854,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 336,
-      "ms_total": 342
+      "ms_optimizacion": 293,
+      "ms_total": 300
     },
     {
       "sucursal_clave": "T002",
@@ -703,8 +703,8 @@
       "horas_requeridas": 2065.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 492,
-      "ms_total": 497
+      "ms_optimizacion": 483,
+      "ms_total": 489
     },
     {
       "sucursal_clave": "T003",
@@ -763,8 +763,8 @@
       "horas_requeridas": 1906.5,
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 322,
-      "ms_total": 326
+      "ms_optimizacion": 327,
+      "ms_total": 333
     },
     {
       "sucursal_clave": "T003",
@@ -839,8 +839,8 @@
       "horas_requeridas": 2123.5,
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 567,
-      "ms_total": 571
+      "ms_optimizacion": 569,
+      "ms_total": 573
     },
     {
       "sucursal_clave": "T003",
@@ -900,7 +900,7 @@
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
       "ms_optimizacion": 347,
-      "ms_total": 352
+      "ms_total": 351
     },
     {
       "sucursal_clave": "T003",
@@ -975,8 +975,8 @@
       "horas_requeridas": 2126.5,
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 455,
-      "ms_total": 460
+      "ms_optimizacion": 458,
+      "ms_total": 463
     },
     {
       "sucursal_clave": "T004",
@@ -1035,8 +1035,8 @@
       "horas_requeridas": 2414,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 411,
-      "ms_total": 416
+      "ms_optimizacion": 414,
+      "ms_total": 419
     },
     {
       "sucursal_clave": "T004",
@@ -1126,8 +1126,8 @@
       "horas_requeridas": 2692,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 718,
-      "ms_total": 723
+      "ms_optimizacion": 672,
+      "ms_total": 677
     },
     {
       "sucursal_clave": "T004",
@@ -1186,8 +1186,8 @@
       "horas_requeridas": 2411.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 478,
-      "ms_total": 482
+      "ms_optimizacion": 472,
+      "ms_total": 476
     },
     {
       "sucursal_clave": "T004",
@@ -1277,8 +1277,8 @@
       "horas_requeridas": 2688.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 646,
-      "ms_total": 652
+      "ms_optimizacion": 659,
+      "ms_total": 664
     },
     {
       "sucursal_clave": "T005",
@@ -1337,8 +1337,8 @@
       "horas_requeridas": 1881.5,
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
-      "ms_optimizacion": 329,
-      "ms_total": 334
+      "ms_optimizacion": 312,
+      "ms_total": 316
     },
     {
       "sucursal_clave": "T005",
@@ -1413,8 +1413,8 @@
       "horas_requeridas": 2097,
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
-      "ms_optimizacion": 505,
-      "ms_total": 509
+      "ms_optimizacion": 484,
+      "ms_total": 489
     },
     {
       "sucursal_clave": "T005",
@@ -1473,8 +1473,8 @@
       "horas_requeridas": 1881,
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
-      "ms_optimizacion": 345,
-      "ms_total": 349
+      "ms_optimizacion": 352,
+      "ms_total": 356
     },
     {
       "sucursal_clave": "T005",
@@ -1549,8 +1549,8 @@
       "horas_requeridas": 2091.5,
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
-      "ms_optimizacion": 487,
-      "ms_total": 492
+      "ms_optimizacion": 481,
+      "ms_total": 485
     },
     {
       "sucursal_clave": "T006",
@@ -1609,8 +1609,8 @@
       "horas_requeridas": 1828.5,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 382,
-      "ms_total": 386
+      "ms_optimizacion": 358,
+      "ms_total": 361
     },
     {
       "sucursal_clave": "T006",
@@ -1685,8 +1685,8 @@
       "horas_requeridas": 2043.5,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 488,
-      "ms_total": 491
+      "ms_optimizacion": 482,
+      "ms_total": 487
     },
     {
       "sucursal_clave": "T006",
@@ -1745,8 +1745,8 @@
       "horas_requeridas": 1832,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 328,
-      "ms_total": 333
+      "ms_optimizacion": 325,
+      "ms_total": 330
     },
     {
       "sucursal_clave": "T006",
@@ -1821,8 +1821,8 @@
       "horas_requeridas": 2042.5,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 518,
-      "ms_total": 522
+      "ms_optimizacion": 517,
+      "ms_total": 520
     },
     {
       "sucursal_clave": "T007",
@@ -1881,8 +1881,8 @@
       "horas_requeridas": 1957.5,
       "horas_capacidad": 2464,
       "violaciones_baseline": 98,
-      "ms_optimizacion": 315,
-      "ms_total": 320
+      "ms_optimizacion": 309,
+      "ms_total": 313
     },
     {
       "sucursal_clave": "T007",
@@ -1972,8 +1972,8 @@
       "horas_requeridas": 2181,
       "horas_capacidad": 2464,
       "violaciones_baseline": 98,
-      "ms_optimizacion": 481,
-      "ms_total": 487
+      "ms_optimizacion": 469,
+      "ms_total": 473
     },
     {
       "sucursal_clave": "T007",
@@ -2032,8 +2032,8 @@
       "horas_requeridas": 1956,
       "horas_capacidad": 2464,
       "violaciones_baseline": 98,
-      "ms_optimizacion": 382,
-      "ms_total": 386
+      "ms_optimizacion": 351,
+      "ms_total": 357
     },
     {
       "sucursal_clave": "T007",
@@ -2123,8 +2123,8 @@
       "horas_requeridas": 2181.5,
       "horas_capacidad": 2464,
       "violaciones_baseline": 98,
-      "ms_optimizacion": 480,
-      "ms_total": 484
+      "ms_optimizacion": 477,
+      "ms_total": 482
     },
     {
       "sucursal_clave": "T008",
@@ -2183,8 +2183,8 @@
       "horas_requeridas": 2359,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 482,
-      "ms_total": 486
+      "ms_optimizacion": 478,
+      "ms_total": 482
     },
     {
       "sucursal_clave": "T008",
@@ -2274,8 +2274,8 @@
       "horas_requeridas": 2639.5,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 585,
-      "ms_total": 589
+      "ms_optimizacion": 594,
+      "ms_total": 598
     },
     {
       "sucursal_clave": "T008",
@@ -2334,8 +2334,8 @@
       "horas_requeridas": 2360,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 372,
-      "ms_total": 377
+      "ms_optimizacion": 371,
+      "ms_total": 376
     },
     {
       "sucursal_clave": "T008",
@@ -2425,8 +2425,8 @@
       "horas_requeridas": 2639,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 587,
-      "ms_total": 591
+      "ms_optimizacion": 589,
+      "ms_total": 593
     },
     {
       "sucursal_clave": "T009",
@@ -2485,8 +2485,8 @@
       "horas_requeridas": 2192,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 444,
-      "ms_total": 450
+      "ms_optimizacion": 447,
+      "ms_total": 452
     },
     {
       "sucursal_clave": "T009",
@@ -2561,7 +2561,7 @@
       "horas_requeridas": 2441.5,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 607,
+      "ms_optimizacion": 608,
       "ms_total": 614
     },
     {
@@ -2621,8 +2621,8 @@
       "horas_requeridas": 2185.5,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 405,
-      "ms_total": 409
+      "ms_optimizacion": 400,
+      "ms_total": 404
     },
     {
       "sucursal_clave": "T009",
@@ -2697,8 +2697,8 @@
       "horas_requeridas": 2445.5,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 637,
-      "ms_total": 642
+      "ms_optimizacion": 633,
+      "ms_total": 637
     },
     {
       "sucursal_clave": "T010",
@@ -2773,8 +2773,8 @@
       "horas_requeridas": 1855.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 392,
-      "ms_total": 397
+      "ms_optimizacion": 368,
+      "ms_total": 373
     },
     {
       "sucursal_clave": "T010",
@@ -2864,8 +2864,8 @@
       "horas_requeridas": 2068.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 591,
-      "ms_total": 595
+      "ms_optimizacion": 585,
+      "ms_total": 589
     },
     {
       "sucursal_clave": "T010",
@@ -2940,8 +2940,8 @@
       "horas_requeridas": 1858,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 380,
-      "ms_total": 385
+      "ms_optimizacion": 403,
+      "ms_total": 407
     },
     {
       "sucursal_clave": "T010",
@@ -3032,7 +3032,7 @@
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
       "ms_optimizacion": 521,
-      "ms_total": 525
+      "ms_total": 524
     },
     {
       "sucursal_clave": "T011",
@@ -3091,8 +3091,8 @@
       "horas_requeridas": 2409,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 411,
-      "ms_total": 417
+      "ms_optimizacion": 416,
+      "ms_total": 421
     },
     {
       "sucursal_clave": "T011",
@@ -3167,8 +3167,8 @@
       "horas_requeridas": 2683,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 703,
-      "ms_total": 708
+      "ms_optimizacion": 697,
+      "ms_total": 701
     },
     {
       "sucursal_clave": "T011",
@@ -3227,8 +3227,8 @@
       "horas_requeridas": 2404.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 432,
-      "ms_total": 437
+      "ms_optimizacion": 427,
+      "ms_total": 431
     },
     {
       "sucursal_clave": "T011",
@@ -3303,8 +3303,8 @@
       "horas_requeridas": 2685,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 737,
-      "ms_total": 742
+      "ms_optimizacion": 748,
+      "ms_total": 752
     },
     {
       "sucursal_clave": "T012",
@@ -3363,8 +3363,8 @@
       "horas_requeridas": 2240.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 389,
-      "ms_total": 393
+      "ms_optimizacion": 391,
+      "ms_total": 394
     },
     {
       "sucursal_clave": "T012",
@@ -3454,8 +3454,8 @@
       "horas_requeridas": 2504.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 676,
-      "ms_total": 680
+      "ms_optimizacion": 662,
+      "ms_total": 666
     },
     {
       "sucursal_clave": "T012",
@@ -3530,8 +3530,8 @@
       "horas_requeridas": 2243,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 432,
-      "ms_total": 437
+      "ms_optimizacion": 437,
+      "ms_total": 443
     },
     {
       "sucursal_clave": "T012",
@@ -3621,8 +3621,8 @@
       "horas_requeridas": 2505.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 595,
-      "ms_total": 599
+      "ms_optimizacion": 597,
+      "ms_total": 603
     },
     {
       "sucursal_clave": "T013",
@@ -3681,8 +3681,8 @@
       "horas_requeridas": 2406.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 446,
-      "ms_total": 451
+      "ms_optimizacion": 434,
+      "ms_total": 440
     },
     {
       "sucursal_clave": "T013",
@@ -3772,8 +3772,8 @@
       "horas_requeridas": 2688.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 639,
-      "ms_total": 644
+      "ms_optimizacion": 635,
+      "ms_total": 640
     },
     {
       "sucursal_clave": "T013",
@@ -3832,8 +3832,8 @@
       "horas_requeridas": 2412.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 446,
-      "ms_total": 452
+      "ms_optimizacion": 427,
+      "ms_total": 431
     },
     {
       "sucursal_clave": "T013",
@@ -3923,8 +3923,8 @@
       "horas_requeridas": 2689.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 607,
-      "ms_total": 614
+      "ms_optimizacion": 605,
+      "ms_total": 609
     },
     {
       "sucursal_clave": "T014",
@@ -3983,8 +3983,8 @@
       "horas_requeridas": 2236,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 372,
-      "ms_total": 377
+      "ms_optimizacion": 375,
+      "ms_total": 379
     },
     {
       "sucursal_clave": "T014",
@@ -4059,8 +4059,8 @@
       "horas_requeridas": 2503,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 570,
-      "ms_total": 575
+      "ms_optimizacion": 568,
+      "ms_total": 573
     },
     {
       "sucursal_clave": "T014",
@@ -4119,8 +4119,8 @@
       "horas_requeridas": 2240.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 382,
-      "ms_total": 388
+      "ms_optimizacion": 378,
+      "ms_total": 383
     },
     {
       "sucursal_clave": "T014",
@@ -4195,8 +4195,8 @@
       "horas_requeridas": 2505,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 502,
-      "ms_total": 508
+      "ms_optimizacion": 517,
+      "ms_total": 521
     },
     {
       "sucursal_clave": "T015",
@@ -4271,8 +4271,8 @@
       "horas_requeridas": 1833.5,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 386,
-      "ms_total": 390
+      "ms_optimizacion": 398,
+      "ms_total": 403
     },
     {
       "sucursal_clave": "T015",
@@ -4362,8 +4362,8 @@
       "horas_requeridas": 2038,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 561,
-      "ms_total": 565
+      "ms_optimizacion": 555,
+      "ms_total": 561
     },
     {
       "sucursal_clave": "T015",
@@ -4422,8 +4422,8 @@
       "horas_requeridas": 1830,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 378,
-      "ms_total": 383
+      "ms_optimizacion": 352,
+      "ms_total": 356
     },
     {
       "sucursal_clave": "T015",
@@ -4513,8 +4513,8 @@
       "horas_requeridas": 2039,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 578,
-      "ms_total": 584
+      "ms_optimizacion": 476,
+      "ms_total": 481
     },
     {
       "sucursal_clave": "T016",
@@ -4573,8 +4573,8 @@
       "horas_requeridas": 2492.5,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 475,
-      "ms_total": 480
+      "ms_optimizacion": 480,
+      "ms_total": 487
     },
     {
       "sucursal_clave": "T016",
@@ -4664,8 +4664,8 @@
       "horas_requeridas": 2775.5,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 628,
-      "ms_total": 633
+      "ms_optimizacion": 639,
+      "ms_total": 646
     },
     {
       "sucursal_clave": "T016",
@@ -4724,8 +4724,8 @@
       "horas_requeridas": 2486.5,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 438,
-      "ms_total": 443
+      "ms_optimizacion": 442,
+      "ms_total": 446
     },
     {
       "sucursal_clave": "T016",
@@ -4815,8 +4815,8 @@
       "horas_requeridas": 2770,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 633,
-      "ms_total": 637
+      "ms_optimizacion": 636,
+      "ms_total": 642
     },
     {
       "sucursal_clave": "T017",
@@ -4875,8 +4875,8 @@
       "horas_requeridas": 2411.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 440,
-      "ms_total": 446
+      "ms_optimizacion": 438,
+      "ms_total": 442
     },
     {
       "sucursal_clave": "T017",
@@ -4951,7 +4951,7 @@
       "horas_requeridas": 2690.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 546,
+      "ms_optimizacion": 545,
       "ms_total": 551
     },
     {
@@ -5011,8 +5011,8 @@
       "horas_requeridas": 2408.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 449,
-      "ms_total": 454
+      "ms_optimizacion": 459,
+      "ms_total": 466
     },
     {
       "sucursal_clave": "T017",
@@ -5087,8 +5087,8 @@
       "horas_requeridas": 2690.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 615,
-      "ms_total": 621
+      "ms_optimizacion": 638,
+      "ms_total": 642
     },
     {
       "sucursal_clave": "T018",
@@ -5223,8 +5223,8 @@
       "horas_requeridas": 2836,
       "horas_capacidad": 3312,
       "violaciones_baseline": 132,
-      "ms_optimizacion": 621,
-      "ms_total": 626
+      "ms_optimizacion": 618,
+      "ms_total": 623
     },
     {
       "sucursal_clave": "T018",
@@ -5283,8 +5283,8 @@
       "horas_requeridas": 2534.5,
       "horas_capacidad": 3312,
       "violaciones_baseline": 132,
-      "ms_optimizacion": 455,
-      "ms_total": 463
+      "ms_optimizacion": 464,
+      "ms_total": 471
     },
     {
       "sucursal_clave": "T018",
@@ -5359,8 +5359,8 @@
       "horas_requeridas": 2832,
       "horas_capacidad": 3312,
       "violaciones_baseline": 132,
-      "ms_optimizacion": 629,
-      "ms_total": 635
+      "ms_optimizacion": 624,
+      "ms_total": 630
     },
     {
       "sucursal_clave": "T019",
@@ -5419,8 +5419,8 @@
       "horas_requeridas": 1973,
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 413,
-      "ms_total": 419
+      "ms_optimizacion": 388,
+      "ms_total": 394
     },
     {
       "sucursal_clave": "T019",
@@ -5510,8 +5510,8 @@
       "horas_requeridas": 2202.5,
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 566,
-      "ms_total": 571
+      "ms_optimizacion": 512,
+      "ms_total": 517
     },
     {
       "sucursal_clave": "T019",
@@ -5570,8 +5570,8 @@
       "horas_requeridas": 1973.5,
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 362,
-      "ms_total": 367
+      "ms_optimizacion": 365,
+      "ms_total": 369
     },
     {
       "sucursal_clave": "T019",
@@ -5661,8 +5661,8 @@
       "horas_requeridas": 2199,
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 543,
-      "ms_total": 548
+      "ms_optimizacion": 556,
+      "ms_total": 561
     },
     {
       "sucursal_clave": "T020",
@@ -5721,8 +5721,8 @@
       "horas_requeridas": 1995.5,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 384,
-      "ms_total": 389
+      "ms_optimizacion": 383,
+      "ms_total": 387
     },
     {
       "sucursal_clave": "T020",
@@ -5812,8 +5812,8 @@
       "horas_requeridas": 2229.5,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 530,
-      "ms_total": 534
+      "ms_optimizacion": 523,
+      "ms_total": 527
     },
     {
       "sucursal_clave": "T020",
@@ -5872,8 +5872,8 @@
       "horas_requeridas": 2000,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 385,
-      "ms_total": 389
+      "ms_optimizacion": 381,
+      "ms_total": 386
     },
     {
       "sucursal_clave": "T020",
@@ -5963,8 +5963,8 @@
       "horas_requeridas": 2224,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 465,
-      "ms_total": 470
+      "ms_optimizacion": 471,
+      "ms_total": 475
     },
     {
       "sucursal_clave": "T021",
@@ -6023,8 +6023,8 @@
       "horas_requeridas": 2486,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 463,
-      "ms_total": 469
+      "ms_optimizacion": 462,
+      "ms_total": 467
     },
     {
       "sucursal_clave": "T021",
@@ -6099,8 +6099,8 @@
       "horas_requeridas": 2776.5,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 552,
-      "ms_total": 557
+      "ms_optimizacion": 560,
+      "ms_total": 564
     },
     {
       "sucursal_clave": "T021",
@@ -6159,8 +6159,8 @@
       "horas_requeridas": 2493.5,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 430,
-      "ms_total": 435
+      "ms_optimizacion": 425,
+      "ms_total": 431
     },
     {
       "sucursal_clave": "T021",
@@ -6235,8 +6235,8 @@
       "horas_requeridas": 2778,
       "horas_capacidad": 3232,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 531,
-      "ms_total": 536
+      "ms_optimizacion": 541,
+      "ms_total": 545
     },
     {
       "sucursal_clave": "T022",
@@ -6295,8 +6295,8 @@
       "horas_requeridas": 2388.5,
       "horas_capacidad": 3104,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 428,
-      "ms_total": 434
+      "ms_optimizacion": 446,
+      "ms_total": 451
     },
     {
       "sucursal_clave": "T022",
@@ -6431,8 +6431,8 @@
       "horas_requeridas": 2394.5,
       "horas_capacidad": 3104,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 427,
-      "ms_total": 432
+      "ms_optimizacion": 426,
+      "ms_total": 431
     },
     {
       "sucursal_clave": "T022",
@@ -6522,8 +6522,8 @@
       "horas_requeridas": 2668,
       "horas_capacidad": 3104,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 546,
-      "ms_total": 550
+      "ms_optimizacion": 574,
+      "ms_total": 580
     },
     {
       "sucursal_clave": "T023",
@@ -6598,8 +6598,8 @@
       "horas_requeridas": 2236.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 421,
-      "ms_total": 425
+      "ms_optimizacion": 434,
+      "ms_total": 439
     },
     {
       "sucursal_clave": "T023",
@@ -6689,8 +6689,8 @@
       "horas_requeridas": 2509,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 610,
-      "ms_total": 614
+      "ms_optimizacion": 663,
+      "ms_total": 668
     },
     {
       "sucursal_clave": "T023",
@@ -6765,8 +6765,8 @@
       "horas_requeridas": 2240,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 404,
-      "ms_total": 408
+      "ms_optimizacion": 418,
+      "ms_total": 422
     },
     {
       "sucursal_clave": "T023",
@@ -6856,8 +6856,8 @@
       "horas_requeridas": 2505.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 678,
-      "ms_total": 683
+      "ms_optimizacion": 687,
+      "ms_total": 693
     },
     {
       "sucursal_clave": "T024",
@@ -6916,7 +6916,7 @@
       "horas_requeridas": 1999.5,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 431,
+      "ms_optimizacion": 430,
       "ms_total": 435
     },
     {
@@ -7007,8 +7007,8 @@
       "horas_requeridas": 2226.5,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 558,
-      "ms_total": 563
+      "ms_optimizacion": 573,
+      "ms_total": 578
     },
     {
       "sucursal_clave": "T024",
@@ -7067,8 +7067,8 @@
       "horas_requeridas": 1999,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 366,
-      "ms_total": 370
+      "ms_optimizacion": 375,
+      "ms_total": 378
     },
     {
       "sucursal_clave": "T024",
@@ -7158,8 +7158,8 @@
       "horas_requeridas": 2226,
       "horas_capacidad": 2528,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 589,
-      "ms_total": 594
+      "ms_optimizacion": 613,
+      "ms_total": 618
     },
     {
       "sucursal_clave": "T025",
@@ -7218,8 +7218,8 @@
       "horas_requeridas": 2127,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 380,
-      "ms_total": 384
+      "ms_optimizacion": 381,
+      "ms_total": 386
     },
     {
       "sucursal_clave": "T025",
@@ -7294,8 +7294,8 @@
       "horas_requeridas": 2374,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 528,
-      "ms_total": 532
+      "ms_optimizacion": 531,
+      "ms_total": 537
     },
     {
       "sucursal_clave": "T025",
@@ -7354,8 +7354,8 @@
       "horas_requeridas": 2121,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 382,
-      "ms_total": 387
+      "ms_optimizacion": 388,
+      "ms_total": 393
     },
     {
       "sucursal_clave": "T025",
@@ -7430,8 +7430,8 @@
       "horas_requeridas": 2363,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 459,
-      "ms_total": 463
+      "ms_optimizacion": 452,
+      "ms_total": 457
     },
     {
       "sucursal_clave": "T026",
@@ -7490,8 +7490,8 @@
       "horas_requeridas": 1880,
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
-      "ms_optimizacion": 360,
-      "ms_total": 364
+      "ms_optimizacion": 372,
+      "ms_total": 376
     },
     {
       "sucursal_clave": "T026",
@@ -7581,8 +7581,8 @@
       "horas_requeridas": 2095.5,
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
-      "ms_optimizacion": 532,
-      "ms_total": 536
+      "ms_optimizacion": 529,
+      "ms_total": 534
     },
     {
       "sucursal_clave": "T026",
@@ -7642,7 +7642,7 @@
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
       "ms_optimizacion": 356,
-      "ms_total": 359
+      "ms_total": 361
     },
     {
       "sucursal_clave": "T026",
@@ -7732,8 +7732,8 @@
       "horas_requeridas": 2097,
       "horas_capacidad": 2360,
       "violaciones_baseline": 94,
-      "ms_optimizacion": 566,
-      "ms_total": 571
+      "ms_optimizacion": 559,
+      "ms_total": 563
     },
     {
       "sucursal_clave": "T027",
@@ -7793,7 +7793,7 @@
       "horas_capacidad": 3104,
       "violaciones_baseline": 124,
       "ms_optimizacion": 463,
-      "ms_total": 467
+      "ms_total": 468
     },
     {
       "sucursal_clave": "T027",
@@ -7883,8 +7883,8 @@
       "horas_requeridas": 2663.5,
       "horas_capacidad": 3104,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 704,
-      "ms_total": 708
+      "ms_optimizacion": 694,
+      "ms_total": 698
     },
     {
       "sucursal_clave": "T027",
@@ -7944,7 +7944,7 @@
       "horas_capacidad": 3104,
       "violaciones_baseline": 124,
       "ms_optimizacion": 442,
-      "ms_total": 447
+      "ms_total": 446
     },
     {
       "sucursal_clave": "T027",
@@ -8034,8 +8034,8 @@
       "horas_requeridas": 2670,
       "horas_capacidad": 3104,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 685,
-      "ms_total": 690
+      "ms_optimizacion": 682,
+      "ms_total": 687
     },
     {
       "sucursal_clave": "T028",
@@ -8094,8 +8094,8 @@
       "horas_requeridas": 1906.5,
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 335,
-      "ms_total": 341
+      "ms_optimizacion": 342,
+      "ms_total": 347
     },
     {
       "sucursal_clave": "T028",
@@ -8170,8 +8170,8 @@
       "horas_requeridas": 2121.5,
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 462,
-      "ms_total": 467
+      "ms_optimizacion": 469,
+      "ms_total": 473
     },
     {
       "sucursal_clave": "T028",
@@ -8230,8 +8230,8 @@
       "horas_requeridas": 1904,
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 360,
-      "ms_total": 364
+      "ms_optimizacion": 338,
+      "ms_total": 343
     },
     {
       "sucursal_clave": "T028",
@@ -8306,8 +8306,8 @@
       "horas_requeridas": 2117.5,
       "horas_capacidad": 2400,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 452,
-      "ms_total": 458
+      "ms_optimizacion": 466,
+      "ms_total": 470
     },
     {
       "sucursal_clave": "T029",
@@ -8366,8 +8366,8 @@
       "horas_requeridas": 2410,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 444,
-      "ms_total": 448
+      "ms_optimizacion": 449,
+      "ms_total": 455
     },
     {
       "sucursal_clave": "T029",
@@ -8457,8 +8457,8 @@
       "horas_requeridas": 2686.5,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 595,
-      "ms_total": 600
+      "ms_optimizacion": 600,
+      "ms_total": 606
     },
     {
       "sucursal_clave": "T029",
@@ -8517,8 +8517,8 @@
       "horas_requeridas": 2412,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 406,
-      "ms_total": 411
+      "ms_optimizacion": 412,
+      "ms_total": 416
     },
     {
       "sucursal_clave": "T029",
@@ -8608,8 +8608,8 @@
       "horas_requeridas": 2685,
       "horas_capacidad": 3128,
       "violaciones_baseline": 124,
-      "ms_optimizacion": 569,
-      "ms_total": 574
+      "ms_optimizacion": 578,
+      "ms_total": 582
     },
     {
       "sucursal_clave": "T030",
@@ -8668,8 +8668,8 @@
       "horas_requeridas": 1918,
       "horas_capacidad": 2424,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 387,
-      "ms_total": 392
+      "ms_optimizacion": 389,
+      "ms_total": 393
     },
     {
       "sucursal_clave": "T030",
@@ -8759,8 +8759,8 @@
       "horas_requeridas": 2139.5,
       "horas_capacidad": 2424,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 550,
-      "ms_total": 554
+      "ms_optimizacion": 519,
+      "ms_total": 524
     },
     {
       "sucursal_clave": "T030",
@@ -8819,8 +8819,8 @@
       "horas_requeridas": 1920,
       "horas_capacidad": 2424,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 355,
-      "ms_total": 358
+      "ms_optimizacion": 383,
+      "ms_total": 387
     },
     {
       "sucursal_clave": "T030",
@@ -8895,8 +8895,8 @@
       "horas_requeridas": 2141,
       "horas_capacidad": 2424,
       "violaciones_baseline": 96,
-      "ms_optimizacion": 493,
-      "ms_total": 497
+      "ms_optimizacion": 497,
+      "ms_total": 502
     },
     {
       "sucursal_clave": "T031",
@@ -8955,8 +8955,8 @@
       "horas_requeridas": 2147.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 388,
-      "ms_total": 393
+      "ms_optimizacion": 374,
+      "ms_total": 378
     },
     {
       "sucursal_clave": "T031",
@@ -9031,8 +9031,8 @@
       "horas_requeridas": 2388.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 501,
-      "ms_total": 505
+      "ms_optimizacion": 505,
+      "ms_total": 510
     },
     {
       "sucursal_clave": "T031",
@@ -9091,8 +9091,8 @@
       "horas_requeridas": 2145.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 415,
-      "ms_total": 419
+      "ms_optimizacion": 387,
+      "ms_total": 391
     },
     {
       "sucursal_clave": "T031",
@@ -9167,7 +9167,7 @@
       "horas_requeridas": 2391.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 503,
+      "ms_optimizacion": 505,
       "ms_total": 509
     },
     {
@@ -9227,8 +9227,8 @@
       "horas_requeridas": 1852.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 336,
-      "ms_total": 340
+      "ms_optimizacion": 348,
+      "ms_total": 352
     },
     {
       "sucursal_clave": "T032",
@@ -9303,8 +9303,8 @@
       "horas_requeridas": 2066.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 439,
-      "ms_total": 443
+      "ms_optimizacion": 444,
+      "ms_total": 448
     },
     {
       "sucursal_clave": "T032",
@@ -9363,8 +9363,8 @@
       "horas_requeridas": 1852.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 324,
-      "ms_total": 327
+      "ms_optimizacion": 327,
+      "ms_total": 331
     },
     {
       "sucursal_clave": "T032",
@@ -9439,8 +9439,8 @@
       "horas_requeridas": 2067.5,
       "horas_capacidad": 2320,
       "violaciones_baseline": 92,
-      "ms_optimizacion": 444,
-      "ms_total": 448
+      "ms_optimizacion": 449,
+      "ms_total": 453
     },
     {
       "sucursal_clave": "T033",
@@ -9515,8 +9515,8 @@
       "horas_requeridas": 2237.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 393,
-      "ms_total": 398
+      "ms_optimizacion": 404,
+      "ms_total": 411
     },
     {
       "sucursal_clave": "T033",
@@ -9606,8 +9606,8 @@
       "horas_requeridas": 2503,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 634,
-      "ms_total": 639
+      "ms_optimizacion": 641,
+      "ms_total": 646
     },
     {
       "sucursal_clave": "T033",
@@ -9666,8 +9666,8 @@
       "horas_requeridas": 2239,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 459,
-      "ms_total": 464
+      "ms_optimizacion": 461,
+      "ms_total": 465
     },
     {
       "sucursal_clave": "T033",
@@ -9757,8 +9757,8 @@
       "horas_requeridas": 2506.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 569,
-      "ms_total": 574
+      "ms_optimizacion": 564,
+      "ms_total": 568
     },
     {
       "sucursal_clave": "T034",
@@ -9817,8 +9817,8 @@
       "horas_requeridas": 1831,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 321,
-      "ms_total": 325
+      "ms_optimizacion": 331,
+      "ms_total": 337
     },
     {
       "sucursal_clave": "T034",
@@ -9908,8 +9908,8 @@
       "horas_requeridas": 2044,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 420,
-      "ms_total": 427
+      "ms_optimizacion": 421,
+      "ms_total": 426
     },
     {
       "sucursal_clave": "T034",
@@ -9968,8 +9968,8 @@
       "horas_requeridas": 1836,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 407,
-      "ms_total": 412
+      "ms_optimizacion": 339,
+      "ms_total": 343
     },
     {
       "sucursal_clave": "T034",
@@ -10059,8 +10059,8 @@
       "horas_requeridas": 2044,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 422,
-      "ms_total": 426
+      "ms_optimizacion": 497,
+      "ms_total": 502
     },
     {
       "sucursal_clave": "T035",
@@ -10119,8 +10119,8 @@
       "horas_requeridas": 2364.5,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 437,
-      "ms_total": 441
+      "ms_optimizacion": 512,
+      "ms_total": 520
     },
     {
       "sucursal_clave": "T035",
@@ -10195,8 +10195,8 @@
       "horas_requeridas": 2633,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 594,
-      "ms_total": 598
+      "ms_optimizacion": 647,
+      "ms_total": 652
     },
     {
       "sucursal_clave": "T035",
@@ -10255,8 +10255,8 @@
       "horas_requeridas": 2360.5,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 419,
-      "ms_total": 423
+      "ms_optimizacion": 424,
+      "ms_total": 429
     },
     {
       "sucursal_clave": "T035",
@@ -10331,8 +10331,8 @@
       "horas_requeridas": 2631,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 579,
-      "ms_total": 584
+      "ms_optimizacion": 577,
+      "ms_total": 583
     },
     {
       "sucursal_clave": "T036",
@@ -10391,8 +10391,8 @@
       "horas_requeridas": 2125.5,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 343,
-      "ms_total": 347
+      "ms_optimizacion": 350,
+      "ms_total": 355
     },
     {
       "sucursal_clave": "T036",
@@ -10467,8 +10467,8 @@
       "horas_requeridas": 2364.5,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 454,
-      "ms_total": 459
+      "ms_optimizacion": 462,
+      "ms_total": 466
     },
     {
       "sucursal_clave": "T036",
@@ -10527,8 +10527,8 @@
       "horas_requeridas": 2127,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 314,
-      "ms_total": 318
+      "ms_optimizacion": 316,
+      "ms_total": 321
     },
     {
       "sucursal_clave": "T036",
@@ -10603,8 +10603,8 @@
       "horas_requeridas": 2367,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 521,
-      "ms_total": 526
+      "ms_optimizacion": 548,
+      "ms_total": 554
     },
     {
       "sucursal_clave": "T037",
@@ -10663,8 +10663,8 @@
       "horas_requeridas": 2359.5,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 458,
-      "ms_total": 464
+      "ms_optimizacion": 457,
+      "ms_total": 463
     },
     {
       "sucursal_clave": "T037",
@@ -10754,8 +10754,8 @@
       "horas_requeridas": 2639.5,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 619,
-      "ms_total": 623
+      "ms_optimizacion": 638,
+      "ms_total": 644
     },
     {
       "sucursal_clave": "T037",
@@ -10815,7 +10815,7 @@
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
       "ms_optimizacion": 452,
-      "ms_total": 457
+      "ms_total": 458
     },
     {
       "sucursal_clave": "T037",
@@ -10905,8 +10905,8 @@
       "horas_requeridas": 2636,
       "horas_capacidad": 3064,
       "violaciones_baseline": 122,
-      "ms_optimizacion": 612,
-      "ms_total": 617
+      "ms_optimizacion": 605,
+      "ms_total": 611
     },
     {
       "sucursal_clave": "T038",
@@ -10965,8 +10965,8 @@
       "horas_requeridas": 2240,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 386,
-      "ms_total": 391
+      "ms_optimizacion": 383,
+      "ms_total": 389
     },
     {
       "sucursal_clave": "T038",
@@ -11041,8 +11041,8 @@
       "horas_requeridas": 2501,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 657,
-      "ms_total": 661
+      "ms_optimizacion": 595,
+      "ms_total": 599
     },
     {
       "sucursal_clave": "T038",
@@ -11101,8 +11101,8 @@
       "horas_requeridas": 2240,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 415,
-      "ms_total": 419
+      "ms_optimizacion": 408,
+      "ms_total": 413
     },
     {
       "sucursal_clave": "T038",
@@ -11177,8 +11177,8 @@
       "horas_requeridas": 2500.5,
       "horas_capacidad": 2880,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 526,
-      "ms_total": 531
+      "ms_optimizacion": 538,
+      "ms_total": 543
     },
     {
       "sucursal_clave": "T039",
@@ -11237,8 +11237,8 @@
       "horas_requeridas": 2287.5,
       "horas_capacidad": 2960,
       "violaciones_baseline": 118,
-      "ms_optimizacion": 400,
-      "ms_total": 407
+      "ms_optimizacion": 391,
+      "ms_total": 396
     },
     {
       "sucursal_clave": "T039",
@@ -11313,8 +11313,8 @@
       "horas_requeridas": 2551,
       "horas_capacidad": 2960,
       "violaciones_baseline": 118,
-      "ms_optimizacion": 531,
-      "ms_total": 536
+      "ms_optimizacion": 538,
+      "ms_total": 542
     },
     {
       "sucursal_clave": "T039",
@@ -11373,8 +11373,8 @@
       "horas_requeridas": 2285,
       "horas_capacidad": 2960,
       "violaciones_baseline": 118,
-      "ms_optimizacion": 404,
-      "ms_total": 409
+      "ms_optimizacion": 409,
+      "ms_total": 414
     },
     {
       "sucursal_clave": "T039",
@@ -11449,8 +11449,8 @@
       "horas_requeridas": 2553.5,
       "horas_capacidad": 2960,
       "violaciones_baseline": 118,
-      "ms_optimizacion": 586,
-      "ms_total": 591
+      "ms_optimizacion": 576,
+      "ms_total": 580
     },
     {
       "sucursal_clave": "T040",
@@ -11509,8 +11509,8 @@
       "horas_requeridas": 2140,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 370,
-      "ms_total": 374
+      "ms_optimizacion": 380,
+      "ms_total": 384
     },
     {
       "sucursal_clave": "T040",
@@ -11600,8 +11600,8 @@
       "horas_requeridas": 2384,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 477,
-      "ms_total": 482
+      "ms_optimizacion": 485,
+      "ms_total": 489
     },
     {
       "sucursal_clave": "T040",
@@ -11660,8 +11660,8 @@
       "horas_requeridas": 2136.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 365,
-      "ms_total": 370
+      "ms_optimizacion": 376,
+      "ms_total": 381
     },
     {
       "sucursal_clave": "T040",
@@ -11751,8 +11751,8 @@
       "horas_requeridas": 2387.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 568,
-      "ms_total": 573
+      "ms_optimizacion": 548,
+      "ms_total": 554
     },
     {
       "sucursal_clave": "T041",
@@ -11811,8 +11811,8 @@
       "horas_requeridas": 2177.5,
       "horas_capacidad": 2776,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 389,
-      "ms_total": 395
+      "ms_optimizacion": 396,
+      "ms_total": 401
     },
     {
       "sucursal_clave": "T041",
@@ -11887,8 +11887,8 @@
       "horas_requeridas": 2430,
       "horas_capacidad": 2776,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 504,
-      "ms_total": 509
+      "ms_optimizacion": 514,
+      "ms_total": 518
     },
     {
       "sucursal_clave": "T041",
@@ -11947,8 +11947,8 @@
       "horas_requeridas": 2181.5,
       "horas_capacidad": 2776,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 370,
-      "ms_total": 375
+      "ms_optimizacion": 375,
+      "ms_total": 381
     },
     {
       "sucursal_clave": "T041",
@@ -12023,8 +12023,8 @@
       "horas_requeridas": 2434,
       "horas_capacidad": 2776,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 531,
-      "ms_total": 536
+      "ms_optimizacion": 540,
+      "ms_total": 545
     },
     {
       "sucursal_clave": "T042",
@@ -12083,8 +12083,8 @@
       "horas_requeridas": 1829,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 354,
-      "ms_total": 359
+      "ms_optimizacion": 349,
+      "ms_total": 354
     },
     {
       "sucursal_clave": "T042",
@@ -12174,8 +12174,8 @@
       "horas_requeridas": 2041,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 510,
-      "ms_total": 514
+      "ms_optimizacion": 512,
+      "ms_total": 515
     },
     {
       "sucursal_clave": "T042",
@@ -12234,8 +12234,8 @@
       "horas_requeridas": 1830,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 388,
-      "ms_total": 392
+      "ms_optimizacion": 384,
+      "ms_total": 388
     },
     {
       "sucursal_clave": "T042",
@@ -12325,8 +12325,8 @@
       "horas_requeridas": 2041,
       "horas_capacidad": 2280,
       "violaciones_baseline": 90,
-      "ms_optimizacion": 485,
-      "ms_total": 491
+      "ms_optimizacion": 512,
+      "ms_total": 517
     },
     {
       "sucursal_clave": "T043",
@@ -12401,8 +12401,8 @@
       "horas_requeridas": 2141.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 428,
-      "ms_total": 433
+      "ms_optimizacion": 434,
+      "ms_total": 439
     },
     {
       "sucursal_clave": "T043",
@@ -12492,8 +12492,8 @@
       "horas_requeridas": 2384,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 557,
-      "ms_total": 562
+      "ms_optimizacion": 558,
+      "ms_total": 563
     },
     {
       "sucursal_clave": "T043",
@@ -12583,8 +12583,8 @@
       "horas_requeridas": 2141.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 414,
-      "ms_total": 420
+      "ms_optimizacion": 419,
+      "ms_total": 425
     },
     {
       "sucursal_clave": "T043",
@@ -12674,8 +12674,8 @@
       "horas_requeridas": 2390.5,
       "horas_capacidad": 2752,
       "violaciones_baseline": 110,
-      "ms_optimizacion": 637,
-      "ms_total": 642
+      "ms_optimizacion": 627,
+      "ms_total": 631
     },
     {
       "sucursal_clave": "T044",
@@ -12734,8 +12734,8 @@
       "horas_requeridas": 2464.5,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 381,
-      "ms_total": 387
+      "ms_optimizacion": 380,
+      "ms_total": 386
     },
     {
       "sucursal_clave": "T044",
@@ -12810,8 +12810,8 @@
       "horas_requeridas": 2748.5,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 647,
-      "ms_total": 652
+      "ms_optimizacion": 703,
+      "ms_total": 709
     },
     {
       "sucursal_clave": "T044",
@@ -12870,8 +12870,8 @@
       "horas_requeridas": 2460,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 434,
-      "ms_total": 439
+      "ms_optimizacion": 437,
+      "ms_total": 443
     },
     {
       "sucursal_clave": "T044",
@@ -12946,8 +12946,8 @@
       "horas_requeridas": 2751.5,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 708,
-      "ms_total": 712
+      "ms_optimizacion": 699,
+      "ms_total": 705
     },
     {
       "sucursal_clave": "T045",
@@ -13022,8 +13022,8 @@
       "horas_requeridas": 2118,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 393,
-      "ms_total": 398
+      "ms_optimizacion": 385,
+      "ms_total": 389
     },
     {
       "sucursal_clave": "T045",
@@ -13113,8 +13113,8 @@
       "horas_requeridas": 2362,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 565,
-      "ms_total": 569
+      "ms_optimizacion": 577,
+      "ms_total": 583
     },
     {
       "sucursal_clave": "T045",
@@ -13189,8 +13189,8 @@
       "horas_requeridas": 2120.5,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 457,
-      "ms_total": 461
+      "ms_optimizacion": 468,
+      "ms_total": 472
     },
     {
       "sucursal_clave": "T045",
@@ -13280,8 +13280,8 @@
       "horas_requeridas": 2365.5,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 581,
-      "ms_total": 585
+      "ms_optimizacion": 578,
+      "ms_total": 582
     },
     {
       "sucursal_clave": "T046",
@@ -13341,7 +13341,7 @@
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
       "ms_optimizacion": 328,
-      "ms_total": 332
+      "ms_total": 334
     },
     {
       "sucursal_clave": "T046",
@@ -13416,8 +13416,8 @@
       "horas_requeridas": 2200,
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 525,
-      "ms_total": 529
+      "ms_optimizacion": 521,
+      "ms_total": 526
     },
     {
       "sucursal_clave": "T046",
@@ -13492,8 +13492,8 @@
       "horas_requeridas": 1977.5,
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 352,
-      "ms_total": 357
+      "ms_optimizacion": 359,
+      "ms_total": 363
     },
     {
       "sucursal_clave": "T046",
@@ -13568,8 +13568,8 @@
       "horas_requeridas": 2202,
       "horas_capacidad": 2504,
       "violaciones_baseline": 100,
-      "ms_optimizacion": 569,
-      "ms_total": 573
+      "ms_optimizacion": 550,
+      "ms_total": 554
     },
     {
       "sucursal_clave": "T047",
@@ -13644,8 +13644,8 @@
       "horas_requeridas": 2123,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 384,
-      "ms_total": 390
+      "ms_optimizacion": 388,
+      "ms_total": 392
     },
     {
       "sucursal_clave": "T047",
@@ -13735,8 +13735,8 @@
       "horas_requeridas": 2366,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 652,
-      "ms_total": 657
+      "ms_optimizacion": 646,
+      "ms_total": 651
     },
     {
       "sucursal_clave": "T047",
@@ -13811,8 +13811,8 @@
       "horas_requeridas": 2123.5,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 465,
-      "ms_total": 469
+      "ms_optimizacion": 464,
+      "ms_total": 468
     },
     {
       "sucursal_clave": "T047",
@@ -13902,8 +13902,8 @@
       "horas_requeridas": 2370,
       "horas_capacidad": 2712,
       "violaciones_baseline": 108,
-      "ms_optimizacion": 578,
-      "ms_total": 582
+      "ms_optimizacion": 580,
+      "ms_total": 585
     },
     {
       "sucursal_clave": "T048",
@@ -13962,8 +13962,8 @@
       "horas_requeridas": 2210.5,
       "horas_capacidad": 2856,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 382,
-      "ms_total": 386
+      "ms_optimizacion": 385,
+      "ms_total": 391
     },
     {
       "sucursal_clave": "T048",
@@ -14038,8 +14038,8 @@
       "horas_requeridas": 2472.5,
       "horas_capacidad": 2856,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 570,
-      "ms_total": 574
+      "ms_optimizacion": 562,
+      "ms_total": 567
     },
     {
       "sucursal_clave": "T048",
@@ -14098,8 +14098,8 @@
       "horas_requeridas": 2209.5,
       "horas_capacidad": 2856,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 396,
-      "ms_total": 401
+      "ms_optimizacion": 427,
+      "ms_total": 432
     },
     {
       "sucursal_clave": "T048",
@@ -14174,8 +14174,8 @@
       "horas_requeridas": 2473,
       "horas_capacidad": 2856,
       "violaciones_baseline": 114,
-      "ms_optimizacion": 568,
-      "ms_total": 574
+      "ms_optimizacion": 526,
+      "ms_total": 532
     },
     {
       "sucursal_clave": "T049",
@@ -14234,8 +14234,8 @@
       "horas_requeridas": 2192.5,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 382,
-      "ms_total": 389
+      "ms_optimizacion": 381,
+      "ms_total": 385
     },
     {
       "sucursal_clave": "T049",
@@ -14310,8 +14310,8 @@
       "horas_requeridas": 2454.5,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 557,
-      "ms_total": 563
+      "ms_optimizacion": 544,
+      "ms_total": 548
     },
     {
       "sucursal_clave": "T049",
@@ -14370,8 +14370,8 @@
       "horas_requeridas": 2196.5,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 378,
-      "ms_total": 384
+      "ms_optimizacion": 373,
+      "ms_total": 379
     },
     {
       "sucursal_clave": "T049",
@@ -14446,8 +14446,8 @@
       "horas_requeridas": 2455.5,
       "horas_capacidad": 2816,
       "violaciones_baseline": 112,
-      "ms_optimizacion": 641,
-      "ms_total": 648
+      "ms_optimizacion": 629,
+      "ms_total": 633
     },
     {
       "sucursal_clave": "T050",
@@ -14506,8 +14506,8 @@
       "horas_requeridas": 2470.5,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 458,
-      "ms_total": 463
+      "ms_optimizacion": 477,
+      "ms_total": 483
     },
     {
       "sucursal_clave": "T050",
@@ -14597,8 +14597,8 @@
       "horas_requeridas": 2753.5,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 696,
-      "ms_total": 701
+      "ms_optimizacion": 706,
+      "ms_total": 711
     },
     {
       "sucursal_clave": "T050",
@@ -14657,8 +14657,8 @@
       "horas_requeridas": 2471.5,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 465,
-      "ms_total": 472
+      "ms_optimizacion": 463,
+      "ms_total": 467
     },
     {
       "sucursal_clave": "T050",
@@ -14748,8 +14748,8 @@
       "horas_requeridas": 2751.5,
       "horas_capacidad": 3208,
       "violaciones_baseline": 128,
-      "ms_optimizacion": 643,
-      "ms_total": 647
+      "ms_optimizacion": 650,
+      "ms_total": 657
     }
   ]
 }
