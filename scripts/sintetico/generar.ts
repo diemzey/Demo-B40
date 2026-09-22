@@ -294,6 +294,7 @@ const PLANTILLAS: PlantillaTurno[] = [
   { clave: "cierre_temprano", hora_inicio: "12:00", duracion_min: 510, descanso_min: 30 }, // 12:00–20:30 · 8 h
   { clave: "medio_cierre", hora_inicio: "14:30", duracion_min: 360, descanso_min: 0 }, // 14:30–20:30 · 6 h
   { clave: "corto_pico", hora_inicio: "16:30", duracion_min: 240, descanso_min: 0 }, // 16:30–20:30 · 4 h
+  { clave: "cierre_medio", hora_inicio: "11:30", duracion_min: 510, descanso_min: 30 }, // 11:30–20:00 · 8 h (par ligante 11:30 + 19:30)
 ];
 
 const plantilla = (clave: string): PlantillaTurno => {
