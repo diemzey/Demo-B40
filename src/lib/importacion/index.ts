@@ -20,11 +20,13 @@ export {
   HUB_POR_DEFECTO,
   TAMANO_LOTE,
   asegurarSucursal,
+  huellaFilas,
   importarTurnos,
   llaveSucursal,
   type ClienteSupabase,
   type DestinoImportacion,
   type ParametrosImportacion,
+  type ProgresoImportacion,
   type ResultadoImportacion,
   type SucursalImportacion,
 } from "./importar";
@@ -40,6 +42,7 @@ export {
 } from "./destino";
 
 export {
+  CONCURRENCIA_PROGRAMACION,
   ErrorFlujo,
   TRAMOS,
   etiquetaPasoMotor,

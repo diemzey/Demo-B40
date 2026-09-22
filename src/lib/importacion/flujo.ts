@@ -1,9 +1,9 @@
 import { programarSemana, type ResultadoProgramacion, type ProgresoProgramacion } from "@/lib/motor/programar";
 import type { DestinoResuelto, EmpresaImportacion } from "./destino";
-import { importarTurnos, type ClienteSupabase, type ResultadoImportacion } from "./importar";
+import { importarTurnos, type ClienteSupabase, type ProgresoImportacion, type ResultadoImportacion } from "./importar";
 import { numeroSemanaIso, type ResultadoParseo, type ResumenTurnos } from "./parse";
 
-/**
+/*
  * Un solo flujo, sin botones intermedios: importar el CSV ya parseado y, por
  * cada sucursal-semana importada, correr el motor para publicar la propuesta.
  * Lo usan `ImportarYProgramar` (navegador) y el script de prueba en vivo
@@ -12,6 +12,17 @@ import { numeroSemanaIso, type ResultadoParseo, type ResumenTurnos } from "./par
  *
  * El avance es UNA barra 0–100 con frases humanas (sin telemetría):
  *   leyendo 0–8 · destino 8–12 · importando 12–40 · programando 40–99 · listo 100.
+ *
+ * Retomar: volver a soltar el mismo archivo omite las sucursales que ya
+ * quedaron cargadas igual (huella en `importaciones_csv`) y no vuelve a
+ * programar las semanas de esas sucursales que ya tienen propuesta publicada.
+ * Así una carga de 50 tiendas interrumpida a la mitad termina en la segunda
+ * pasada sin repetir lo hecho.
+ *
+ * Las sucursales se programan en paralelo (`CONCURRENCIA_PROGRAMACION`); las
+ * semanas de una misma sucursal, en serie, porque comparten catálogo de
+ * empleados. La primera semana corre sola para dejar listo el catálogo de la
+ * empresa (habilidades, puestos, tabuladores, plantillas, reglas).
  */
 
 export type EtapaFlujo = "leyendo" | "destino" | "importando" | "programando" | "listo";
@@ -33,6 +44,13 @@ export const TRAMOS: Record<EtapaFlujo, [number, number]> = {
   listo: [100, 100],
 };
 
+/**
+ * Sucursales que se programan a la vez. Dos: con tres, los RPC que
+ * materializan y resumen escenarios pasaban de ~1 s a más de 15 s en la
+ * instancia base de Supabase y Postgres los cancelaba.
+ */
+export const CONCURRENCIA_PROGRAMACION = 2;
+
 export type ProgramacionFlujo = {
   sucursal: ResultadoImportacion["sucursal"];
   semanaIso: string;
@@ -42,6 +60,8 @@ export type ProgramacionFlujo = {
 export type ResultadoFlujo = {
   resultados: ResultadoImportacion[];
   programaciones: ProgramacionFlujo[];
+  /** Semanas-sucursal que ya tenían propuesta publicada y no se volvieron a programar. */
+  omitidas: number;
   /** Sucursal en la que conviene abrir el panel (la primera importada). */
   sucursalId: string;
 };
@@ -97,6 +117,17 @@ export function etiquetaPasoMotor(p: ProgresoProgramacion, ctx: { sucursal?: str
   }
 }
 
+/** Frase del avance de la importación ("Guardando Tlalpan (33 de 50) · 54,168 de 85,104 turnos"). */
+function etiquetaImportacion(p: ProgresoImportacion, resumen: Pick<ResumenTurnos, "colaboradores" | "turnos">): string {
+  if (p.sucursales <= 1) {
+    return p.omitida ? `Ya estaba guardada: ${fraseTurnos(resumen.turnos, resumen.colaboradores)}` : `Guardando ${fraseTurnos(resumen.turnos, resumen.colaboradores)}`;
+  }
+  const conteo = `${fmtN.format(p.turnos)} de ${fmtN.format(p.turnosTotal)} turnos`;
+  return p.omitida
+    ? `${p.nombre} ya estaba guardada (${p.sucursal} de ${p.sucursales}) · ${conteo}`
+    : `Guardando ${p.nombre} (${p.sucursal} de ${p.sucursales}) · ${conteo}`;
+}
+
 function escalar(tramo: [number, number], fraccion: number): number {
   const [a, b] = tramo;
   return Math.round(a + (b - a) * Math.max(0, Math.min(1, fraccion)));
@@ -114,8 +145,34 @@ export type OpcionesFlujo = {
   resultados?: ResultadoImportacion[] | null;
   /** Reintento: semanas ya programadas (se saltan). */
   programaciones?: ProgramacionFlujo[];
+  /** Sucursales programadas a la vez (por defecto `CONCURRENCIA_PROGRAMACION`). */
+  concurrencia?: number;
   onProgreso?: (p: ProgresoFlujo) => void;
 };
+
+type Par = { sucursal: ResultadoImportacion["sucursal"]; semanaIso: string };
+
+const llavePar = (p: Par) => `${p.sucursal.id}|${p.semanaIso}`;
+
+/**
+ * Semanas-sucursal con propuesta publicada entre las sucursales que se
+ * omitieron por estar ya cargadas igual: no hace falta reprogramarlas.
+ */
+async function paresYaProgramados(supabase: ClienteSupabase, resultados: ResultadoImportacion[]): Promise<Set<string>> {
+  const omitidas = resultados.filter((r) => r.omitida);
+  if (omitidas.length === 0) return new Set();
+  const ids = omitidas.map((r) => r.sucursal.id);
+  const semanas = [...new Set(omitidas.flatMap((r) => r.semanas))];
+  const { data, error } = await supabase
+    .from("escenarios")
+    .select("sucursal_id, semana_iso")
+    .eq("tipo", "propuesta")
+    .eq("estado", "publicado")
+    .in("sucursal_id", ids)
+    .in("semana_iso", semanas);
+  if (error) throw new Error(`No se pudieron leer las propuestas existentes (${error.message}).`);
+  return new Set((data ?? []).map((e) => `${e.sucursal_id}|${e.semana_iso}`));
+}
 
 export async function importarYProgramarTurnos(opts: OpcionesFlujo): Promise<ResultadoFlujo> {
   const { supabase, nombreArchivo, parseo, resumen, destino, empresa } = opts;
@@ -141,6 +198,12 @@ export async function importarYProgramarTurnos(opts: OpcionesFlujo): Promise<Res
         filas: parseo.filas,
         totales: parseo.totales,
         errores: parseo.errores,
+        onProgreso: (p: ProgresoImportacion) =>
+          progreso({
+            etapa: "importando",
+            pct: escalar(TRAMOS.importando, p.turnosTotal > 0 ? p.turnos / p.turnosTotal : 0),
+            etiqueta: etiquetaImportacion(p, resumen),
+          }),
       };
       resultados = await importarTurnos(
         destino.tipo === "csv"
@@ -154,45 +217,111 @@ export async function importarYProgramarTurnos(opts: OpcionesFlujo): Promise<Res
     }
   }
 
-  // 2. Programar cada sucursal-semana.
-  const pares = resultados.flatMap((r) => r.semanas.map((semanaIso) => ({ sucursal: r.sucursal, semanaIso })));
-  const hechas = new Set((opts.programaciones ?? []).map((p) => `${p.sucursal.id}|${p.semanaIso}`));
+  // 2. Programar cada sucursal-semana que falte.
+  const pares: Par[] = resultados.flatMap((r) => r.semanas.map((semanaIso) => ({ sucursal: r.sucursal, semanaIso })));
   const programaciones: ProgramacionFlujo[] = [...(opts.programaciones ?? [])];
-  const pendientes = pares.filter((p) => !hechas.has(`${p.sucursal.id}|${p.semanaIso}`));
-  const [ini, fin] = TRAMOS.programando;
-  const ancho = (fin - ini) / Math.max(pendientes.length, 1);
+  const hechas = new Set(programaciones.map(llavePar));
+  let yaProgramados: Set<string>;
+  try {
+    yaProgramados = await paresYaProgramados(supabase, resultados);
+  } catch (e) {
+    throw new ErrorFlujo("programando", e, resultados, programaciones);
+  }
+  const pendientes = pares.filter((p) => !hechas.has(llavePar(p)) && !yaProgramados.has(llavePar(p)));
+  const omitidas = pares.length - pendientes.length - programaciones.length;
+  const total = pendientes.length;
   const varias = pares.length > 1;
 
-  for (const [i, par] of pendientes.entries()) {
-    const tramo: [number, number] = [ini + ancho * i, ini + ancho * (i + 1)];
+  // Avance agregado: semanas terminadas + fracción de las que van corriendo.
+  const parcial = new Map<string, number>();
+  let terminadas = 0;
+  const avisar = (par: Par, p: ProgresoProgramacion) => {
+    parcial.set(llavePar(par), p.paso === "listo" ? 1 : p.pct / 100);
+    let suma = terminadas;
+    for (const v of parcial.values()) suma += v;
+    const conteo = total > 1 ? `Semana ${Math.min(terminadas + 1, total)} de ${total} · ` : "";
     const etiquetaSemana = varias ? ` · semana ${numeroSemanaIso(par.semanaIso)}` : "";
     progreso({
       etapa: "programando",
-      pct: escalar(tramo, 0),
-      etiqueta: etiquetaPasoMotor({ paso: "catalogo", pct: 0 }, { sucursal: varias ? par.sucursal.nombre : undefined, tope: tope ?? 40 }) + etiquetaSemana,
+      pct: escalar(TRAMOS.programando, total > 0 ? suma / total : 1),
+      etiqueta: conteo + etiquetaPasoMotor(p, { sucursal: varias ? par.sucursal.nombre : undefined, tope: p.tope ?? tope ?? 40 }) + etiquetaSemana,
     });
-    try {
-      const resultado = await programarSemana({
+  };
+
+  const programar = async (par: Par) => {
+    avisar(par, { paso: "catalogo", pct: 0 });
+    const correr = () =>
+      programarSemana({
         supabase,
         sucursalId: par.sucursal.id,
         semanaIso: par.semanaIso,
         tope,
         costoHoraDefault,
-        onProgreso: (p) => {
-          if (p.paso === "listo") return;
-          progreso({
-            etapa: "programando",
-            pct: escalar(tramo, p.pct / 100),
-            etiqueta: etiquetaPasoMotor(p, { sucursal: varias ? par.sucursal.nombre : undefined, tope: p.tope ?? tope ?? 40 }) + etiquetaSemana,
-          });
-        },
+        onProgreso: (p) => avisar(par, p),
       });
-      programaciones.push({ sucursal: par.sucursal, semanaIso: par.semanaIso, resultado });
+    let resultado: ResultadoProgramacion;
+    try {
+      resultado = await correr();
     } catch (e) {
-      throw new ErrorFlujo("programando", e, resultados, programaciones);
+      // Dos sucursales en paralelo pueden crear a la vez el mismo puesto o plantilla
+      // de la empresa (la segunda pasada ya los encuentra creados), o Postgres pudo
+      // cancelar una consulta por tiempo con la base cargada: una segunda pasada
+      // tras una pausa suele bastar. Nada quedó a medias: cada paso es una transacción.
+      if (!esConflicto(e) && !esTimeout(e)) throw e;
+      await new Promise((r) => setTimeout(r, esTimeout(e) ? 4000 : 500));
+      resultado = await correr();
     }
+    parcial.delete(llavePar(par));
+    terminadas += 1;
+    programaciones.push({ sucursal: par.sucursal, semanaIso: par.semanaIso, resultado });
+  };
+
+  // Colas por sucursal: en serie dentro de la sucursal, varias sucursales a la vez.
+  const colas = new Map<string, Par[]>();
+  for (const p of pendientes) colas.set(p.sucursal.id, [...(colas.get(p.sucursal.id) ?? []), p]);
+  const listaColas = [...colas.values()];
+  const concurrencia = Math.max(1, opts.concurrencia ?? CONCURRENCIA_PROGRAMACION);
+
+  let fallo: unknown = null;
+  try {
+    // La primera semana sola: deja el catálogo de la empresa listo para las demás.
+    const primera = listaColas[0]?.shift();
+    if (primera) await programar(primera);
+
+    let siguiente = 0;
+    const trabajador = async () => {
+      while (fallo === null && siguiente < listaColas.length) {
+        const cola = listaColas[siguiente++];
+        for (const par of cola) {
+          if (fallo !== null) return;
+          await programar(par);
+        }
+      }
+    };
+    await Promise.all(
+      Array.from({ length: Math.min(concurrencia, listaColas.length) }, () =>
+        trabajador().catch((e) => {
+          if (fallo === null) fallo = e;
+        }),
+      ),
+    );
+  } catch (e) {
+    fallo = e;
   }
+  if (fallo !== null) throw new ErrorFlujo("programando", fallo, resultados, programaciones);
 
   progreso({ etapa: "listo", pct: 100, etiqueta: "Listo: tu antes y después" });
-  return { resultados, programaciones, sucursalId: resultados[0].sucursal.id };
+  return { resultados, programaciones, omitidas, sucursalId: resultados[0].sucursal.id };
+}
+
+/** Consulta cancelada por `statement_timeout` (57014). */
+function esTimeout(e: unknown): boolean {
+  const m = e instanceof Error ? e.message : String(e);
+  return /57014|statement timeout/i.test(m);
+}
+
+/** Violación de unicidad de Postgres (23505) al crear catálogo en paralelo. */
+function esConflicto(e: unknown): boolean {
+  const m = e instanceof Error ? e.message : String(e);
+  return /23505|duplicate key|ya existe|already exists/i.test(m);
 }

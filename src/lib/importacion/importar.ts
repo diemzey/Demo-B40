@@ -15,6 +15,13 @@ import { lunesIso, type ErrorFila, type FilaTurno } from "./parse";
  *    la misma semana actualiza en vez de fallar;
  * 4. cierra la carga con `completada` o `con_errores` y el detalle de errores.
  *
+ * Cada carga guarda una `huella` (SHA-256 de las filas de la sucursal). Si la
+ * sucursal ya tiene una carga `completada` con la misma huella y sus turnos
+ * siguen ahí, se omite: así una carga grande interrumpida a la mitad se
+ * retoma volviendo a soltar el mismo archivo, sin repetir lo hecho. Las cargas
+ * que quedaron en `procesando` (pestaña cerrada, red caída) se cierran como
+ * `con_errores` al retomar.
+ *
  * Los errores de Supabase se lanzan como `Error` con mensaje en español.
  */
 
@@ -43,6 +50,20 @@ export type ParametrosImportacion = DestinoImportacion & {
   errores: readonly ErrorFila[];
   /** Ciudad para las sucursales (y el hub) que haya que crear. */
   ciudad?: string | null;
+  /** Avance de la escritura: por sucursal y por lote de turnos. */
+  onProgreso?: (p: ProgresoImportacion) => void;
+};
+
+export type ProgresoImportacion = {
+  /** Sucursal en curso (desde 1) y cuántas trae el archivo. */
+  sucursal: number;
+  sucursales: number;
+  nombre: string;
+  /** Turnos del archivo ya escritos (u omitidos) y total. */
+  turnos: number;
+  turnosTotal: number;
+  /** `true` cuando la sucursal ya estaba cargada igual y se omitió. */
+  omitida?: boolean;
 };
 
 export type SucursalImportacion = {
@@ -64,6 +85,10 @@ export type ResultadoImportacion = {
   semanas: string[];
   filasOk: number;
   filasError: number;
+  /** Huella de las filas de la sucursal (ver cabecera). */
+  huella: string;
+  /** `true` si la sucursal ya tenía esta misma carga completada y no se reescribió. */
+  omitida: boolean;
 };
 
 type EmpleadoInsert = TablesInsert<"empleados">;
@@ -83,6 +108,41 @@ function fallo(contexto: string, error: { message: string; code?: string } | nul
 /** Llave de comparación de nombres de sucursal: sin espacios sobrantes ni mayúsculas. */
 export function llaveSucursal(nombre: string): string {
   return nombre.trim().toLocaleLowerCase("es-MX");
+}
+
+/** Texto canónico de una fila para la huella (sin el renglón ni la sucursal). */
+function filaCanonica(f: FilaTurno): string {
+  return [
+    f.clave,
+    f.nombre,
+    f.apellido,
+    f.puesto ?? "",
+    f.jornadaContratada ?? "",
+    f.fecha,
+    f.horaInicio,
+    f.horaFin,
+    f.minutosDescanso,
+    f.cruzaMedianoche ? 1 : 0,
+  ].join("|");
+}
+
+/** SHA-256 (hex) de las filas ordenadas; el orden del archivo no cambia la huella. */
+export async function huellaFilas(filas: readonly FilaTurno[]): Promise<string> {
+  const texto = filas.map(filaCanonica).sort().join("\n");
+  const bytes = new TextEncoder().encode(texto);
+  const subtle = globalThis.crypto?.subtle;
+  if (subtle) {
+    const hash = await subtle.digest("SHA-256", bytes);
+    return [...new Uint8Array(hash)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  // Sin WebCrypto (entornos muy viejos): FNV-1a de 32 bits por duplicado, suficiente para distinguir cargas.
+  let a = 0x811c9dc5;
+  let b = 0x01000193;
+  for (const x of bytes) {
+    a = Math.imul(a ^ x, 0x01000193) >>> 0;
+    b = Math.imul(b ^ x, 0x811c9dc5) >>> 0;
+  }
+  return `fnv-${a.toString(16).padStart(8, "0")}${b.toString(16).padStart(8, "0")}`;
 }
 
 /* ---------- Sucursales ---------- */
@@ -187,6 +247,7 @@ export async function importarTurnos({
   filas,
   totales,
   errores,
+  onProgreso,
 }: ParametrosImportacion): Promise<ResultadoImportacion[]> {
   if (filas.length === 0) {
     throw new Error("No hay filas válidas para importar.");
@@ -229,8 +290,19 @@ export async function importarTurnos({
   }
 
   const resultados: ResultadoImportacion[] = [];
+  const turnosTotal = cargas.reduce((n, c) => n + c.filas.length, 0);
+  let acumulado = 0;
   for (const [i, carga] of cargas.entries()) {
     const primera = i === 0;
+    const progreso = (hechos: number, omitida?: boolean) =>
+      onProgreso?.({
+        sucursal: i + 1,
+        sucursales: cargas.length,
+        nombre: carga.sucursal.nombre,
+        turnos: acumulado + hechos,
+        turnosTotal,
+        omitida,
+      });
     resultados.push(
       await importarEnSucursal({
         supabase,
@@ -240,8 +312,10 @@ export async function importarTurnos({
         // Las filas con error del archivo sólo se cuentan en la primera carga.
         totales: primera ? totales - (filas.length - carga.filas.length) : carga.filas.length,
         errores: primera ? errores : [],
+        progreso,
       }),
     );
+    acumulado += carga.filas.length;
   }
   return resultados;
 }
@@ -253,6 +327,7 @@ async function importarEnSucursal({
   filas,
   totales,
   errores,
+  progreso,
 }: {
   supabase: ClienteSupabase;
   sucursal: SucursalImportacion;
@@ -260,8 +335,56 @@ async function importarEnSucursal({
   filas: readonly FilaTurno[];
   totales: number;
   errores: readonly ErrorFila[];
+  progreso: (turnosHechos: number, omitida?: boolean) => void;
 }): Promise<ResultadoImportacion> {
   const sucursalId = sucursal.id;
+  progreso(0);
+
+  // 0. ¿Ya está cargada igual? Misma huella completada y con todos sus turnos aún ligados.
+  const huella = await huellaFilas(filas);
+  const semanas = [...new Set(filas.map((f) => lunesIso(f.fecha)))].sort();
+  const porClave = new Map<string, FilaTurno>();
+  for (const f of filas) porClave.set(f.clave, f);
+  if (!sucursal.creada) {
+    const { data: previas } = await supabase
+      .from("importaciones_csv")
+      .select("id")
+      .eq("sucursal_id", sucursalId)
+      .eq("estado", "completada")
+      .eq("huella", huella)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const previa = previas?.[0];
+    if (previa) {
+      const { count } = await supabase
+        .from("horarios")
+        .select("id", { count: "exact", head: true })
+        .eq("importacion_id", previa.id);
+      if (count === filas.length) {
+        progreso(filas.length, true);
+        return {
+          importacionId: previa.id,
+          sucursal,
+          empleados: porClave.size,
+          horarios: filas.length,
+          semanas,
+          filasOk: filas.length,
+          filasError: 0,
+          huella,
+          omitida: true,
+        };
+      }
+    }
+    // Cargas que quedaron a medias (pestaña cerrada, red caída): se cierran para no confundir.
+    await supabase
+      .from("importaciones_csv")
+      .update({
+        estado: "con_errores",
+        errores: [{ fila: 0, columna: "importacion", mensaje: "Carga interrumpida; se volvió a cargar el archivo." }] as unknown as Json,
+      })
+      .eq("sucursal_id", sucursalId)
+      .eq("estado", "procesando");
+  }
 
   // 1. Bitácora de la carga.
   const { data: importacion, error: errorImportacion } = await supabase
@@ -271,6 +394,7 @@ async function importarEnSucursal({
       nombre_archivo: nombreArchivo,
       estado: "procesando",
       filas_totales: totales,
+      huella,
     })
     .select("id")
     .single();
@@ -297,8 +421,6 @@ async function importarEnSucursal({
 
   try {
     // 2. Empleados: la última fila de cada clave manda en nombre/puesto/jornada.
-    const porClave = new Map<string, FilaTurno>();
-    for (const f of filas) porClave.set(f.clave, f);
     const claves = [...porClave.keys()];
 
     const idPorClave = new Map<string, string>();
@@ -366,11 +488,14 @@ async function importarEnSucursal({
       });
     }
 
+    let escritos = 0;
     for (const lote of lotes(horarios)) {
       const { error } = await supabase
         .from("horarios")
         .upsert(lote, { onConflict: "empleado_id,fecha,hora_inicio" });
       if (error) throw fallo("No se pudieron guardar los turnos.", error);
+      escritos += lote.length;
+      progreso(escritos);
     }
 
     // 4. Cierre de la bitácora.
@@ -385,8 +510,6 @@ async function importarEnSucursal({
       .eq("id", importacionId);
     if (errorCierre) throw fallo("Los turnos se guardaron pero no se pudo cerrar la bitácora.", errorCierre);
 
-    const semanas = [...new Set(filas.map((f) => lunesIso(f.fecha)))].sort();
-
     return {
       importacionId,
       sucursal,
@@ -395,6 +518,8 @@ async function importarEnSucursal({
       semanas,
       filasOk: filas.length,
       filasError: errores.length,
+      huella,
+      omitida: false,
     };
   } catch (e) {
     const mensaje = e instanceof Error ? e.message : "Error desconocido al importar.";

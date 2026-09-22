@@ -56,6 +56,8 @@ import { cn } from "@/lib/utils";
 const MAX_ERRORES_VISIBLES = 8;
 /** Ventana para cambiar la sucursal propuesta antes de que se cree/use. */
 const ESPERA_DESTINO_MS = 2000;
+/** Puntos que el avance suave puede adelantarse al último avance real. */
+const ADELANTO_MAX = 3;
 
 const fmtN = new Intl.NumberFormat("es-MX");
 const fmtMXN = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
@@ -75,7 +77,7 @@ type Estado =
   | { fase: "vacio" }
   | { fase: "revisar"; archivo: Archivo }
   | { fase: "demo"; archivo: Archivo }
-  | { fase: "corriendo"; archivo: Archivo; progreso: ProgresoFlujo }
+  | { fase: "corriendo"; archivo: Archivo; progreso: ProgresoFlujo; /** Último avance real reportado por el flujo. */ real?: number }
   | { fase: "error"; archivo: Archivo; etapa: EtapaFlujo; mensaje: string; reanudar: Reanudar }
   | { fase: "listo"; archivo: Archivo; resultado: ResultadoFlujo };
 
@@ -157,13 +159,16 @@ export function ImportarYProgramar({
     };
   }, [conectado, datos.empresa, router]);
 
-  // La barra avanza suavemente mientras un paso largo no reporta progreso.
+  // La barra avanza suavemente mientras un paso largo no reporta progreso,
+  // pero nunca más de unos puntos por delante del último avance real: con
+  // 200 semanas por programar, el avance real es lento y la barra no debe
+  // llegar al final antes que el trabajo.
   useEffect(() => {
     if (estado.fase !== "corriendo") return;
     const id = setInterval(() => {
       setEstado((s) => {
         if (s.fase !== "corriendo" || s.progreso.etapa === "listo") return s;
-        const techo = TRAMOS[s.progreso.etapa][1] - 1;
+        const techo = Math.min(TRAMOS[s.progreso.etapa][1] - 1, (s.real ?? s.progreso.pct) + ADELANTO_MAX);
         if (s.progreso.pct >= techo) return s;
         return { ...s, progreso: { ...s.progreso, pct: s.progreso.pct + 1 } };
       });
@@ -171,9 +176,28 @@ export function ImportarYProgramar({
     return () => clearInterval(id);
   }, [estado.fase]);
 
+  // Mientras corre, salir de la página cortaría la carga a la mitad: el
+  // navegador pregunta antes (una carga cortada se retoma soltando el mismo
+  // archivo, pero mejor no cortarla).
+  useEffect(() => {
+    if (estado.fase !== "corriendo") return;
+    const avisar = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      // Chrome y Safari todavía exigen `returnValue` para mostrar el aviso.
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", avisar);
+    return () => window.removeEventListener("beforeunload", avisar);
+  }, [estado.fase]);
+
   const avanzar = (progreso: ProgresoFlujo) => {
     if (!vivo.current) return;
-    setEstado((s) => (s.fase === "corriendo" ? { ...s, progreso } : s));
+    setEstado((s) => {
+      if (s.fase !== "corriendo") return s;
+      // La barra nunca retrocede dentro de una misma etapa (el avance suave pudo adelantarse).
+      const pct = s.progreso.etapa === progreso.etapa ? Math.max(s.progreso.pct, progreso.pct) : progreso.pct;
+      return { ...s, progreso: { ...progreso, pct }, real: progreso.pct };
+    });
   };
 
   /* ---------- 1. Leer el archivo ---------- */
@@ -759,15 +783,24 @@ function ResumenListo({ resultado }: { resultado: ResultadoFlujo }) {
   const turnos = resultado.resultados.reduce((n, r) => n + r.horarios, 0);
   const personas = resultado.resultados.reduce((n, r) => n + r.empleados, 0);
   const sucursales = [...new Set(resultado.resultados.map((r) => r.sucursal.nombre))];
-  const semanas = [...new Set(resultado.programaciones.map((p) => p.semanaIso))].sort();
+  const yaCargadas = resultado.resultados.filter((r) => r.omitida).length;
+  const semanas = [...new Set(resultado.resultados.flatMap((r) => r.semanas))].sort();
   const ahorro = resultado.programaciones.reduce((n, p) => n + p.resultado.ahorroMxn, 0);
   const base = resultado.programaciones.reduce((n, p) => n + p.resultado.costoBaseline, 0);
   const pct = base > 0 ? (ahorro / base) * 100 : 0;
   return (
     <p className="text-[13px] leading-relaxed text-muted-foreground">
-      <span className="text-foreground">{fraseTurnos(turnos, personas)}</span> en {sucursales.join(", ")}
+      <span className="text-foreground">{fraseTurnos(turnos, personas)}</span> en{" "}
+      {sucursales.length > 3 ? `${fmtN.format(sucursales.length)} sucursales` : sucursales.join(", ")}
       {semanas.length === 1 && <> · {etiquetaSemana(semanas[0])}</>}
       {semanas.length > 1 && <> · {semanas.length} semanas</>}
+      {yaCargadas > 0 && (
+        <>
+          {" "}
+          · {yaCargadas === sucursales.length ? "ya estaban guardadas" : `${fmtN.format(yaCargadas)} ya estaban guardadas`}
+        </>
+      )}
+      {resultado.omitidas > 0 && <> · {fmtN.format(resultado.omitidas)} {resultado.omitidas === 1 ? "semana ya tenía propuesta" : "semanas ya tenían propuesta"}</>}
       {resultado.programaciones.length > 0 && (
         <>
           {" "}

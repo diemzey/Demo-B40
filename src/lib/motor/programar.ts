@@ -319,17 +319,30 @@ async function leerEmpleados(ctx: Contexto): Promise<EmpleadoDb[]> {
   );
 }
 
-async function leerHorarios(ctx: Contexto): Promise<HorarioDb[]> {
-  const filas = await paginar<HorarioDb & { empleados: unknown }>("horarios", (a, b) =>
-    ctx.sb
-      .from("horarios")
-      .select("id, empleado_id, fecha, hora_inicio, hora_fin, cruza_medianoche, minutos_descanso, empleados!inner(sucursal_id)")
-      .eq("empleados.sucursal_id", ctx.sucursalId)
-      .gte("fecha", ctx.semana)
-      .lte("fecha", ctx.domingo)
-      .order("id")
-      .range(a, b),
-  );
+/**
+ * Turnos de la semana de los empleados dados. Se filtra por `empleado_id IN`
+ * (índice `(empleado_id, fecha)`) y no por el join con `empleados`: con cientos
+ * de miles de turnos, ordenar por `id` y filtrar por el join hacía que Postgres
+ * recorriera la tabla y rozara el *statement timeout*.
+ */
+async function leerHorarios(ctx: Contexto, empleados: EmpleadoDb[]): Promise<HorarioDb[]> {
+  const filas: (HorarioDb & { empleados?: unknown })[] = [];
+  for (const ids of lotes(empleados.map((e) => e.id), 150)) {
+    filas.push(
+      ...(await paginar<HorarioDb>("horarios", (a, b) =>
+        ctx.sb
+          .from("horarios")
+          .select("id, empleado_id, fecha, hora_inicio, hora_fin, cruza_medianoche, minutos_descanso")
+          .in("empleado_id", ids)
+          .gte("fecha", ctx.semana)
+          .lte("fecha", ctx.domingo)
+          .order("empleado_id")
+          .order("fecha")
+          .order("hora_inicio")
+          .range(a, b),
+      )),
+    );
+  }
   return filas.map((h) => ({
     id: h.id,
     empleado_id: h.empleado_id,
@@ -585,7 +598,8 @@ async function asegurarReglas(ctx: Contexto): Promise<ReglasDb> {
 
 async function asegurarCatalogo(ctx: Contexto): Promise<Catalogo_> {
   ctx.progreso({ paso: "catalogo", pct: 3, detalle: "Leyendo colaboradores y turnos" });
-  const [empleados, horarios] = await Promise.all([leerEmpleados(ctx), leerHorarios(ctx)]);
+  const empleados = await leerEmpleados(ctx);
+  const horarios = await leerHorarios(ctx, empleados);
   if (empleados.length === 0) throw new Error("La sucursal no tiene colaboradores; importa primero el CSV de turnos.");
   if (horarios.length === 0) throw new Error(`No hay turnos importados para la semana del ${ctx.semana} en esta sucursal.`);
 

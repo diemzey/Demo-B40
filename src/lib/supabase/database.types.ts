@@ -1165,6 +1165,7 @@ export type Database = {
           filas_error: number
           filas_ok: number
           filas_totales: number
+          huella: string | null
           id: string
           nombre_archivo: string
           sucursal_id: string
@@ -1178,6 +1179,7 @@ export type Database = {
           filas_error?: number
           filas_ok?: number
           filas_totales?: number
+          huella?: string | null
           id?: string
           nombre_archivo: string
           sucursal_id: string
@@ -1191,6 +1193,7 @@ export type Database = {
           filas_error?: number
           filas_ok?: number
           filas_totales?: number
+          huella?: string | null
           id?: string
           nombre_archivo?: string
           sucursal_id?: string

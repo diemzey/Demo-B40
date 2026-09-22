@@ -337,6 +337,24 @@ Reglas:
   `filas_error`, `errores` como `[{"fila": n, "columna": "...", "mensaje": "..."}]`).
 - Re-importar la misma fila (`empleado`, `fecha`, `hora_inicio`) hace *upsert*
   de `horarios`: actualiza el turno en vez de duplicarlo o fallar.
+- Cada carga guarda una `huella` (0009: SHA-256 de las filas normalizadas de la
+  sucursal, sin importar el orden del archivo). Si la sucursal ya tiene una
+  carga `completada` con la misma huella y todos sus turnos siguen ligados a
+  ella, la app la **omite**: volver a soltar el mismo archivo retoma una carga
+  grande interrumpida (pestaña cerrada, red caída) sin repetir lo hecho, y
+  tampoco vuelve a programar las semanas de esas sucursales que ya tienen
+  propuesta publicada. Las cargas que quedaron en `procesando` se cierran como
+  `con_errores` ("Carga interrumpida") al retomar.
+- Al programar varias sucursales del mismo archivo, la app corre hasta 2 a la
+  vez (las semanas de una misma sucursal, en serie); la primera semana corre
+  sola para dejar listo el catálogo de la empresa.
+- 0010 sube el `statement_timeout` del rol `authenticated` de 8 s (valor de
+  Supabase) a 15 s: los RPC que resumen escenarios y el panel con decenas de
+  tiendas se acercaban al límite bajo carga. Si aun así Postgres cancela una
+  consulta, el flujo reintenta esa semana una vez tras una pausa.
+- 0011 deja de auditar fila por fila los *inserts* de `asignaciones` (mil filas
+  por escenario): el escenario publicado es inmutable y ya es la traza; las
+  actualizaciones y bajas de asignaciones siguen auditadas.
 
 ## Datos de demostración (`seed.sql`)
 
