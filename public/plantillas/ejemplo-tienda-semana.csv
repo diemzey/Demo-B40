@@ -1,0 +1,389 @@
+clave,nombre,apellido,puesto,jornada_contratada,sucursal,fecha,hora_inicio,hora_fin,minutos_descanso
+T020-001,Guadalupe,Chávez Castillo,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-001,Guadalupe,Chávez Castillo,Vendedor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-001,Guadalupe,Chávez Castillo,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-001,Guadalupe,Chávez Castillo,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-001,Guadalupe,Chávez Castillo,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-001,Guadalupe,Chávez Castillo,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-002,Francisco,Santiago García,Almacenista,48,Celaya,2026-07-20,09:00,17:30,30
+T020-002,Francisco,Santiago García,Almacenista,48,Celaya,2026-07-21,09:00,17:30,30
+T020-002,Francisco,Santiago García,Almacenista,48,Celaya,2026-07-23,09:00,17:30,30
+T020-002,Francisco,Santiago García,Almacenista,48,Celaya,2026-07-24,09:00,17:30,30
+T020-002,Francisco,Santiago García,Almacenista,48,Celaya,2026-07-25,09:00,17:30,30
+T020-002,Francisco,Santiago García,Almacenista,48,Celaya,2026-07-26,09:00,17:30,30
+T020-003,Jimena,Hernández Aguilar,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-003,Jimena,Hernández Aguilar,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-003,Jimena,Hernández Aguilar,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-003,Jimena,Hernández Aguilar,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-003,Jimena,Hernández Aguilar,Vendedor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-003,Jimena,Hernández Aguilar,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-004,Jimena,Bautista Fuentes,Vendedor(a) de piso,24,Celaya,2026-07-20,09:00,15:00,0
+T020-004,Jimena,Bautista Fuentes,Vendedor(a) de piso,24,Celaya,2026-07-21,09:00,15:00,0
+T020-004,Jimena,Bautista Fuentes,Vendedor(a) de piso,24,Celaya,2026-07-24,09:00,15:00,0
+T020-004,Jimena,Bautista Fuentes,Vendedor(a) de piso,24,Celaya,2026-07-25,09:00,15:00,0
+T020-005,Ana,Guerrero Ortiz,Cajero(a),48,Celaya,2026-07-20,09:00,17:30,30
+T020-005,Ana,Guerrero Ortiz,Cajero(a),48,Celaya,2026-07-21,09:00,17:30,30
+T020-005,Ana,Guerrero Ortiz,Cajero(a),48,Celaya,2026-07-23,09:00,17:30,30
+T020-005,Ana,Guerrero Ortiz,Cajero(a),48,Celaya,2026-07-24,09:00,17:30,30
+T020-005,Ana,Guerrero Ortiz,Cajero(a),48,Celaya,2026-07-25,09:00,17:30,30
+T020-005,Ana,Guerrero Ortiz,Cajero(a),48,Celaya,2026-07-26,09:00,17:30,30
+T020-006,Héctor,Camacho Sánchez,Cajero(a),24,Celaya,2026-07-21,09:00,15:00,0
+T020-006,Héctor,Camacho Sánchez,Cajero(a),24,Celaya,2026-07-22,09:00,15:00,0
+T020-006,Héctor,Camacho Sánchez,Cajero(a),24,Celaya,2026-07-23,09:00,15:00,0
+T020-006,Héctor,Camacho Sánchez,Cajero(a),24,Celaya,2026-07-24,09:00,15:00,0
+T020-007,Luis,Jiménez Cortés,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-007,Luis,Jiménez Cortés,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-007,Luis,Jiménez Cortés,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-007,Luis,Jiménez Cortés,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-007,Luis,Jiménez Cortés,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-007,Luis,Jiménez Cortés,Vendedor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-008,Rosa,Romero Guerrero,Gerente de tienda,48,Celaya,2026-07-20,09:00,17:30,30
+T020-008,Rosa,Romero Guerrero,Gerente de tienda,48,Celaya,2026-07-21,09:00,17:30,30
+T020-008,Rosa,Romero Guerrero,Gerente de tienda,48,Celaya,2026-07-22,09:00,17:30,30
+T020-008,Rosa,Romero Guerrero,Gerente de tienda,48,Celaya,2026-07-23,09:00,17:30,30
+T020-008,Rosa,Romero Guerrero,Gerente de tienda,48,Celaya,2026-07-25,09:00,17:30,30
+T020-008,Rosa,Romero Guerrero,Gerente de tienda,48,Celaya,2026-07-26,09:00,17:30,30
+T020-009,Patricia,Meza Camacho,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-009,Patricia,Meza Camacho,Vendedor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-009,Patricia,Meza Camacho,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-009,Patricia,Meza Camacho,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-009,Patricia,Meza Camacho,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-009,Patricia,Meza Camacho,Vendedor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-010,Estela,Zamora Luna,Cajero(a),48,Celaya,2026-07-20,09:00,17:30,30
+T020-010,Estela,Zamora Luna,Cajero(a),48,Celaya,2026-07-21,09:00,17:30,30
+T020-010,Estela,Zamora Luna,Cajero(a),48,Celaya,2026-07-22,09:00,17:30,30
+T020-010,Estela,Zamora Luna,Cajero(a),48,Celaya,2026-07-23,09:00,17:30,30
+T020-010,Estela,Zamora Luna,Cajero(a),48,Celaya,2026-07-25,09:00,17:30,30
+T020-010,Estela,Zamora Luna,Cajero(a),48,Celaya,2026-07-26,09:00,17:30,30
+T020-011,Ricardo,Rivera Rodríguez,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-011,Ricardo,Rivera Rodríguez,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-011,Ricardo,Rivera Rodríguez,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-011,Ricardo,Rivera Rodríguez,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-011,Ricardo,Rivera Rodríguez,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-011,Ricardo,Rivera Rodríguez,Vendedor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-012,Araceli,Cortés Luna,Vendedor(a) de piso,24,Celaya,2026-07-20,09:00,15:00,0
+T020-012,Araceli,Cortés Luna,Vendedor(a) de piso,24,Celaya,2026-07-21,09:00,15:00,0
+T020-012,Araceli,Cortés Luna,Vendedor(a) de piso,24,Celaya,2026-07-22,09:00,15:00,0
+T020-012,Araceli,Cortés Luna,Vendedor(a) de piso,24,Celaya,2026-07-23,09:00,15:00,0
+T020-013,Mauricio,Méndez Juárez,Cajero(a),48,Celaya,2026-07-20,12:30,21:00,30
+T020-013,Mauricio,Méndez Juárez,Cajero(a),48,Celaya,2026-07-22,12:30,21:00,30
+T020-013,Mauricio,Méndez Juárez,Cajero(a),48,Celaya,2026-07-23,12:30,21:00,30
+T020-013,Mauricio,Méndez Juárez,Cajero(a),48,Celaya,2026-07-24,12:30,21:00,30
+T020-013,Mauricio,Méndez Juárez,Cajero(a),48,Celaya,2026-07-25,12:30,21:00,30
+T020-013,Mauricio,Méndez Juárez,Cajero(a),48,Celaya,2026-07-26,12:30,21:00,30
+T020-014,Mónica,González Chávez,Vendedor(a) de piso,24,Celaya,2026-07-22,15:00,21:00,0
+T020-014,Mónica,González Chávez,Vendedor(a) de piso,24,Celaya,2026-07-23,15:00,21:00,0
+T020-014,Mónica,González Chávez,Vendedor(a) de piso,24,Celaya,2026-07-24,15:00,21:00,0
+T020-014,Mónica,González Chávez,Vendedor(a) de piso,24,Celaya,2026-07-25,15:00,21:00,0
+T020-015,Adrián,Lara Meza,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-015,Adrián,Lara Meza,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-015,Adrián,Lara Meza,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-015,Adrián,Lara Meza,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-015,Adrián,Lara Meza,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-015,Adrián,Lara Meza,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-016,María,Luna García,Almacenista,48,Celaya,2026-07-20,09:00,17:30,30
+T020-016,María,Luna García,Almacenista,48,Celaya,2026-07-21,09:00,17:30,30
+T020-016,María,Luna García,Almacenista,48,Celaya,2026-07-22,09:00,17:30,30
+T020-016,María,Luna García,Almacenista,48,Celaya,2026-07-23,09:00,17:30,30
+T020-016,María,Luna García,Almacenista,48,Celaya,2026-07-24,09:00,17:30,30
+T020-016,María,Luna García,Almacenista,48,Celaya,2026-07-25,09:00,17:30,30
+T020-017,Andrés,Estrada Fuentes,Cajero(a),48,Celaya,2026-07-21,09:00,17:30,30
+T020-017,Andrés,Estrada Fuentes,Cajero(a),48,Celaya,2026-07-22,09:00,17:30,30
+T020-017,Andrés,Estrada Fuentes,Cajero(a),48,Celaya,2026-07-23,09:00,17:30,30
+T020-017,Andrés,Estrada Fuentes,Cajero(a),48,Celaya,2026-07-24,09:00,17:30,30
+T020-017,Andrés,Estrada Fuentes,Cajero(a),48,Celaya,2026-07-25,09:00,17:30,30
+T020-017,Andrés,Estrada Fuentes,Cajero(a),48,Celaya,2026-07-26,09:00,17:30,30
+T020-018,Rodrigo,González Gutiérrez,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-018,Rodrigo,González Gutiérrez,Vendedor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-018,Rodrigo,González Gutiérrez,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-018,Rodrigo,González Gutiérrez,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-018,Rodrigo,González Gutiérrez,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-018,Rodrigo,González Gutiérrez,Vendedor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-019,Miguel,Hernández Núñez,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-019,Miguel,Hernández Núñez,Vendedor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-019,Miguel,Hernández Núñez,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-019,Miguel,Hernández Núñez,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-019,Miguel,Hernández Núñez,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-019,Miguel,Hernández Núñez,Vendedor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-020,Carmen,Bautista Castillo,Asesor(a) de crédito,48,Celaya,2026-07-20,12:30,21:00,30
+T020-020,Carmen,Bautista Castillo,Asesor(a) de crédito,48,Celaya,2026-07-21,12:30,21:00,30
+T020-020,Carmen,Bautista Castillo,Asesor(a) de crédito,48,Celaya,2026-07-22,12:30,21:00,30
+T020-020,Carmen,Bautista Castillo,Asesor(a) de crédito,48,Celaya,2026-07-23,12:30,21:00,30
+T020-020,Carmen,Bautista Castillo,Asesor(a) de crédito,48,Celaya,2026-07-24,12:30,21:00,30
+T020-020,Carmen,Bautista Castillo,Asesor(a) de crédito,48,Celaya,2026-07-26,12:30,21:00,30
+T020-021,Héctor,Ramos Téllez,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-021,Héctor,Ramos Téllez,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-021,Héctor,Ramos Téllez,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-021,Héctor,Ramos Téllez,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-021,Héctor,Ramos Téllez,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-021,Héctor,Ramos Téllez,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-022,Mónica,Domínguez Zamora,Cajero(a),48,Celaya,2026-07-20,09:00,17:30,30
+T020-022,Mónica,Domínguez Zamora,Cajero(a),48,Celaya,2026-07-21,09:00,17:30,30
+T020-022,Mónica,Domínguez Zamora,Cajero(a),48,Celaya,2026-07-23,09:00,17:30,30
+T020-022,Mónica,Domínguez Zamora,Cajero(a),48,Celaya,2026-07-24,09:00,17:30,30
+T020-022,Mónica,Domínguez Zamora,Cajero(a),48,Celaya,2026-07-25,09:00,17:30,30
+T020-022,Mónica,Domínguez Zamora,Cajero(a),48,Celaya,2026-07-26,09:00,17:30,30
+T020-023,Paola,Zamora Ramírez,Almacenista,24,Celaya,2026-07-20,15:00,21:00,0
+T020-023,Paola,Zamora Ramírez,Almacenista,24,Celaya,2026-07-21,15:00,21:00,0
+T020-023,Paola,Zamora Ramírez,Almacenista,24,Celaya,2026-07-22,15:00,21:00,0
+T020-023,Paola,Zamora Ramírez,Almacenista,24,Celaya,2026-07-23,15:00,21:00,0
+T020-024,Rocío,Valdez Meza,Cajero(a),48,Celaya,2026-07-20,12:30,21:00,30
+T020-024,Rocío,Valdez Meza,Cajero(a),48,Celaya,2026-07-21,12:30,21:00,30
+T020-024,Rocío,Valdez Meza,Cajero(a),48,Celaya,2026-07-23,12:30,21:00,30
+T020-024,Rocío,Valdez Meza,Cajero(a),48,Celaya,2026-07-24,12:30,21:00,30
+T020-024,Rocío,Valdez Meza,Cajero(a),48,Celaya,2026-07-25,12:30,21:00,30
+T020-024,Rocío,Valdez Meza,Cajero(a),48,Celaya,2026-07-26,12:30,21:00,30
+T020-025,Mónica,Domínguez Peña,Vendedor(a) de piso,24,Celaya,2026-07-20,15:00,21:00,0
+T020-025,Mónica,Domínguez Peña,Vendedor(a) de piso,24,Celaya,2026-07-21,15:00,21:00,0
+T020-025,Mónica,Domínguez Peña,Vendedor(a) de piso,24,Celaya,2026-07-22,15:00,21:00,0
+T020-025,Mónica,Domínguez Peña,Vendedor(a) de piso,24,Celaya,2026-07-26,15:00,21:00,0
+T020-026,Tomás,Guerrero Chávez,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-026,Tomás,Guerrero Chávez,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-026,Tomás,Guerrero Chávez,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-026,Tomás,Guerrero Chávez,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-026,Tomás,Guerrero Chávez,Vendedor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-026,Tomás,Guerrero Chávez,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-027,Brenda,Rodríguez Contreras,Supervisor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-027,Brenda,Rodríguez Contreras,Supervisor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-027,Brenda,Rodríguez Contreras,Supervisor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-027,Brenda,Rodríguez Contreras,Supervisor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-027,Brenda,Rodríguez Contreras,Supervisor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-027,Brenda,Rodríguez Contreras,Supervisor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-028,Miguel,Estrada Salazar,Asesor(a) de crédito,48,Celaya,2026-07-20,09:00,17:30,30
+T020-028,Miguel,Estrada Salazar,Asesor(a) de crédito,48,Celaya,2026-07-21,09:00,17:30,30
+T020-028,Miguel,Estrada Salazar,Asesor(a) de crédito,48,Celaya,2026-07-22,09:00,17:30,30
+T020-028,Miguel,Estrada Salazar,Asesor(a) de crédito,48,Celaya,2026-07-24,09:00,17:30,30
+T020-028,Miguel,Estrada Salazar,Asesor(a) de crédito,48,Celaya,2026-07-25,09:00,17:30,30
+T020-028,Miguel,Estrada Salazar,Asesor(a) de crédito,48,Celaya,2026-07-26,09:00,17:30,30
+T020-029,Laura,Morales Rojas,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-029,Laura,Morales Rojas,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-029,Laura,Morales Rojas,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-029,Laura,Morales Rojas,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-029,Laura,Morales Rojas,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-029,Laura,Morales Rojas,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-030,Elizabeth,Ibarra Fuentes,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-030,Elizabeth,Ibarra Fuentes,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-030,Elizabeth,Ibarra Fuentes,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-030,Elizabeth,Ibarra Fuentes,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-030,Elizabeth,Ibarra Fuentes,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-030,Elizabeth,Ibarra Fuentes,Vendedor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-031,Beatriz,Moreno Méndez,Cajero(a),24,Celaya,2026-07-20,09:00,15:00,0
+T020-031,Beatriz,Moreno Méndez,Cajero(a),24,Celaya,2026-07-21,09:00,15:00,0
+T020-031,Beatriz,Moreno Méndez,Cajero(a),24,Celaya,2026-07-22,09:00,15:00,0
+T020-031,Beatriz,Moreno Méndez,Cajero(a),24,Celaya,2026-07-23,09:00,15:00,0
+T020-032,Antonio,Ramos Molina,Cajero(a),48,Celaya,2026-07-20,09:00,17:30,30
+T020-032,Antonio,Ramos Molina,Cajero(a),48,Celaya,2026-07-21,09:00,17:30,30
+T020-032,Antonio,Ramos Molina,Cajero(a),48,Celaya,2026-07-22,09:00,17:30,30
+T020-032,Antonio,Ramos Molina,Cajero(a),48,Celaya,2026-07-23,09:00,17:30,30
+T020-032,Antonio,Ramos Molina,Cajero(a),48,Celaya,2026-07-24,09:00,17:30,30
+T020-032,Antonio,Ramos Molina,Cajero(a),48,Celaya,2026-07-26,09:00,17:30,30
+T020-033,Eduardo,Molina Velázquez,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-033,Eduardo,Molina Velázquez,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-033,Eduardo,Molina Velázquez,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-033,Eduardo,Molina Velázquez,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-033,Eduardo,Molina Velázquez,Vendedor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-033,Eduardo,Molina Velázquez,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-034,Julio,Juárez Díaz,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-034,Julio,Juárez Díaz,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-034,Julio,Juárez Díaz,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-034,Julio,Juárez Díaz,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-034,Julio,Juárez Díaz,Vendedor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-034,Julio,Juárez Díaz,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-035,Margarita,Medina Bautista,Vendedor(a) de piso,24,Celaya,2026-07-20,09:00,15:00,0
+T020-035,Margarita,Medina Bautista,Vendedor(a) de piso,24,Celaya,2026-07-21,09:00,15:00,0
+T020-035,Margarita,Medina Bautista,Vendedor(a) de piso,24,Celaya,2026-07-22,09:00,15:00,0
+T020-035,Margarita,Medina Bautista,Vendedor(a) de piso,24,Celaya,2026-07-26,09:00,15:00,0
+T020-036,Rubén,Medina Juárez,Vendedor(a) de piso,24,Celaya,2026-07-23,15:00,21:00,0
+T020-036,Rubén,Medina Juárez,Vendedor(a) de piso,24,Celaya,2026-07-24,15:00,21:00,0
+T020-036,Rubén,Medina Juárez,Vendedor(a) de piso,24,Celaya,2026-07-25,09:00,15:00,0
+T020-036,Rubén,Medina Juárez,Vendedor(a) de piso,24,Celaya,2026-07-26,09:00,15:00,0
+T020-037,Rosa,Cruz Luna,Cajero(a),48,Celaya,2026-07-20,12:30,21:00,30
+T020-037,Rosa,Cruz Luna,Cajero(a),48,Celaya,2026-07-21,12:30,21:00,30
+T020-037,Rosa,Cruz Luna,Cajero(a),48,Celaya,2026-07-22,12:30,21:00,30
+T020-037,Rosa,Cruz Luna,Cajero(a),48,Celaya,2026-07-24,12:30,21:00,30
+T020-037,Rosa,Cruz Luna,Cajero(a),48,Celaya,2026-07-25,12:30,21:00,30
+T020-037,Rosa,Cruz Luna,Cajero(a),48,Celaya,2026-07-26,12:30,21:00,30
+T020-038,Ricardo,Campos Gutiérrez,Almacenista,48,Celaya,2026-07-20,09:00,17:30,30
+T020-038,Ricardo,Campos Gutiérrez,Almacenista,48,Celaya,2026-07-21,09:00,17:30,30
+T020-038,Ricardo,Campos Gutiérrez,Almacenista,48,Celaya,2026-07-22,09:00,17:30,30
+T020-038,Ricardo,Campos Gutiérrez,Almacenista,48,Celaya,2026-07-23,09:00,17:30,30
+T020-038,Ricardo,Campos Gutiérrez,Almacenista,48,Celaya,2026-07-24,09:00,17:30,30
+T020-038,Ricardo,Campos Gutiérrez,Almacenista,48,Celaya,2026-07-26,09:00,17:30,30
+T020-039,Ximena,Rojas Estrada,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-039,Ximena,Rojas Estrada,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-039,Ximena,Rojas Estrada,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-039,Ximena,Rojas Estrada,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-039,Ximena,Rojas Estrada,Vendedor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-039,Ximena,Rojas Estrada,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-040,Javier,Aguilar Moreno,Almacenista,24,Celaya,2026-07-22,09:00,15:00,0
+T020-040,Javier,Aguilar Moreno,Almacenista,24,Celaya,2026-07-23,09:00,15:00,0
+T020-040,Javier,Aguilar Moreno,Almacenista,24,Celaya,2026-07-24,09:00,15:00,0
+T020-040,Javier,Aguilar Moreno,Almacenista,24,Celaya,2026-07-25,09:00,15:00,0
+T020-041,Guillermo,Ortiz Ibarra,Asesor(a) de crédito,48,Celaya,2026-07-20,12:30,21:00,30
+T020-041,Guillermo,Ortiz Ibarra,Asesor(a) de crédito,48,Celaya,2026-07-22,12:30,21:00,30
+T020-041,Guillermo,Ortiz Ibarra,Asesor(a) de crédito,48,Celaya,2026-07-23,12:30,21:00,30
+T020-041,Guillermo,Ortiz Ibarra,Asesor(a) de crédito,48,Celaya,2026-07-24,12:30,21:00,30
+T020-041,Guillermo,Ortiz Ibarra,Asesor(a) de crédito,48,Celaya,2026-07-25,12:30,21:00,30
+T020-041,Guillermo,Ortiz Ibarra,Asesor(a) de crédito,48,Celaya,2026-07-26,12:30,21:00,30
+T020-042,Pablo,Carrillo Reyes,Vendedor(a) de piso,24,Celaya,2026-07-20,15:00,21:00,0
+T020-042,Pablo,Carrillo Reyes,Vendedor(a) de piso,24,Celaya,2026-07-21,15:00,21:00,0
+T020-042,Pablo,Carrillo Reyes,Vendedor(a) de piso,24,Celaya,2026-07-22,15:00,21:00,0
+T020-042,Pablo,Carrillo Reyes,Vendedor(a) de piso,24,Celaya,2026-07-26,15:00,21:00,0
+T020-043,Karla,Rojas Quintero,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-043,Karla,Rojas Quintero,Vendedor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-043,Karla,Rojas Quintero,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-043,Karla,Rojas Quintero,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-043,Karla,Rojas Quintero,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-043,Karla,Rojas Quintero,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-044,Rubén,Cortés Luna,Cajero(a),48,Celaya,2026-07-20,09:00,17:30,30
+T020-044,Rubén,Cortés Luna,Cajero(a),48,Celaya,2026-07-21,09:00,17:30,30
+T020-044,Rubén,Cortés Luna,Cajero(a),48,Celaya,2026-07-22,09:00,17:30,30
+T020-044,Rubén,Cortés Luna,Cajero(a),48,Celaya,2026-07-23,09:00,17:30,30
+T020-044,Rubén,Cortés Luna,Cajero(a),48,Celaya,2026-07-24,09:00,17:30,30
+T020-044,Rubén,Cortés Luna,Cajero(a),48,Celaya,2026-07-25,09:00,17:30,30
+T020-045,Mauricio,Guzmán Guerrero,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-045,Mauricio,Guzmán Guerrero,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-045,Mauricio,Guzmán Guerrero,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-045,Mauricio,Guzmán Guerrero,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-045,Mauricio,Guzmán Guerrero,Vendedor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-045,Mauricio,Guzmán Guerrero,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-046,Yolanda,Guerrero Domínguez,Cajero(a),48,Celaya,2026-07-21,12:30,21:00,30
+T020-046,Yolanda,Guerrero Domínguez,Cajero(a),48,Celaya,2026-07-22,12:30,21:00,30
+T020-046,Yolanda,Guerrero Domínguez,Cajero(a),48,Celaya,2026-07-23,12:30,21:00,30
+T020-046,Yolanda,Guerrero Domínguez,Cajero(a),48,Celaya,2026-07-24,12:30,21:00,30
+T020-046,Yolanda,Guerrero Domínguez,Cajero(a),48,Celaya,2026-07-25,12:30,21:00,30
+T020-046,Yolanda,Guerrero Domínguez,Cajero(a),48,Celaya,2026-07-26,12:30,21:00,30
+T020-047,Carmen,Núñez Solís,Vendedor(a) de piso,24,Celaya,2026-07-22,15:00,21:00,0
+T020-047,Carmen,Núñez Solís,Vendedor(a) de piso,24,Celaya,2026-07-23,15:00,21:00,0
+T020-047,Carmen,Núñez Solís,Vendedor(a) de piso,24,Celaya,2026-07-24,15:00,21:00,0
+T020-047,Carmen,Núñez Solís,Vendedor(a) de piso,24,Celaya,2026-07-25,15:00,21:00,0
+T020-048,Enrique,Medina Moreno,Almacenista,48,Celaya,2026-07-20,12:30,21:00,30
+T020-048,Enrique,Medina Moreno,Almacenista,48,Celaya,2026-07-21,12:30,21:00,30
+T020-048,Enrique,Medina Moreno,Almacenista,48,Celaya,2026-07-22,12:30,21:00,30
+T020-048,Enrique,Medina Moreno,Almacenista,48,Celaya,2026-07-24,12:30,21:00,30
+T020-048,Enrique,Medina Moreno,Almacenista,48,Celaya,2026-07-25,12:30,21:00,30
+T020-048,Enrique,Medina Moreno,Almacenista,48,Celaya,2026-07-26,12:30,21:00,30
+T020-049,Iván,Jiménez Trejo,Cajero(a),48,Celaya,2026-07-20,12:30,21:00,30
+T020-049,Iván,Jiménez Trejo,Cajero(a),48,Celaya,2026-07-22,12:30,21:00,30
+T020-049,Iván,Jiménez Trejo,Cajero(a),48,Celaya,2026-07-23,12:30,21:00,30
+T020-049,Iván,Jiménez Trejo,Cajero(a),48,Celaya,2026-07-24,12:30,21:00,30
+T020-049,Iván,Jiménez Trejo,Cajero(a),48,Celaya,2026-07-25,12:30,21:00,30
+T020-049,Iván,Jiménez Trejo,Cajero(a),48,Celaya,2026-07-26,12:30,21:00,30
+T020-050,Arturo,Luna Molina,Supervisor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-050,Arturo,Luna Molina,Supervisor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-050,Arturo,Luna Molina,Supervisor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-050,Arturo,Luna Molina,Supervisor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-050,Arturo,Luna Molina,Supervisor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-050,Arturo,Luna Molina,Supervisor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-051,Jimena,Pacheco Vázquez,Supervisor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-051,Jimena,Pacheco Vázquez,Supervisor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-051,Jimena,Pacheco Vázquez,Supervisor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-051,Jimena,Pacheco Vázquez,Supervisor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-051,Jimena,Pacheco Vázquez,Supervisor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-051,Jimena,Pacheco Vázquez,Supervisor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-052,Mónica,Quintero Cervantes,Vendedor(a) de piso,48,Celaya,2026-07-20,09:00,17:30,30
+T020-052,Mónica,Quintero Cervantes,Vendedor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-052,Mónica,Quintero Cervantes,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-052,Mónica,Quintero Cervantes,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-052,Mónica,Quintero Cervantes,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-052,Mónica,Quintero Cervantes,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-053,Elizabeth,Nájera Pérez,Vendedor(a) de piso,24,Celaya,2026-07-23,09:00,15:00,0
+T020-053,Elizabeth,Nájera Pérez,Vendedor(a) de piso,24,Celaya,2026-07-24,09:00,15:00,0
+T020-053,Elizabeth,Nájera Pérez,Vendedor(a) de piso,24,Celaya,2026-07-25,09:00,15:00,0
+T020-053,Elizabeth,Nájera Pérez,Vendedor(a) de piso,24,Celaya,2026-07-26,09:00,15:00,0
+T020-054,Yolanda,Díaz Núñez,Vendedor(a) de piso,24,Celaya,2026-07-20,09:00,15:00,0
+T020-054,Yolanda,Díaz Núñez,Vendedor(a) de piso,24,Celaya,2026-07-21,09:00,15:00,0
+T020-054,Yolanda,Díaz Núñez,Vendedor(a) de piso,24,Celaya,2026-07-22,09:00,15:00,0
+T020-054,Yolanda,Díaz Núñez,Vendedor(a) de piso,24,Celaya,2026-07-26,09:00,15:00,0
+T020-055,Sofía,Castillo Velázquez,Cajero(a),24,Celaya,2026-07-20,15:00,21:00,0
+T020-055,Sofía,Castillo Velázquez,Cajero(a),24,Celaya,2026-07-24,15:00,21:00,0
+T020-055,Sofía,Castillo Velázquez,Cajero(a),24,Celaya,2026-07-25,15:00,21:00,0
+T020-055,Sofía,Castillo Velázquez,Cajero(a),24,Celaya,2026-07-26,15:00,21:00,0
+T020-056,Raúl,Santiago Méndez,Cajero(a),24,Celaya,2026-07-23,15:00,21:00,0
+T020-056,Raúl,Santiago Méndez,Cajero(a),24,Celaya,2026-07-24,15:00,21:00,0
+T020-056,Raúl,Santiago Méndez,Cajero(a),24,Celaya,2026-07-25,09:00,15:00,0
+T020-056,Raúl,Santiago Méndez,Cajero(a),24,Celaya,2026-07-26,09:00,15:00,0
+T020-057,Héctor,Rodríguez Campos,Vendedor(a) de piso,24,Celaya,2026-07-20,09:00,15:00,0
+T020-057,Héctor,Rodríguez Campos,Vendedor(a) de piso,24,Celaya,2026-07-23,09:00,15:00,0
+T020-057,Héctor,Rodríguez Campos,Vendedor(a) de piso,24,Celaya,2026-07-24,09:00,15:00,0
+T020-057,Héctor,Rodríguez Campos,Vendedor(a) de piso,24,Celaya,2026-07-25,09:00,15:00,0
+T020-058,Gabriela,Salazar Peña,Almacenista,48,Celaya,2026-07-20,09:00,17:30,30
+T020-058,Gabriela,Salazar Peña,Almacenista,48,Celaya,2026-07-21,09:00,17:30,30
+T020-058,Gabriela,Salazar Peña,Almacenista,48,Celaya,2026-07-22,09:00,17:30,30
+T020-058,Gabriela,Salazar Peña,Almacenista,48,Celaya,2026-07-23,09:00,17:30,30
+T020-058,Gabriela,Salazar Peña,Almacenista,48,Celaya,2026-07-24,09:00,17:30,30
+T020-058,Gabriela,Salazar Peña,Almacenista,48,Celaya,2026-07-25,09:00,17:30,30
+T020-059,Verónica,Salazar Ruiz,Vendedor(a) de piso,24,Celaya,2026-07-23,15:00,21:00,0
+T020-059,Verónica,Salazar Ruiz,Vendedor(a) de piso,24,Celaya,2026-07-24,15:00,21:00,0
+T020-059,Verónica,Salazar Ruiz,Vendedor(a) de piso,24,Celaya,2026-07-25,09:00,15:00,0
+T020-059,Verónica,Salazar Ruiz,Vendedor(a) de piso,24,Celaya,2026-07-26,09:00,15:00,0
+T020-060,Javier,Delgado Ramos,Asesor(a) de crédito,48,Celaya,2026-07-21,12:30,21:00,30
+T020-060,Javier,Delgado Ramos,Asesor(a) de crédito,48,Celaya,2026-07-22,12:30,21:00,30
+T020-060,Javier,Delgado Ramos,Asesor(a) de crédito,48,Celaya,2026-07-23,12:30,21:00,30
+T020-060,Javier,Delgado Ramos,Asesor(a) de crédito,48,Celaya,2026-07-24,12:30,21:00,30
+T020-060,Javier,Delgado Ramos,Asesor(a) de crédito,48,Celaya,2026-07-25,12:30,21:00,30
+T020-060,Javier,Delgado Ramos,Asesor(a) de crédito,48,Celaya,2026-07-26,12:30,21:00,30
+T020-061,Elizabeth,Pacheco Vargas,Vendedor(a) de piso,24,Celaya,2026-07-23,15:00,21:00,0
+T020-061,Elizabeth,Pacheco Vargas,Vendedor(a) de piso,24,Celaya,2026-07-24,15:00,21:00,0
+T020-061,Elizabeth,Pacheco Vargas,Vendedor(a) de piso,24,Celaya,2026-07-25,09:00,15:00,0
+T020-061,Elizabeth,Pacheco Vargas,Vendedor(a) de piso,24,Celaya,2026-07-26,09:00,15:00,0
+T020-062,Norma,Fuentes Ríos,Almacenista,24,Celaya,2026-07-23,15:00,21:00,0
+T020-062,Norma,Fuentes Ríos,Almacenista,24,Celaya,2026-07-24,15:00,21:00,0
+T020-062,Norma,Fuentes Ríos,Almacenista,24,Celaya,2026-07-25,09:00,15:00,0
+T020-062,Norma,Fuentes Ríos,Almacenista,24,Celaya,2026-07-26,09:00,15:00,0
+T020-063,José,Cervantes Santiago,Vendedor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-063,José,Cervantes Santiago,Vendedor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-063,José,Cervantes Santiago,Vendedor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-063,José,Cervantes Santiago,Vendedor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-063,José,Cervantes Santiago,Vendedor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-063,José,Cervantes Santiago,Vendedor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-064,Jorge,Castro Campos,Vendedor(a) de piso,24,Celaya,2026-07-23,15:00,21:00,0
+T020-064,Jorge,Castro Campos,Vendedor(a) de piso,24,Celaya,2026-07-24,15:00,21:00,0
+T020-064,Jorge,Castro Campos,Vendedor(a) de piso,24,Celaya,2026-07-25,09:00,15:00,0
+T020-064,Jorge,Castro Campos,Vendedor(a) de piso,24,Celaya,2026-07-26,09:00,15:00,0
+T020-065,Arturo,Valdez Cortés,Almacenista,48,Celaya,2026-07-20,12:30,21:00,30
+T020-065,Arturo,Valdez Cortés,Almacenista,48,Celaya,2026-07-21,12:30,21:00,30
+T020-065,Arturo,Valdez Cortés,Almacenista,48,Celaya,2026-07-22,12:30,21:00,30
+T020-065,Arturo,Valdez Cortés,Almacenista,48,Celaya,2026-07-23,12:30,21:00,30
+T020-065,Arturo,Valdez Cortés,Almacenista,48,Celaya,2026-07-24,12:30,21:00,30
+T020-065,Arturo,Valdez Cortés,Almacenista,48,Celaya,2026-07-26,12:30,21:00,30
+T020-066,Diego,Luna Rivera,Vendedor(a) de piso,48,Celaya,2026-07-21,09:00,17:30,30
+T020-066,Diego,Luna Rivera,Vendedor(a) de piso,48,Celaya,2026-07-22,09:00,17:30,30
+T020-066,Diego,Luna Rivera,Vendedor(a) de piso,48,Celaya,2026-07-23,09:00,17:30,30
+T020-066,Diego,Luna Rivera,Vendedor(a) de piso,48,Celaya,2026-07-24,09:00,17:30,30
+T020-066,Diego,Luna Rivera,Vendedor(a) de piso,48,Celaya,2026-07-25,09:00,17:30,30
+T020-066,Diego,Luna Rivera,Vendedor(a) de piso,48,Celaya,2026-07-26,09:00,17:30,30
+T020-067,Jimena,Ortega Cruz,Supervisor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-067,Jimena,Ortega Cruz,Supervisor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-067,Jimena,Ortega Cruz,Supervisor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-067,Jimena,Ortega Cruz,Supervisor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-067,Jimena,Ortega Cruz,Supervisor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-067,Jimena,Ortega Cruz,Supervisor(a) de piso,48,Celaya,2026-07-26,12:30,21:00,30
+T020-068,Juan,Bautista Contreras,Cajero(a),48,Celaya,2026-07-20,09:00,17:30,30
+T020-068,Juan,Bautista Contreras,Cajero(a),48,Celaya,2026-07-21,09:00,17:30,30
+T020-068,Juan,Bautista Contreras,Cajero(a),48,Celaya,2026-07-22,09:00,17:30,30
+T020-068,Juan,Bautista Contreras,Cajero(a),48,Celaya,2026-07-23,09:00,17:30,30
+T020-068,Juan,Bautista Contreras,Cajero(a),48,Celaya,2026-07-24,09:00,17:30,30
+T020-068,Juan,Bautista Contreras,Cajero(a),48,Celaya,2026-07-25,09:00,17:30,30
+T020-069,Luis,Castillo Morales,Almacenista,48,Celaya,2026-07-20,09:00,17:30,30
+T020-069,Luis,Castillo Morales,Almacenista,48,Celaya,2026-07-22,09:00,17:30,30
+T020-069,Luis,Castillo Morales,Almacenista,48,Celaya,2026-07-23,09:00,17:30,30
+T020-069,Luis,Castillo Morales,Almacenista,48,Celaya,2026-07-24,09:00,17:30,30
+T020-069,Luis,Castillo Morales,Almacenista,48,Celaya,2026-07-25,09:00,17:30,30
+T020-069,Luis,Castillo Morales,Almacenista,48,Celaya,2026-07-26,09:00,17:30,30
+T020-070,Estela,Téllez Téllez,Almacenista,24,Celaya,2026-07-20,15:00,21:00,0
+T020-070,Estela,Téllez Téllez,Almacenista,24,Celaya,2026-07-21,15:00,21:00,0
+T020-070,Estela,Téllez Téllez,Almacenista,24,Celaya,2026-07-22,15:00,21:00,0
+T020-070,Estela,Téllez Téllez,Almacenista,24,Celaya,2026-07-23,15:00,21:00,0
+T020-071,Guillermo,Herrera Torres,Supervisor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-071,Guillermo,Herrera Torres,Supervisor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-071,Guillermo,Herrera Torres,Supervisor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-071,Guillermo,Herrera Torres,Supervisor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-071,Guillermo,Herrera Torres,Supervisor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-071,Guillermo,Herrera Torres,Supervisor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
+T020-072,Carlos,Solís Nájera,Supervisor(a) de piso,48,Celaya,2026-07-20,12:30,21:00,30
+T020-072,Carlos,Solís Nájera,Supervisor(a) de piso,48,Celaya,2026-07-21,12:30,21:00,30
+T020-072,Carlos,Solís Nájera,Supervisor(a) de piso,48,Celaya,2026-07-22,12:30,21:00,30
+T020-072,Carlos,Solís Nájera,Supervisor(a) de piso,48,Celaya,2026-07-23,12:30,21:00,30
+T020-072,Carlos,Solís Nájera,Supervisor(a) de piso,48,Celaya,2026-07-24,12:30,21:00,30
+T020-072,Carlos,Solís Nájera,Supervisor(a) de piso,48,Celaya,2026-07-25,12:30,21:00,30
