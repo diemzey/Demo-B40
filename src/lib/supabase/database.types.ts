@@ -351,6 +351,37 @@ export type Database = {
       }
     }
     Views: {
+      v_ahorro_escenario: {
+        Row: {
+          ahorro_dobles: number | null
+          ahorro_mxn: number | null
+          ahorro_pct: number | null
+          ahorro_prima: number | null
+          ahorro_sobrestaffing: number | null
+          ahorro_triples: number | null
+          cobertura_pico_baseline_pct: number | null
+          cobertura_pico_propuesta_pct: number | null
+          costo_total_baseline: number | null
+          costo_total_propuesta: number | null
+          deficit_pico_horas_propuesta: number | null
+          escenario_baseline_id: string | null
+          escenario_propuesta_id: string | null
+          horas_baseline: number | null
+          horas_propuesta: number | null
+          semana_iso: string | null
+          sucursal_id: string | null
+          tope_semanal: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escenarios_sucursal_id_fkey"
+            columns: ["sucursal_id"]
+            isOneToOne: false
+            referencedRelation: "sucursales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_horas_semana: {
         Row: {
           empleado_id: string | null
@@ -411,6 +442,27 @@ export type Database = {
           nombre: string
           puesto: string
           rol: string
+        }[]
+      }
+      reporte_ejecutivo: {
+        Args: { p_semana?: string }
+        Returns: {
+          ahorro_dobles: number
+          ahorro_mxn: number
+          ahorro_pct: number
+          ahorro_prima: number
+          ahorro_sobrestaffing: number
+          ahorro_triples: number
+          cobertura_pico_baseline_pct: number
+          cobertura_pico_propuesta_pct: number
+          costo_baseline: number
+          costo_propuesta: number
+          deficit_pico_horas: number
+          horas_baseline: number
+          horas_propuesta: number
+          semana_iso: string
+          tiendas: number
+          tiendas_con_subdotacion_pico: number
         }[]
       }
       resumen_reacomodo: {

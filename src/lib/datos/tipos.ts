@@ -67,3 +67,75 @@ export type DatosPanel = {
   /** Historial de la sucursal, ascendente por semana. */
   semanas: SemanaHistorial[];
 };
+
+/* ---------- Reporte ejecutivo (Postgres: resumen_escenario → v_ahorro_escenario → reporte_ejecutivo) ---------- */
+
+/** Una fila de `reporte_ejecutivo()`: la empresa agregada por semana ISO. */
+export type FilaReporte = {
+  /** Lunes de la semana ISO, `YYYY-MM-DD`. */
+  semanaIso: string;
+  /** Sucursales con baseline y propuesta publicados esa semana. */
+  tiendas: number;
+  costoBaseline: number;
+  costoPropuesta: number;
+  ahorroMxn: number;
+  /** Porcentaje 0–100 sobre el costo baseline. */
+  ahorroPct: number;
+  ahorroDobles: number;
+  ahorroTriples: number;
+  ahorroPrima: number;
+  ahorroSobrestaffing: number;
+  horasBaseline: number;
+  horasPropuesta: number;
+  /** Promedio por tienda del % de intervalos pico cubiertos (0–100). */
+  coberturaPicoBaselinePct: number;
+  coberturaPicoPropuestaPct: number;
+  tiendasConSubdotacionPico: number;
+  /** Horas-persona que faltan en intervalos pico con la propuesta. */
+  deficitPicoHoras: number;
+};
+
+/**
+ * Suma de todas las semanas de `reporte_ejecutivo()`. `tiendas` y
+ * `tiendasConSubdotacionPico` cuentan sucursales distintas (no tienda-semanas);
+ * `ahorroPct` = ahorro / costo baseline y las coberturas son promedio ponderado
+ * por tiendas.
+ */
+export type TotalReporte = Omit<FilaReporte, "semanaIso"> & {
+  /** Número de semanas agregadas. */
+  semanas: number;
+  /** Lunes de la primera y última semana; null sin datos. */
+  desde: string | null;
+  hasta: string | null;
+};
+
+/** Una fila de `v_ahorro_escenario` con el nombre de la sucursal. */
+export type SucursalReporte = {
+  sucursalId: string;
+  nombre: string;
+  semanaIso: string;
+  costoBaseline: number;
+  costoPropuesta: number;
+  ahorroMxn: number;
+  ahorroPct: number;
+  /** null cuando la semana no tiene intervalos pico. */
+  coberturaPicoPropuestaPct: number | null;
+  deficitPicoHoras: number;
+};
+
+/** Datos de la pestaña Reportes. Objeto plano (serializable) para pasar de servidor a cliente. */
+export type DatosReporte = {
+  origen: "supabase" | "demo";
+  /** `sin-datos`: hay sesión pero la empresa aún no tiene escenarios publicados. */
+  aviso: "sin-datos" | null;
+  empresa: { id: string; nombre: string } | null;
+  /** Tope semanal de las propuestas (el más frecuente en `v_ahorro_escenario`). */
+  tope: number;
+  /** Filas de `reporte_ejecutivo()`, ascendentes por semana. */
+  semanas: FilaReporte[];
+  total: TotalReporte;
+  /** Todas las tienda-semanas de `v_ahorro_escenario`, de menor a mayor ahorro %. */
+  porSucursal: SucursalReporte[];
+  /** Las 5 tienda-semanas con mayor ahorro %. */
+  mejores: SucursalReporte[];
+};
