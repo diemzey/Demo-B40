@@ -123,6 +123,40 @@ export function ImportarYProgramar({
     };
   }, []);
 
+  // Cuenta recién creada: el servidor pudo renderizar antes de que la sesión o
+  // la empresa del registro estuvieran disponibles. En vez de avisar de
+  // inmediato, se vuelve a consultar unas veces y se recarga el panel en
+  // cuanto aparece la empresa; sólo si no aparece se muestra el aviso.
+  const [buscandoEmpresa, setBuscandoEmpresa] = useState(conectado && !datos.empresa);
+  useEffect(() => {
+    if (!conectado || datos.empresa) return;
+    let cancelado = false;
+    let intentos = 0;
+    const intentar = async () => {
+      try {
+        const ctx = await leerContextoImportacion(createClient());
+        if (cancelado) return;
+        if (ctx.empresa) {
+          router.refresh();
+          return;
+        }
+      } catch {
+        // se reintenta abajo
+      }
+      if (cancelado) return;
+      intentos += 1;
+      if (intentos < 5) {
+        setTimeout(() => void intentar(), 1500);
+      } else {
+        setBuscandoEmpresa(false);
+      }
+    };
+    void intentar();
+    return () => {
+      cancelado = true;
+    };
+  }, [conectado, datos.empresa, router]);
+
   // La barra avanza suavemente mientras un paso largo no reporta progreso.
   useEffect(() => {
     if (estado.fase !== "corriendo") return;
@@ -328,10 +362,20 @@ export function ImportarYProgramar({
     >
       {estado.fase === "vacio" &&
         (conectado && !datos.empresa ? (
-          <Aviso tono="rosa">
-            Tu cuenta aún no está ligada a una empresa, así que no podemos guardar tu semana. Pide a quien administra la
-            cuenta que te agregue.
-          </Aviso>
+          buscandoEmpresa ? (
+            <p className="flex items-center gap-2 py-6 text-[13px] text-muted-foreground" role="status" aria-live="polite">
+              <LogoCargando size={18} label="" className="text-foreground" />
+              Preparando tu cuenta…
+            </p>
+          ) : (
+            <Aviso tono="rosa">
+              Tu cuenta aún no está ligada a una empresa, así que no podemos guardar tu semana.{" "}
+              <button type="button" onClick={() => router.refresh()} className="underline underline-offset-2">
+                Volver a intentar
+              </button>{" "}
+              o pide a quien administra la cuenta que te agregue.
+            </Aviso>
+          )
         ) : (
           <ZonaCsv compacto={compacto} onArchivo={(f) => void cargarArchivo(f)} />
         ))}
