@@ -162,9 +162,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [workspaceLocal, setWorkspaceLocal] = useState<string | null>(null);
   const activeWorkspace = workspaceLocal ?? datos.sucursal?.nombre ?? sucursales[0] ?? "";
   const hash = useSyncExternalStore(subscribeHash, getHash, getServerHash);
-  // El item activo se deriva siempre de la URL (pathname + hash); así los
-  // enlaces del menú de perfil y el botón "atrás" también cambian de pestaña.
-  const activeId = idFromLocation(pathname, hash);
+  // Selección hecha con clic en el menú, junto con el hash que había en ese
+  // momento: si la URL ya cambió, manda la URL; si por lo que sea el cambio
+  // de hash no se detectó (navegadores que no pasan por pushState), manda el
+  // clic. Así la pestaña cambia siempre al instante.
+  const [seleccion, setSeleccion] = useState<{ id: string; hash: string } | null>(null);
+  // El item activo se deriva de la URL (pathname + hash); así los enlaces
+  // del menú de perfil y el botón "atrás" también cambian de pestaña.
+  const activeId =
+    seleccion && seleccion.hash === hash ? seleccion.id : idFromLocation(pathname, hash);
   const ActiveTab = TABS[activeId];
 
   useEffect(() => {
@@ -202,6 +208,12 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     if (id === "search") {
       setIsSearchOpen(true);
       return;
+    }
+    if (id in TABS) {
+      setSeleccion({ id, hash: window.location.hash });
+      // Tras la navegación del enlace, fuerza una relectura del hash por si
+      // el navegador no pasó por el pushState interceptado.
+      window.setTimeout(() => window.dispatchEvent(new Event("hashchange")), 0);
     }
     setMobileOpen(false);
   };
