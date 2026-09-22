@@ -2,20 +2,18 @@
 
 import { useRouter } from "next/navigation";
 import { ImportarCsv } from "@/components/dashboard/importar-csv";
-import { SEMANAS, SEMANA_ACTUAL, type EstadoSemana } from "@/components/dashboard/semanas-data";
-import { Panel, PanelHeader, Pill, TabHeader, type PillTone } from "@/components/dashboard/tabs/ui";
+import { Panel, PanelHeader, Pill, TabHeader } from "@/components/dashboard/tabs/ui";
 import { usePanel } from "@/lib/datos/panel-context";
 import { rangoCorto, semanaDesdeLunes } from "@/lib/datos/semana";
-
-const TONO: Record<EstadoSemana, PillTone> = {
-  Diagnosticada: "amber",
-  Reacomodada: "good",
-  Pendiente: "neutral",
-};
 
 const fmtH = new Intl.NumberFormat("es-MX", {
   minimumFractionDigits: 1,
   maximumFractionDigits: 1,
+});
+const fmtMXN = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  maximumFractionDigits: 0,
 });
 
 type Fila = {
@@ -25,7 +23,9 @@ type Fila = {
   horasAlDoble: number;
   fueraDeNorma: number;
   colaboradores: number;
-  estado: EstadoSemana;
+  /** Propuesta publicada para la semana (`v_ahorro_escenario`). */
+  programada: boolean;
+  ahorroMxn?: number;
   actual: boolean;
 };
 
@@ -34,29 +34,21 @@ export function SemanasTab() {
   const router = useRouter();
   const real = datos.origen === "supabase";
 
-  // Supabase: historial de la sucursal (ascendente) → más reciente arriba.
-  // Demo: las semanas de muestra de siempre.
-  const filas: Fila[] = real
-    ? [...datos.semanas].reverse().map((s) => ({
-        clave: s.inicio,
-        iso: s.iso,
-        fechas: rangoCorto(semanaDesdeLunes(s.inicio)),
-        horasAlDoble: s.horasAlDoble,
-        fueraDeNorma: s.fueraDeNorma,
-        colaboradores: s.colaboradores,
-        estado: s.horasAlDoble > 0 ? "Diagnosticada" : "Reacomodada",
-        actual: s.inicio === datos.semana?.inicio,
-      }))
-    : [...SEMANAS].reverse().map((s) => ({
-        clave: String(s.semana),
-        iso: s.semana,
-        fechas: s.fechas,
-        horasAlDoble: s.horasAlDoble,
-        fueraDeNorma: s.fueraDeNorma,
-        colaboradores: datos.personas.length,
-        estado: s.estado,
-        actual: s.semana === SEMANA_ACTUAL,
-      }));
+  // Historial de la sucursal (ascendente) → más reciente arriba. En demo son
+  // las semanas de muestra, con la misma forma.
+  const filas: Fila[] = [...datos.semanas].reverse().map((s) => ({
+    clave: s.inicio,
+    iso: s.iso,
+    fechas: rangoCorto(semanaDesdeLunes(s.inicio)),
+    horasAlDoble: s.horasAlDoble,
+    fueraDeNorma: s.fueraDeNorma,
+    colaboradores: s.colaboradores,
+    programada: s.programada,
+    ahorroMxn: s.ahorroMxn,
+    actual: s.inicio === datos.semana?.inicio,
+  }));
+  const conAhorro = filas.some((f) => f.ahorroMxn !== undefined);
+  const columnas = conAhorro ? 6 : 5;
 
   const primera = filas[filas.length - 1];
   const ultima = filas[0];
@@ -67,13 +59,14 @@ export function SemanasTab() {
       : primera.iso === ultima.iso
         ? `Semana ${ultima.iso}`
         : `Semanas ${primera.iso}–${ultima.iso}`;
+  const programadas = filas.filter((f) => f.programada).length;
 
   return (
     <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
       <TabHeader
         eyebrow="Semanas"
         title={`Semanas · Sucursal ${sucursal}`}
-        subtitle={`${rango} · horas al doble contra el tope de ${datos.tope} h`}
+        subtitle={`${rango} · ${programadas} de ${filas.length} ${filas.length === 1 ? "programada" : "programadas"} · semana actual contra el tope de ${datos.tope} h`}
       />
 
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
@@ -82,7 +75,7 @@ export function SemanasTab() {
             title="Historial"
             description={
               real
-                ? "Cada semana importada desde CSV, con su exceso sobre el tope legal del año."
+                ? `Cada semana importada desde CSV. La semana actual se mide contra ${datos.tope} h; las anteriores contra el tope legal de su año (${datos.topeLegal} h). "Programada" = propuesta publicada con su ahorro.`
                 : "Las semanas 24–30 son datos de muestra; la 31 se calcula de la plantilla."
             }
           />
@@ -94,13 +87,14 @@ export function SemanasTab() {
                   <th className="h-9 px-2.5 font-medium">Fechas</th>
                   <th className="h-9 px-2.5 text-right font-medium">Horas al doble</th>
                   <th className="h-9 px-2.5 text-right font-medium">Fuera de norma</th>
+                  {conAhorro && <th className="h-9 px-2.5 text-right font-medium">Ahorro · semana</th>}
                   <th className="h-9 px-4 text-right font-medium">Estado</th>
                 </tr>
               </thead>
               <tbody>
                 {filas.length === 0 && (
                   <tr className="border-t border-border/60">
-                    <td colSpan={5} className="px-4 py-6 text-center text-xs text-muted-foreground">
+                    <td colSpan={columnas} className="px-4 py-6 text-center text-xs text-muted-foreground">
                       Importa tu primer CSV para ver el historial aquí.
                     </td>
                   </tr>
@@ -124,8 +118,21 @@ export function SemanasTab() {
                     <td className="px-2.5 py-2.5 text-right tabular-nums">
                       {s.fueraDeNorma} de {s.colaboradores}
                     </td>
+                    {conAhorro && (
+                      <td className="px-2.5 py-2.5 text-right tabular-nums">
+                        {s.ahorroMxn === undefined ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : (
+                          <span className={s.ahorroMxn >= 0 ? "font-medium text-emerald-400" : "text-destructive"}>
+                            {fmtMXN.format(s.ahorroMxn)}
+                          </span>
+                        )}
+                      </td>
+                    )}
                     <td className="px-4 py-2.5 text-right">
-                      <Pill tone={TONO[s.estado]}>{s.estado}</Pill>
+                      <Pill tone={s.programada ? "good" : "neutral"}>
+                        {s.programada ? "Programada" : "Sin programar"}
+                      </Pill>
                     </td>
                   </tr>
                 ))}

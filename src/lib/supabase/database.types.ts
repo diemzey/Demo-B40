@@ -16,18 +16,827 @@ export type Database = {
   }
   public: {
     Tables: {
+      asignaciones: {
+        Row: {
+          created_at: string
+          descanso_min: number
+          empleado_id: string
+          es_domingo: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas: number | null
+          id: string
+          inicio: string
+          plantilla_id: string | null
+          semana_iso: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id: string
+          es_domingo?: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas?: number | null
+          id?: string
+          inicio: string
+          plantilla_id?: string | null
+          semana_iso: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id?: string
+          es_domingo?: boolean | null
+          escenario_id?: string
+          fin?: string
+          habilidad_id?: string
+          horas?: number | null
+          id?: string
+          inicio?: string
+          plantilla_id?: string | null
+          semana_iso?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asignaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_horas_semana"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "escenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_baseline_id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_propuesta_id"]
+          },
+          {
+            foreignKeyName: "asignaciones_habilidad_id_fkey"
+            columns: ["habilidad_id"]
+            isOneToOne: false
+            referencedRelation: "habilidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_plantilla_id_fkey"
+            columns: ["plantilla_id"]
+            isOneToOne: false
+            referencedRelation: "plantillas_turno"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      asignaciones_2026q1: {
+        Row: {
+          created_at: string
+          descanso_min: number
+          empleado_id: string
+          es_domingo: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas: number | null
+          id: string
+          inicio: string
+          plantilla_id: string | null
+          semana_iso: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id: string
+          es_domingo?: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas?: number | null
+          id?: string
+          inicio: string
+          plantilla_id?: string | null
+          semana_iso: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id?: string
+          es_domingo?: boolean | null
+          escenario_id?: string
+          fin?: string
+          habilidad_id?: string
+          horas?: number | null
+          id?: string
+          inicio?: string
+          plantilla_id?: string | null
+          semana_iso?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      asignaciones_2026q2: {
+        Row: {
+          created_at: string
+          descanso_min: number
+          empleado_id: string
+          es_domingo: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas: number | null
+          id: string
+          inicio: string
+          plantilla_id: string | null
+          semana_iso: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id: string
+          es_domingo?: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas?: number | null
+          id?: string
+          inicio: string
+          plantilla_id?: string | null
+          semana_iso: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id?: string
+          es_domingo?: boolean | null
+          escenario_id?: string
+          fin?: string
+          habilidad_id?: string
+          horas?: number | null
+          id?: string
+          inicio?: string
+          plantilla_id?: string | null
+          semana_iso?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      asignaciones_2026q3: {
+        Row: {
+          created_at: string
+          descanso_min: number
+          empleado_id: string
+          es_domingo: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas: number | null
+          id: string
+          inicio: string
+          plantilla_id: string | null
+          semana_iso: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id: string
+          es_domingo?: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas?: number | null
+          id?: string
+          inicio: string
+          plantilla_id?: string | null
+          semana_iso: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id?: string
+          es_domingo?: boolean | null
+          escenario_id?: string
+          fin?: string
+          habilidad_id?: string
+          horas?: number | null
+          id?: string
+          inicio?: string
+          plantilla_id?: string | null
+          semana_iso?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      asignaciones_2026q4: {
+        Row: {
+          created_at: string
+          descanso_min: number
+          empleado_id: string
+          es_domingo: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas: number | null
+          id: string
+          inicio: string
+          plantilla_id: string | null
+          semana_iso: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id: string
+          es_domingo?: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas?: number | null
+          id?: string
+          inicio: string
+          plantilla_id?: string | null
+          semana_iso: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id?: string
+          es_domingo?: boolean | null
+          escenario_id?: string
+          fin?: string
+          habilidad_id?: string
+          horas?: number | null
+          id?: string
+          inicio?: string
+          plantilla_id?: string | null
+          semana_iso?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      asignaciones_default: {
+        Row: {
+          created_at: string
+          descanso_min: number
+          empleado_id: string
+          es_domingo: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas: number | null
+          id: string
+          inicio: string
+          plantilla_id: string | null
+          semana_iso: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id: string
+          es_domingo?: boolean | null
+          escenario_id: string
+          fin: string
+          habilidad_id: string
+          horas?: number | null
+          id?: string
+          inicio: string
+          plantilla_id?: string | null
+          semana_iso: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descanso_min?: number
+          empleado_id?: string
+          es_domingo?: boolean | null
+          escenario_id?: string
+          fin?: string
+          habilidad_id?: string
+          horas?: number | null
+          id?: string
+          inicio?: string
+          plantilla_id?: string | null
+          semana_iso?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      auditoria: {
+        Row: {
+          antes: Json | null
+          despues: Json | null
+          en: string
+          escenario_id: string | null
+          fila_id: string | null
+          id: number
+          operacion: string
+          tabla: string
+          usuario: string | null
+        }
+        Insert: {
+          antes?: Json | null
+          despues?: Json | null
+          en?: string
+          escenario_id?: string | null
+          fila_id?: string | null
+          id?: number
+          operacion: string
+          tabla: string
+          usuario?: string | null
+        }
+        Update: {
+          antes?: Json | null
+          despues?: Json | null
+          en?: string
+          escenario_id?: string | null
+          fila_id?: string | null
+          id?: number
+          operacion?: string
+          tabla?: string
+          usuario?: string | null
+        }
+        Relationships: []
+      }
+      cobertura_intervalo: {
+        Row: {
+          asignado_caja: number
+          asignado_total: number
+          es_pico: boolean
+          escenario_id: string
+          inicio: string
+          requerido_caja: number
+          requerido_total: number
+        }
+        Insert: {
+          asignado_caja?: number
+          asignado_total?: number
+          es_pico?: boolean
+          escenario_id: string
+          inicio: string
+          requerido_caja?: number
+          requerido_total?: number
+        }
+        Update: {
+          asignado_caja?: number
+          asignado_total?: number
+          es_pico?: boolean
+          escenario_id?: string
+          inicio?: string
+          requerido_caja?: number
+          requerido_total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobertura_intervalo_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "escenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobertura_intervalo_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_baseline_id"]
+          },
+          {
+            foreignKeyName: "cobertura_intervalo_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_propuesta_id"]
+          },
+        ]
+      }
+      demanda_intervalo: {
+        Row: {
+          created_at: string
+          es_pico: boolean
+          fin: string
+          id: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja: number
+          requerido_total: number
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          es_pico?: boolean
+          fin: string
+          id?: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          es_pico?: boolean
+          fin?: string
+          id?: string
+          inicio?: string
+          pronostico_id?: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demanda_intervalo_pronostico_id_fkey"
+            columns: ["pronostico_id"]
+            isOneToOne: false
+            referencedRelation: "pronosticos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "demanda_intervalo_sucursal_id_fkey"
+            columns: ["sucursal_id"]
+            isOneToOne: false
+            referencedRelation: "sucursales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      demanda_intervalo_2026q1: {
+        Row: {
+          created_at: string
+          es_pico: boolean
+          fin: string
+          id: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja: number
+          requerido_total: number
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          es_pico?: boolean
+          fin: string
+          id?: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          es_pico?: boolean
+          fin?: string
+          id?: string
+          inicio?: string
+          pronostico_id?: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      demanda_intervalo_2026q2: {
+        Row: {
+          created_at: string
+          es_pico: boolean
+          fin: string
+          id: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja: number
+          requerido_total: number
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          es_pico?: boolean
+          fin: string
+          id?: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          es_pico?: boolean
+          fin?: string
+          id?: string
+          inicio?: string
+          pronostico_id?: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      demanda_intervalo_2026q3: {
+        Row: {
+          created_at: string
+          es_pico: boolean
+          fin: string
+          id: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja: number
+          requerido_total: number
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          es_pico?: boolean
+          fin: string
+          id?: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          es_pico?: boolean
+          fin?: string
+          id?: string
+          inicio?: string
+          pronostico_id?: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      demanda_intervalo_2026q4: {
+        Row: {
+          created_at: string
+          es_pico: boolean
+          fin: string
+          id: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja: number
+          requerido_total: number
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          es_pico?: boolean
+          fin: string
+          id?: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          es_pico?: boolean
+          fin?: string
+          id?: string
+          inicio?: string
+          pronostico_id?: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      demanda_intervalo_default: {
+        Row: {
+          created_at: string
+          es_pico: boolean
+          fin: string
+          id: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja: number
+          requerido_total: number
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          es_pico?: boolean
+          fin: string
+          id?: string
+          inicio: string
+          pronostico_id: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          es_pico?: boolean
+          fin?: string
+          id?: string
+          inicio?: string
+          pronostico_id?: string
+          requerido_caja?: number
+          requerido_total?: number
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      disponibilidad: {
+        Row: {
+          created_at: string
+          dia_semana: number
+          empleado_id: string
+          hora_fin: string
+          hora_inicio: string
+          id: string
+          updated_at: string
+          vigente_desde: string | null
+          vigente_hasta: string | null
+        }
+        Insert: {
+          created_at?: string
+          dia_semana: number
+          empleado_id: string
+          hora_fin: string
+          hora_inicio: string
+          id?: string
+          updated_at?: string
+          vigente_desde?: string | null
+          vigente_hasta?: string | null
+        }
+        Update: {
+          created_at?: string
+          dia_semana?: number
+          empleado_id?: string
+          hora_fin?: string
+          hora_inicio?: string
+          id?: string
+          updated_at?: string
+          vigente_desde?: string | null
+          vigente_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disponibilidad_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disponibilidad_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_horas_semana"
+            referencedColumns: ["empleado_id"]
+          },
+        ]
+      }
+      empleado_habilidades: {
+        Row: {
+          certificado_hasta: string | null
+          created_at: string
+          empleado_id: string
+          habilidad_id: string
+        }
+        Insert: {
+          certificado_hasta?: string | null
+          created_at?: string
+          empleado_id: string
+          habilidad_id: string
+        }
+        Update: {
+          certificado_hasta?: string | null
+          created_at?: string
+          empleado_id?: string
+          habilidad_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleado_habilidades_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleado_habilidades_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_horas_semana"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleado_habilidades_habilidad_id_fkey"
+            columns: ["habilidad_id"]
+            isOneToOne: false
+            referencedRelation: "habilidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empleados: {
         Row: {
           activo: boolean
           apellido: string
           clave_externa: string | null
           created_at: string
+          fecha_alta: string | null
           foto_url: string | null
           id: string
           jornada_contratada_horas: number | null
+          max_horas_semana: number
           nombre: string
           puesto: string | null
+          puesto_id: string | null
           sucursal_id: string
+          tipo_contrato: Database["public"]["Enums"]["tipo_contrato"]
           updated_at: string
         }
         Insert: {
@@ -35,12 +844,16 @@ export type Database = {
           apellido: string
           clave_externa?: string | null
           created_at?: string
+          fecha_alta?: string | null
           foto_url?: string | null
           id?: string
           jornada_contratada_horas?: number | null
+          max_horas_semana?: number
           nombre: string
           puesto?: string | null
+          puesto_id?: string | null
           sucursal_id: string
+          tipo_contrato?: Database["public"]["Enums"]["tipo_contrato"]
           updated_at?: string
         }
         Update: {
@@ -48,15 +861,26 @@ export type Database = {
           apellido?: string
           clave_externa?: string | null
           created_at?: string
+          fecha_alta?: string | null
           foto_url?: string | null
           id?: string
           jornada_contratada_horas?: number | null
+          max_horas_semana?: number
           nombre?: string
           puesto?: string | null
+          puesto_id?: string | null
           sucursal_id?: string
+          tipo_contrato?: Database["public"]["Enums"]["tipo_contrato"]
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "empleados_puesto_id_fkey"
+            columns: ["puesto_id"]
+            isOneToOne: false
+            referencedRelation: "puestos"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "empleados_sucursal_id_fkey"
             columns: ["sucursal_id"]
@@ -89,6 +913,138 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      escenarios: {
+        Row: {
+          creado_por: string | null
+          created_at: string
+          estado: Database["public"]["Enums"]["estado_escenario"]
+          id: string
+          padre_id: string | null
+          parametros: Json
+          pronostico_id: string | null
+          publicado_en: string | null
+          reglas_id: string
+          semana_iso: string
+          sucursal_id: string
+          tipo: Database["public"]["Enums"]["tipo_escenario"]
+          tope_semanal: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_escenario"]
+          id?: string
+          padre_id?: string | null
+          parametros?: Json
+          pronostico_id?: string | null
+          publicado_en?: string | null
+          reglas_id: string
+          semana_iso: string
+          sucursal_id: string
+          tipo: Database["public"]["Enums"]["tipo_escenario"]
+          tope_semanal: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          creado_por?: string | null
+          created_at?: string
+          estado?: Database["public"]["Enums"]["estado_escenario"]
+          id?: string
+          padre_id?: string | null
+          parametros?: Json
+          pronostico_id?: string | null
+          publicado_en?: string | null
+          reglas_id?: string
+          semana_iso?: string
+          sucursal_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_escenario"]
+          tope_semanal?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escenarios_padre_id_fkey"
+            columns: ["padre_id"]
+            isOneToOne: false
+            referencedRelation: "escenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escenarios_padre_id_fkey"
+            columns: ["padre_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_baseline_id"]
+          },
+          {
+            foreignKeyName: "escenarios_padre_id_fkey"
+            columns: ["padre_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_propuesta_id"]
+          },
+          {
+            foreignKeyName: "escenarios_pronostico_id_fkey"
+            columns: ["pronostico_id"]
+            isOneToOne: false
+            referencedRelation: "pronosticos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escenarios_reglas_id_fkey"
+            columns: ["reglas_id"]
+            isOneToOne: false
+            referencedRelation: "reglas_laborales"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escenarios_sucursal_id_fkey"
+            columns: ["sucursal_id"]
+            isOneToOne: false
+            referencedRelation: "sucursales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      habilidades: {
+        Row: {
+          clave: string
+          created_at: string
+          empresa_id: string
+          id: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          clave: string
+          created_at?: string
+          empresa_id: string
+          id?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          clave?: string
+          created_at?: string
+          empresa_id?: string
+          id?: string
+          nombre?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "habilidades_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       horarios: {
         Row: {
@@ -293,6 +1249,271 @@ export type Database = {
           },
         ]
       }
+      plantillas_turno: {
+        Row: {
+          activa: boolean
+          clave: string
+          created_at: string
+          descanso_min: number
+          duracion_min: number
+          empresa_id: string
+          hora_inicio: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          clave: string
+          created_at?: string
+          descanso_min?: number
+          duracion_min: number
+          empresa_id: string
+          hora_inicio: string
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          clave?: string
+          created_at?: string
+          descanso_min?: number
+          duracion_min?: number
+          empresa_id?: string
+          hora_inicio?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plantillas_turno_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pronosticos: {
+        Row: {
+          created_at: string
+          generado_en: string
+          id: string
+          metodo: string
+          parametros: Json
+          semana_iso: string
+          sucursal_id: string
+        }
+        Insert: {
+          created_at?: string
+          generado_en?: string
+          id?: string
+          metodo?: string
+          parametros?: Json
+          semana_iso: string
+          sucursal_id: string
+        }
+        Update: {
+          created_at?: string
+          generado_en?: string
+          id?: string
+          metodo?: string
+          parametros?: Json
+          semana_iso?: string
+          sucursal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pronosticos_sucursal_id_fkey"
+            columns: ["sucursal_id"]
+            isOneToOne: false
+            referencedRelation: "sucursales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      puestos: {
+        Row: {
+          clave: string
+          created_at: string
+          empresa_id: string
+          habilidad_id: string | null
+          id: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          clave: string
+          created_at?: string
+          empresa_id: string
+          habilidad_id?: string | null
+          id?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          clave?: string
+          created_at?: string
+          empresa_id?: string
+          habilidad_id?: string | null
+          id?: string
+          nombre?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "puestos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "puestos_habilidad_id_fkey"
+            columns: ["habilidad_id"]
+            isOneToOne: false
+            referencedRelation: "habilidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reglas_laborales: {
+        Row: {
+          created_at: string
+          descanso_entre_turnos_horas: number
+          empresa_id: string | null
+          factor_doble: number
+          factor_triple: number
+          horas_dobles_max: number
+          id: string
+          max_dias_semana: number
+          max_horas_dia: number
+          prima_dominical_pct: number
+          tope_semanal: number
+          updated_at: string
+          vigente_desde: string
+        }
+        Insert: {
+          created_at?: string
+          descanso_entre_turnos_horas?: number
+          empresa_id?: string | null
+          factor_doble?: number
+          factor_triple?: number
+          horas_dobles_max?: number
+          id?: string
+          max_dias_semana?: number
+          max_horas_dia?: number
+          prima_dominical_pct?: number
+          tope_semanal: number
+          updated_at?: string
+          vigente_desde: string
+        }
+        Update: {
+          created_at?: string
+          descanso_entre_turnos_horas?: number
+          empresa_id?: string | null
+          factor_doble?: number
+          factor_triple?: number
+          horas_dobles_max?: number
+          id?: string
+          max_dias_semana?: number
+          max_horas_dia?: number
+          prima_dominical_pct?: number
+          tope_semanal?: number
+          updated_at?: string
+          vigente_desde?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reglas_laborales_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resumen_escenario: {
+        Row: {
+          calculado_en: string
+          costo_dobles: number
+          costo_prima_dominical: number
+          costo_regular: number
+          costo_sobrestaffing: number
+          costo_total: number
+          costo_triples: number
+          deficit_pico_horas: number
+          escenario_id: string
+          horas_dobles: number
+          horas_domingo: number
+          horas_regulares: number
+          horas_sobrestaffing: number
+          horas_totales: number
+          horas_triples: number
+          intervalos_pico: number
+          intervalos_pico_cubiertos: number
+        }
+        Insert: {
+          calculado_en?: string
+          costo_dobles?: number
+          costo_prima_dominical?: number
+          costo_regular?: number
+          costo_sobrestaffing?: number
+          costo_total?: number
+          costo_triples?: number
+          deficit_pico_horas?: number
+          escenario_id: string
+          horas_dobles?: number
+          horas_domingo?: number
+          horas_regulares?: number
+          horas_sobrestaffing?: number
+          horas_totales?: number
+          horas_triples?: number
+          intervalos_pico?: number
+          intervalos_pico_cubiertos?: number
+        }
+        Update: {
+          calculado_en?: string
+          costo_dobles?: number
+          costo_prima_dominical?: number
+          costo_regular?: number
+          costo_sobrestaffing?: number
+          costo_total?: number
+          costo_triples?: number
+          deficit_pico_horas?: number
+          escenario_id?: string
+          horas_dobles?: number
+          horas_domingo?: number
+          horas_regulares?: number
+          horas_sobrestaffing?: number
+          horas_totales?: number
+          horas_triples?: number
+          intervalos_pico?: number
+          intervalos_pico_cubiertos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resumen_escenario_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: true
+            referencedRelation: "escenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resumen_escenario_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: true
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_baseline_id"]
+          },
+          {
+            foreignKeyName: "resumen_escenario_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: true
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_propuesta_id"]
+          },
+        ]
+      }
       sucursales: {
         Row: {
           ciudad: string | null
@@ -334,6 +1555,44 @@ export type Database = {
           },
         ]
       }
+      tabuladores: {
+        Row: {
+          created_at: string
+          id: string
+          prima_dominical_pct: number
+          puesto_id: string
+          salario_hora: number
+          updated_at: string
+          vigente_desde: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prima_dominical_pct?: number
+          puesto_id: string
+          salario_hora: number
+          updated_at?: string
+          vigente_desde: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prima_dominical_pct?: number
+          puesto_id?: string
+          salario_hora?: number
+          updated_at?: string
+          vigente_desde?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tabuladores_puesto_id_fkey"
+            columns: ["puesto_id"]
+            isOneToOne: false
+            referencedRelation: "puestos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       topes_semanales: {
         Row: {
           anio: number
@@ -346,6 +1605,212 @@ export type Database = {
         Update: {
           anio?: number
           tope_horas?: number
+        }
+        Relationships: []
+      }
+      trafico_observado: {
+        Row: {
+          created_at: string
+          fin: string
+          id: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          fin: string
+          id?: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          fin?: string
+          id?: string
+          inicio?: string
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trafico_observado_sucursal_id_fkey"
+            columns: ["sucursal_id"]
+            isOneToOne: false
+            referencedRelation: "sucursales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trafico_observado_2026q1: {
+        Row: {
+          created_at: string
+          fin: string
+          id: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          fin: string
+          id?: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          fin?: string
+          id?: string
+          inicio?: string
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      trafico_observado_2026q2: {
+        Row: {
+          created_at: string
+          fin: string
+          id: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          fin: string
+          id?: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          fin?: string
+          id?: string
+          inicio?: string
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      trafico_observado_2026q3: {
+        Row: {
+          created_at: string
+          fin: string
+          id: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          fin: string
+          id?: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          fin?: string
+          id?: string
+          inicio?: string
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      trafico_observado_2026q4: {
+        Row: {
+          created_at: string
+          fin: string
+          id: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          fin: string
+          id?: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          fin?: string
+          id?: string
+          inicio?: string
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
+        }
+        Relationships: []
+      }
+      trafico_observado_default: {
+        Row: {
+          created_at: string
+          fin: string
+          id: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico: number
+          ventas: number
+        }
+        Insert: {
+          created_at?: string
+          fin: string
+          id?: string
+          inicio: string
+          semana_iso: string
+          sucursal_id: string
+          trafico?: number
+          ventas?: number
+        }
+        Update: {
+          created_at?: string
+          fin?: string
+          id?: string
+          inicio?: string
+          semana_iso?: string
+          sucursal_id?: string
+          trafico?: number
+          ventas?: number
         }
         Relationships: []
       }
@@ -373,6 +1838,118 @@ export type Database = {
           tope_semanal: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "escenarios_sucursal_id_fkey"
+            columns: ["sucursal_id"]
+            isOneToOne: false
+            referencedRelation: "sucursales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_asignacion_horas_semana: {
+        Row: {
+          dias_trabajados: number | null
+          empleado_id: string | null
+          escenario_id: string | null
+          horas: number | null
+          horas_domingo: number | null
+          semana_iso: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asignaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_horas_semana"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "escenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_baseline_id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_propuesta_id"]
+          },
+        ]
+      }
+      v_costo_empleado_semana: {
+        Row: {
+          costo_dobles: number | null
+          costo_prima_dominical: number | null
+          costo_regular: number | null
+          costo_total: number | null
+          costo_triples: number | null
+          dias_trabajados: number | null
+          empleado_id: string | null
+          escenario_id: string | null
+          horas: number | null
+          horas_dobles: number | null
+          horas_domingo: number | null
+          horas_regulares: number | null
+          horas_triples: number | null
+          semana_iso: string | null
+          sucursal_id: string | null
+          tarifa: number | null
+          tope: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "asignaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_horas_semana"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "escenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_baseline_id"]
+          },
+          {
+            foreignKeyName: "asignaciones_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_propuesta_id"]
+          },
           {
             foreignKeyName: "escenarios_sucursal_id_fkey"
             columns: ["sucursal_id"]
@@ -419,10 +1996,56 @@ export type Database = {
           },
         ]
       }
+      v_subdotacion_pico: {
+        Row: {
+          asignado_total: number | null
+          deficit: number | null
+          escenario_id: string | null
+          inicio: string | null
+          requerido_total: number | null
+          semana_iso: string | null
+          sucursal_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_escenario"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cobertura_intervalo_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "escenarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cobertura_intervalo_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_baseline_id"]
+          },
+          {
+            foreignKeyName: "cobertura_intervalo_escenario_id_fkey"
+            columns: ["escenario_id"]
+            isOneToOne: false
+            referencedRelation: "v_ahorro_escenario"
+            referencedColumns: ["escenario_propuesta_id"]
+          },
+          {
+            foreignKeyName: "escenarios_sucursal_id_fkey"
+            columns: ["sucursal_id"]
+            isOneToOne: false
+            referencedRelation: "sucursales"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       empresa_actual: { Args: never; Returns: string }
       es_admin: { Args: never; Returns: boolean }
+      materializar_baseline: {
+        Args: { p_reglas?: string; p_semana: string; p_sucursal: string }
+        Returns: string
+      }
       puede_editar: { Args: never; Returns: boolean }
       reacomodar_semana: {
         Args: {
@@ -497,13 +2120,19 @@ export type Database = {
           tope_horas: number
         }[]
       }
+      resumir_escenario: { Args: { p_escenario: string }; Returns: undefined }
       rol_actual: {
         Args: never
         Returns: Database["public"]["Enums"]["rol_usuario"]
       }
+      tarifa_vigente: {
+        Args: { p_fecha: string; p_puesto: string }
+        Returns: number
+      }
       tope_semanal: { Args: { p_anio: number }; Returns: number }
     }
     Enums: {
+      estado_escenario: "borrador" | "publicado" | "archivado"
       estado_importacion:
         | "pendiente"
         | "procesando"
@@ -511,6 +2140,8 @@ export type Database = {
         | "con_errores"
       origen_horario: "csv" | "manual" | "motor"
       rol_usuario: "owner" | "admin" | "gerente" | "lectura"
+      tipo_contrato: "tiempo_completo" | "medio_tiempo"
+      tipo_escenario: "baseline" | "propuesta"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -638,6 +2269,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      estado_escenario: ["borrador", "publicado", "archivado"],
       estado_importacion: [
         "pendiente",
         "procesando",
@@ -646,6 +2278,8 @@ export const Constants = {
       ],
       origen_horario: ["csv", "manual", "motor"],
       rol_usuario: ["owner", "admin", "gerente", "lectura"],
+      tipo_contrato: ["tiempo_completo", "medio_tiempo"],
+      tipo_escenario: ["baseline", "propuesta"],
     },
   },
 } as const

@@ -33,6 +33,11 @@ clave), `--presupuesto ms` (búsqueda local por tienda-semana, default 3000),
 
 ## Módulos
 
+Los módulos puros (`tipos`, `tiempo`, `pronostico`, `requerimiento`,
+`baseline`, `reglas`, `optimizar`, `evaluar`, `capacidad`) viven en
+`src/lib/motor/` para que la app los corra en el navegador
+(`src/lib/motor/programar.ts`); aquí son re-exports.
+
 | Archivo | Qué hace |
 |---|---|
 | `tipos.ts` | Contratos de entrada (salida de `scripts/sintetico`) y de salida (formas de `demanda_intervalo`, `asignaciones`, `resumen_escenario`). |

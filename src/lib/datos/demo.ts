@@ -57,6 +57,7 @@ export function datosDemo(aviso: DatosPanel["aviso"] = null): DatosPanel {
     sucursal: { id: "coapa", nombre: "Coapa" },
     semana,
     tope: TOPE_2027,
+    topeLegal: TOPE_2027,
     topeAnio: 2027,
     topeAnterior: 48,
     tope2030: TOPE_2030,
@@ -70,6 +71,9 @@ export function datosDemo(aviso: DatosPanel["aviso"] = null): DatosPanel {
       horasAlDoble: s.horasAlDoble,
       fueraDeNorma: s.fueraDeNorma,
       colaboradores: PLANTILLA_COAPA.length,
+      // En la muestra, "Reacomodada" equivale a una semana ya programada.
+      programada: s.estado === "Reacomodada",
     })),
+    programacion: null,
   };
 }

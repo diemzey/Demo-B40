@@ -35,6 +35,40 @@ export type SemanaHistorial = {
   horasAlDoble: number;
   fueraDeNorma: number;
   colaboradores: number;
+  /** `true` cuando la semana ya tiene una propuesta publicada (`v_ahorro_escenario`). */
+  programada: boolean;
+  /** Ahorro semanal de la propuesta publicada (MXN); ausente si no está programada. */
+  ahorroMxn?: number;
+};
+
+/**
+ * Propuesta publicada de la sucursal-semana mostrada: una fila de
+ * `v_ahorro_escenario` (último baseline vs última propuesta publicados) con
+ * el detalle de `resumen_escenario` del baseline y de la propuesta. Ninguna
+ * cifra se recalcula en el panel: todo sale de Postgres.
+ */
+export type ProgramacionPanel = {
+  propuestaId: string;
+  baselineId: string;
+  /** `escenarios.tope_semanal` de la propuesta (h/semana). */
+  tope: number;
+  costoBaseline: number;
+  costoPropuesta: number;
+  ahorroMxn: number;
+  /** Porcentaje 0–100 sobre el costo baseline. */
+  ahorroPct: number;
+  /** Costo de las horas al doble en el baseline (MXN). */
+  costoDoblesBaseline: number;
+  horasDoblesBaseline: number;
+  costoSobrestaffingBaseline: number;
+  costoSobrestaffingPropuesta: number;
+  /** null cuando la semana no tiene intervalos pico. */
+  coberturaPicoBaselinePct: number | null;
+  coberturaPicoPropuestaPct: number | null;
+  /** Horas-persona que faltan en intervalos pico con la propuesta. */
+  deficitPicoHoras: number;
+  /** `escenarios.publicado_en` de la propuesta (ISO 8601); null si no consta. */
+  publicadoEn: string | null;
 };
 
 /**
@@ -61,11 +95,17 @@ export type DatosPanel = {
   /** Sucursal seleccionada. */
   sucursal: { id: string; nombre: string } | null;
   semana: SemanaPanel | null;
-  /** Tope vigente para la semana mostrada. */
+  /**
+   * Tope con el que se calculan `antes`, `despues` y la columna reacomodada:
+   * el de la propuesta publicada si la hay; si no, el objetivo de la reforma
+   * (40 h, `TOPE_2030`), que es lo que el producto optimiza. En demo, 46 h.
+   */
   tope: number;
-  /** Año al que corresponde `tope` (en demo, 2027). */
+  /** Tope legal del año de la semana (`topes_semanales`), sólo informativo. */
+  topeLegal: number;
+  /** Año al que corresponde `topeLegal` (en demo, 2027). */
   topeAnio: number;
-  /** Tope del año anterior, para el delta de la tarjeta; null si no se conoce. */
+  /** Tope legal del año anterior, para el delta de la tarjeta; null si no se conoce. */
   topeAnterior: number | null;
   tope2030: number;
   personas: JornadaPersona[];
@@ -74,6 +114,8 @@ export type DatosPanel = {
   antes2030: JornadaResumen;
   /** Historial de la sucursal, ascendente por semana. */
   semanas: SemanaHistorial[];
+  /** Propuesta publicada para la sucursal-semana mostrada; null si aún no se programó. */
+  programacion: ProgramacionPanel | null;
 };
 
 /* ---------- Reporte ejecutivo (Postgres: resumen_escenario → v_ahorro_escenario → reporte_ejecutivo) ---------- */

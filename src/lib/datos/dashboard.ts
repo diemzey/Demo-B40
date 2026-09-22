@@ -1,16 +1,18 @@
 import { cache } from "react";
 import { cookies } from "next/headers";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { JornadaPersona } from "@/components/ui/jornada-artefacto";
 import { resumenDe } from "@/components/demo/plantilla-coapa";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
-import type { Tables } from "@/lib/supabase/database.types";
+import type { Database, Tables } from "@/lib/supabase/database.types";
 import { datosDemo } from "@/lib/datos/demo";
 import { numeroSemanaIso, semanaDesdeLunes } from "@/lib/datos/semana";
 import {
   COOKIE_SUCURSAL,
   TOPE_2030,
   type DatosPanel,
+  type ProgramacionPanel,
   type SemanaHistorial,
   type SucursalPanel,
 } from "@/lib/datos/tipos";
@@ -33,6 +35,66 @@ import {
 
 type Supabase = Awaited<ReturnType<typeof createClient>>;
 type ResumenFila = Tables<"v_resumen_sucursal_semana">;
+type AhorroFila = Tables<"v_ahorro_escenario">;
+
+/*
+ * Tablas y vistas de la programación (migraciones 0006/0007) que todavía no
+ * están en `database.types.ts`. Se declaran aquí, sólo con las columnas que
+ * lee el panel, y se superponen al esquema generado para consultarlas con
+ * tipos; cuando se regeneren los tipos estas declaraciones sobran.
+ */
+type FilaResumenEscenario = {
+  escenario_id: string;
+  horas_totales: number;
+  horas_dobles: number;
+  horas_triples: number;
+  costo_dobles: number;
+  costo_triples: number;
+  horas_sobrestaffing: number;
+  costo_sobrestaffing: number;
+  costo_total: number;
+  intervalos_pico: number;
+  intervalos_pico_cubiertos: number;
+  deficit_pico_horas: number;
+  calculado_en: string;
+};
+type FilaEscenario = {
+  id: string;
+  sucursal_id: string;
+  semana_iso: string;
+  tipo: "baseline" | "propuesta";
+  version: number;
+  estado: string;
+  tope_semanal: number;
+  publicado_en: string | null;
+};
+type FilaAsignacionHoras = {
+  escenario_id: string;
+  empleado_id: string;
+  semana_iso: string;
+  horas: number;
+  horas_domingo: number;
+  dias_trabajados: number;
+};
+type Tabla<Row> = { Row: Row; Insert: Partial<Row>; Update: Partial<Row>; Relationships: [] };
+type EsquemaProgramacion = Omit<Database["public"], "Tables" | "Views"> & {
+  Tables: Database["public"]["Tables"] & {
+    escenarios: Tabla<FilaEscenario>;
+    resumen_escenario: Tabla<FilaResumenEscenario>;
+  };
+  Views: Database["public"]["Views"] & {
+    v_asignacion_horas_semana: { Row: FilaAsignacionHoras; Relationships: [] };
+  };
+};
+type DbProgramacion = Omit<Database, "public"> & { public: EsquemaProgramacion };
+type SupabaseProgramacion = SupabaseClient<DbProgramacion>;
+
+const num = (v: number | string | null | undefined): number => {
+  const n = typeof v === "number" ? v : Number(v ?? 0);
+  return Number.isFinite(n) ? n : 0;
+};
+const oNull = (v: number | string | null | undefined): number | null =>
+  v === null || v === undefined ? null : num(v);
 
 /** Catálogo local por si `topes_semanales` estuviera vacío (mismos valores que la migración 0004). */
 const TOPES_RESPALDO: Array<Pick<Tables<"topes_semanales">, "anio" | "tope_horas">> = [
@@ -78,7 +140,8 @@ function panelVacio(
     sucursales: [],
     sucursal: null,
     semana: null,
-    tope,
+    tope: TOPE_2030,
+    topeLegal: tope,
     topeAnio: anio,
     topeAnterior: topeAnterior === tope ? null : topeAnterior,
     tope2030: TOPE_2030,
@@ -87,6 +150,64 @@ function panelVacio(
     despues: { ...SIN_EXCESO, horasAbsorbidas: 0, horasSinCubrir: 0, vacantes: 0 },
     antes2030: { ...SIN_EXCESO },
     semanas: [],
+    programacion: null,
+  };
+}
+
+/** Lunes `YYYY-MM-DD` de una fecha que Postgres devuelve como `date` (a veces con hora). */
+const lunesDe = (fecha: string) => fecha.slice(0, 10);
+
+type Programada = {
+  programacion: ProgramacionPanel;
+  /** Horas por empleado en la propuesta (`v_asignacion_horas_semana`). */
+  horasPropuesta: Map<string, number>;
+};
+
+/**
+ * Detalle de la propuesta publicada de una sucursal-semana: `resumen_escenario`
+ * del baseline y de la propuesta, la fecha de publicación y las horas por
+ * empleado. Devuelve null si la fila de `v_ahorro_escenario` no está completa
+ * o si falta alguno de los resúmenes (la vista los exige, pero RLS podría
+ * ocultarlos).
+ */
+async function cargarProgramada(db: SupabaseProgramacion, fila: AhorroFila): Promise<Programada | null> {
+  const propuestaId = fila.escenario_propuesta_id;
+  const baselineId = fila.escenario_baseline_id;
+  if (!propuestaId || !baselineId) return null;
+
+  const [{ data: resumenes }, { data: escenario }, { data: filasHoras }] = await Promise.all([
+    db.from("resumen_escenario").select("*").in("escenario_id", [baselineId, propuestaId]),
+    db.from("escenarios").select("id, publicado_en").eq("id", propuestaId).maybeSingle(),
+    db.from("v_asignacion_horas_semana").select("empleado_id, horas").eq("escenario_id", propuestaId),
+  ]);
+  const baseline = resumenes?.find((r) => r.escenario_id === baselineId);
+  const propuesta = resumenes?.find((r) => r.escenario_id === propuestaId);
+  if (!baseline || !propuesta) return null;
+
+  const horasPropuesta = new Map<string, number>();
+  for (const h of filasHoras ?? []) {
+    horasPropuesta.set(h.empleado_id, num(horasPropuesta.get(h.empleado_id)) + num(h.horas));
+  }
+
+  return {
+    programacion: {
+      propuestaId,
+      baselineId,
+      tope: num(fila.tope_semanal) || TOPE_2030,
+      costoBaseline: num(fila.costo_total_baseline ?? baseline.costo_total),
+      costoPropuesta: num(fila.costo_total_propuesta ?? propuesta.costo_total),
+      ahorroMxn: num(fila.ahorro_mxn),
+      ahorroPct: num(fila.ahorro_pct),
+      costoDoblesBaseline: num(baseline.costo_dobles),
+      horasDoblesBaseline: num(baseline.horas_dobles),
+      costoSobrestaffingBaseline: num(baseline.costo_sobrestaffing),
+      costoSobrestaffingPropuesta: num(propuesta.costo_sobrestaffing),
+      coberturaPicoBaselinePct: oNull(fila.cobertura_pico_baseline_pct),
+      coberturaPicoPropuestaPct: oNull(fila.cobertura_pico_propuesta_pct),
+      deficitPicoHoras: num(fila.deficit_pico_horas_propuesta ?? propuesta.deficit_pico_horas),
+      publicadoEn: escenario?.publicado_en ?? null,
+    },
+    horasPropuesta,
   };
 }
 
@@ -163,55 +284,124 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
 
   const historial = resumen.filter((r) => r.sucursal_id === elegida.id);
   const semana = semanaDesdeLunes(historial[0].semana_iso);
-  const tope = topeDe(catalogo, semana.anio);
+  const topeLegal = topeDe(catalogo, semana.anio);
   const topeAnterior = topeDe(catalogo, semana.anio - 1);
 
-  // El motor de reacomodo vive en Postgres (public.reacomodar_semana): quien
-  // excede el tope cede, quien tiene capacidad recibe, y lo que no cabe en la
-  // plantilla se reporta como horas sin cubrir → vacantes sugeridas.
-  const [{ data: filasReacomodo }, { data: filasBalance }, { data: filasEmpleados }] =
-    await Promise.all([
-      supabase.rpc("reacomodar_semana", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
-      supabase.rpc("resumen_reacomodo", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
-      supabase
-        .from("empleados")
-        .select("id, nombre, apellido, puesto, foto_url")
-        .eq("sucursal_id", elegida.id)
-        .eq("activo", true)
-        .order("apellido")
-        .order("nombre"),
-    ]);
+  // Propuestas publicadas de la sucursal (una fila por semana): la de la
+  // semana mostrada decide el tope y la columna reacomodada; las demás sólo
+  // marcan el historial como programado.
+  const db = supabase as unknown as SupabaseProgramacion;
+  const { data: filasAhorro } = await supabase
+    .from("v_ahorro_escenario")
+    .select("*")
+    .eq("sucursal_id", elegida.id);
+  const ahorroPorSemana = new Map<string, AhorroFila>();
+  for (const f of filasAhorro ?? []) {
+    if (typeof f.semana_iso === "string") ahorroPorSemana.set(lunesDe(f.semana_iso), f);
+  }
+  const filaAhorro = ahorroPorSemana.get(semana.inicio);
+  const programada = filaAhorro ? await cargarProgramada(db, filaAhorro) : null;
 
-  const propuesta = new Map<string, { hoy: number; reacomodada: number }>();
-  for (const r of filasReacomodo ?? []) {
-    propuesta.set(r.empleado_id, { hoy: r.horas_hoy, reacomodada: r.horas_reacomodadas });
+  // Con propuesta publicada, el tope es el de la propuesta. Sin ella, el
+  // panel diagnostica contra el objetivo de la reforma (40 h), que es lo que
+  // "Programar semana" optimiza; el tope legal del año queda como dato.
+  const tope = programada?.programacion.tope ?? TOPE_2030;
+
+  const consultaEmpleados = supabase
+    .from("empleados")
+    .select("id, nombre, apellido, puesto, foto_url")
+    .eq("sucursal_id", elegida.id)
+    .eq("activo", true)
+    .order("apellido")
+    .order("nombre");
+
+  let personas: JornadaPersona[];
+  let antes: DatosPanel["antes"];
+  let despues: DatosPanel["despues"];
+
+  if (programada) {
+    // Horas de hoy (horarios importados) y horas de la propuesta por empleado.
+    const [{ data: filasHoy }, { data: filasEmpleados }] = await Promise.all([
+      supabase
+        .from("v_horas_semana")
+        .select("empleado_id, horas_semana")
+        .eq("sucursal_id", elegida.id)
+        .eq("semana_iso", semana.inicio),
+      consultaEmpleados,
+    ]);
+    const hoy = new Map<string, number>();
+    for (const h of filasHoy ?? []) {
+      if (h.empleado_id) hoy.set(h.empleado_id, num(h.horas_semana));
+    }
+    const { horasPropuesta } = programada;
+    // Colaboradores activos con horas hoy o en la propuesta; sin turnos en
+    // la propuesta → 0 h reacomodadas.
+    personas = (filasEmpleados ?? []).flatMap((e) => {
+      const horasHoy = hoy.get(e.id);
+      const reacomodada = horasPropuesta.get(e.id);
+      if (horasHoy === undefined && reacomodada === undefined) return [];
+      return [
+        {
+          nombre: nombreCompleto(e),
+          foto: e.foto_url ?? "",
+          detalle: e.puesto ?? undefined,
+          hoy: redondea(horasHoy ?? 0),
+          reacomodada: redondea(reacomodada ?? 0),
+        },
+      ];
+    });
+    const { programacion } = programada;
+    const sinCubrir = redondea(programacion.deficitPicoHoras);
+    antes = { ...resumenDe(personas, "hoy", tope), costoExtraMxn: programacion.costoDoblesBaseline };
+    despues = {
+      ...resumenDe(personas, "reacomodada", tope),
+      horasSinCubrir: sinCubrir,
+      vacantes: sinCubrir > 0 ? Math.ceil(sinCubrir / tope) : 0,
+      ahorroMxn: programacion.ahorroMxn,
+      ahorroPct: programacion.ahorroPct,
+    };
+  } else {
+    // Sin propuesta: el reacomodo de Postgres (public.reacomodar_semana) con
+    // el tope objetivo. Quien excede cede, quien tiene capacidad recibe, y lo
+    // que no cabe en la plantilla se reporta como horas sin cubrir → vacantes.
+    const [{ data: filasReacomodo }, { data: filasBalance }, { data: filasEmpleados }] =
+      await Promise.all([
+        supabase.rpc("reacomodar_semana", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
+        supabase.rpc("resumen_reacomodo", { p_sucursal: elegida.id, p_semana: semana.inicio, p_tope: tope }),
+        consultaEmpleados,
+      ]);
+
+    const propuesta = new Map<string, { hoy: number; reacomodada: number }>();
+    for (const r of filasReacomodo ?? []) {
+      propuesta.set(r.empleado_id, { hoy: r.horas_hoy, reacomodada: r.horas_reacomodadas });
+    }
+
+    // Sólo colaboradores activos con horas esa semana: así el conteo coincide
+    // con `colaboradores` de la vista y con las cifras del pie de la tabla.
+    personas = (filasEmpleados ?? []).flatMap((e) => {
+      const fila = propuesta.get(e.id);
+      if (!fila) return [];
+      return [
+        {
+          nombre: nombreCompleto(e),
+          foto: e.foto_url ?? "",
+          detalle: e.puesto ?? undefined,
+          hoy: fila.hoy,
+          reacomodada: fila.reacomodada,
+        },
+      ];
+    });
+
+    const balance = filasBalance?.[0];
+    antes = resumenDe(personas, "hoy", tope);
+    despues = {
+      ...resumenDe(personas, "reacomodada", tope),
+      horasAbsorbidas: redondea(balance?.horas_absorbidas ?? 0),
+      horasSinCubrir: redondea(balance?.horas_sin_cubrir ?? 0),
+      vacantes: balance?.vacantes_sugeridas ?? 0,
+    };
   }
 
-  // Sólo colaboradores activos con horas esa semana: así el conteo coincide
-  // con `colaboradores` de la vista y con las cifras del pie de la tabla.
-  const personas: JornadaPersona[] = (filasEmpleados ?? []).flatMap((e) => {
-    const fila = propuesta.get(e.id);
-    if (!fila) return [];
-    return [
-      {
-        nombre: nombreCompleto(e),
-        foto: e.foto_url ?? "",
-        detalle: e.puesto ?? undefined,
-        hoy: fila.hoy,
-        reacomodada: fila.reacomodada,
-      },
-    ];
-  });
-
-  const balance = filasBalance?.[0];
-  const reacomodo = {
-    horasAbsorbidas: redondea(balance?.horas_absorbidas ?? 0),
-    horasSinCubrir: redondea(balance?.horas_sin_cubrir ?? 0),
-    vacantes: balance?.vacantes_sugeridas ?? 0,
-  };
-
-  const antes = resumenDe(personas, "hoy", tope);
-  const despues = { ...resumenDe(personas, "reacomodada", tope), ...reacomodo };
   const antes2030 = resumenDe(personas, "hoy", TOPE_2030);
 
   // La tarjeta de la sucursal elegida usa las mismas cifras que el panel.
@@ -222,13 +412,18 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
   );
 
   const semanas: SemanaHistorial[] = historial
-    .map((r) => ({
-      inicio: r.semana_iso,
-      iso: numeroSemanaIso(r.semana_iso),
-      horasAlDoble: redondea(r.horas_al_doble ?? 0),
-      fueraDeNorma: r.fuera_de_norma ?? 0,
-      colaboradores: r.colaboradores ?? 0,
-    }))
+    .map((r) => {
+      const ahorro = ahorroPorSemana.get(lunesDe(r.semana_iso));
+      return {
+        inicio: r.semana_iso,
+        iso: numeroSemanaIso(r.semana_iso),
+        horasAlDoble: redondea(r.horas_al_doble ?? 0),
+        fueraDeNorma: r.fuera_de_norma ?? 0,
+        colaboradores: r.colaboradores ?? 0,
+        programada: ahorro !== undefined,
+        ...(ahorro ? { ahorroMxn: num(ahorro.ahorro_mxn) } : {}),
+      };
+    })
     .reverse();
   // La semana mostrada se calcula de `personas` para que coincida con la tabla.
   const ultima = semanas[semanas.length - 1];
@@ -247,14 +442,16 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
     sucursal: { id: elegida.id, nombre: elegida.nombre },
     semana,
     tope,
+    topeLegal,
     topeAnio: semana.anio,
-    topeAnterior: topeAnterior === tope ? null : topeAnterior,
+    topeAnterior: topeAnterior === topeLegal ? null : topeAnterior,
     tope2030: TOPE_2030,
     personas,
     antes,
     despues,
     antes2030,
     semanas,
+    programacion: programada?.programacion ?? null,
   };
 }
 
