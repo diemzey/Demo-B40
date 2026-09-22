@@ -1,0 +1,180 @@
+{
+  "empresa": {
+    "nombre": "Mini Retail de Prueba"
+  },
+  "hubs": [
+    {
+      "clave": "H01",
+      "nombre": "Hub Centro",
+      "ciudad": "Ciudad de México",
+      "estado": "Ciudad de México"
+    }
+  ],
+  "sucursales": [
+    {
+      "clave": "T01",
+      "nombre": "Tienda Mini 01",
+      "hub_clave": "H01",
+      "ciudad": "Ciudad de México",
+      "apertura": "09:00",
+      "cierre": "21:00",
+      "fte": 20
+    }
+  ],
+  "puestos": [
+    {
+      "clave": "cajero",
+      "nombre": "Cajero",
+      "habilidad_clave": "caja"
+    },
+    {
+      "clave": "piso",
+      "nombre": "Asesor de piso",
+      "habilidad_clave": "piso"
+    },
+    {
+      "clave": "almacenista",
+      "nombre": "Almacenista",
+      "habilidad_clave": "almacen"
+    },
+    {
+      "clave": "supervisor",
+      "nombre": "Supervisor",
+      "habilidad_clave": "supervision"
+    }
+  ],
+  "habilidades": [
+    {
+      "clave": "caja",
+      "nombre": "Caja"
+    },
+    {
+      "clave": "piso",
+      "nombre": "Piso de venta"
+    },
+    {
+      "clave": "almacen",
+      "nombre": "Almacén"
+    },
+    {
+      "clave": "supervision",
+      "nombre": "Supervisión"
+    }
+  ],
+  "tabuladores": [
+    {
+      "puesto_clave": "cajero",
+      "vigente_desde": "2026-01-01",
+      "salario_hora": 62,
+      "prima_dominical_pct": 25
+    },
+    {
+      "puesto_clave": "piso",
+      "vigente_desde": "2026-01-01",
+      "salario_hora": 58,
+      "prima_dominical_pct": 25
+    },
+    {
+      "puesto_clave": "almacenista",
+      "vigente_desde": "2026-01-01",
+      "salario_hora": 60,
+      "prima_dominical_pct": 25
+    },
+    {
+      "puesto_clave": "supervisor",
+      "vigente_desde": "2026-01-01",
+      "salario_hora": 110,
+      "prima_dominical_pct": 25
+    }
+  ],
+  "plantillas_turno": [
+    {
+      "clave": "C0900",
+      "hora_inicio": "09:00",
+      "duracion_min": 510,
+      "descanso_min": 30
+    },
+    {
+      "clave": "C1000",
+      "hora_inicio": "10:00",
+      "duracion_min": 510,
+      "descanso_min": 30
+    },
+    {
+      "clave": "C1100",
+      "hora_inicio": "11:00",
+      "duracion_min": 510,
+      "descanso_min": 30
+    },
+    {
+      "clave": "C1230",
+      "hora_inicio": "12:30",
+      "duracion_min": 510,
+      "descanso_min": 30
+    },
+    {
+      "clave": "S0900",
+      "hora_inicio": "09:00",
+      "duracion_min": 390,
+      "descanso_min": 30
+    },
+    {
+      "clave": "S1500",
+      "hora_inicio": "15:00",
+      "duracion_min": 360,
+      "descanso_min": 30
+    },
+    {
+      "clave": "M0900",
+      "hora_inicio": "09:00",
+      "duracion_min": 240,
+      "descanso_min": 0
+    },
+    {
+      "clave": "M1200",
+      "hora_inicio": "12:00",
+      "duracion_min": 240,
+      "descanso_min": 0
+    },
+    {
+      "clave": "M1300",
+      "hora_inicio": "13:00",
+      "duracion_min": 240,
+      "descanso_min": 0
+    },
+    {
+      "clave": "M1700",
+      "hora_inicio": "17:00",
+      "duracion_min": 240,
+      "descanso_min": 0
+    },
+    {
+      "clave": "M1800",
+      "hora_inicio": "18:00",
+      "duracion_min": 180,
+      "descanso_min": 0
+    }
+  ],
+  "reglas_laborales": {
+    "vigente_desde": "2026-01-01",
+    "tope_semanal": 40,
+    "max_horas_dia": 8,
+    "horas_dobles_max": 9,
+    "factor_doble": 2,
+    "factor_triple": 3,
+    "prima_dominical_pct": 25,
+    "descanso_entre_turnos_horas": 12,
+    "max_dias_semana": 6
+  },
+  "parametros_demanda": {
+    "clientes_por_colaborador_30min": 12,
+    "conversion": 0.35,
+    "transacciones_por_cajero_30min": 10,
+    "minimo_apertura": {
+      "caja": 1,
+      "piso": 2,
+      "almacen": 1,
+      "supervision": 1
+    }
+  }
+}

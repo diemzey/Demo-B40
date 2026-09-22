@@ -1,0 +1,432 @@
+[
+  {
+    "clave_externa": "E001",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre1",
+    "apellido": "Apellido1",
+    "puesto_clave": "supervisor",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "supervision",
+      "piso",
+      "caja"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E002",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre2",
+    "apellido": "Apellido2",
+    "puesto_clave": "supervisor",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "supervision",
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E003",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre3",
+    "apellido": "Apellido3",
+    "puesto_clave": "almacenista",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "almacen",
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E004",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre4",
+    "apellido": "Apellido4",
+    "puesto_clave": "almacenista",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "almacen"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E005",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre5",
+    "apellido": "Apellido5",
+    "puesto_clave": "cajero",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "caja",
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E006",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre6",
+    "apellido": "Apellido6",
+    "puesto_clave": "cajero",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "caja",
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E007",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre7",
+    "apellido": "Apellido7",
+    "puesto_clave": "cajero",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "caja",
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E008",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre8",
+    "apellido": "Apellido8",
+    "puesto_clave": "cajero",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "caja"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E009",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre9",
+    "apellido": "Apellido9",
+    "puesto_clave": "cajero",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "caja"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E010",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre10",
+    "apellido": "Apellido10",
+    "puesto_clave": "cajero",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "caja"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E011",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre11",
+    "apellido": "Apellido11",
+    "puesto_clave": "piso",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "piso",
+      "caja"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E012",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre12",
+    "apellido": "Apellido12",
+    "puesto_clave": "piso",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "piso",
+      "caja"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E013",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre13",
+    "apellido": "Apellido13",
+    "puesto_clave": "piso",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E014",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre14",
+    "apellido": "Apellido14",
+    "puesto_clave": "piso",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E015",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre15",
+    "apellido": "Apellido15",
+    "puesto_clave": "piso",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E016",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre16",
+    "apellido": "Apellido16",
+    "puesto_clave": "piso",
+    "tipo_contrato": "tiempo_completo",
+    "jornada_contratada": 48,
+    "max_horas_semana": 40,
+    "habilidades": [
+      "piso"
+    ],
+    "disponibilidad": []
+  },
+  {
+    "clave_externa": "E017",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre17",
+    "apellido": "Apellido17",
+    "puesto_clave": "piso",
+    "tipo_contrato": "medio_tiempo",
+    "jornada_contratada": 24,
+    "max_horas_semana": 24,
+    "habilidades": [
+      "piso"
+    ],
+    "disponibilidad": [
+      {
+        "dia_semana": 1,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 2,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 3,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 4,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 5,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 6,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 7,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      }
+    ]
+  },
+  {
+    "clave_externa": "E018",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre18",
+    "apellido": "Apellido18",
+    "puesto_clave": "piso",
+    "tipo_contrato": "medio_tiempo",
+    "jornada_contratada": 24,
+    "max_horas_semana": 24,
+    "habilidades": [
+      "piso",
+      "caja"
+    ],
+    "disponibilidad": [
+      {
+        "dia_semana": 1,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 2,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 3,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 4,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 5,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 6,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 7,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      }
+    ]
+  },
+  {
+    "clave_externa": "E019",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre19",
+    "apellido": "Apellido19",
+    "puesto_clave": "piso",
+    "tipo_contrato": "medio_tiempo",
+    "jornada_contratada": 24,
+    "max_horas_semana": 24,
+    "habilidades": [
+      "piso"
+    ],
+    "disponibilidad": [
+      {
+        "dia_semana": 1,
+        "hora_inicio": "09:00",
+        "hora_fin": "15:00"
+      },
+      {
+        "dia_semana": 2,
+        "hora_inicio": "09:00",
+        "hora_fin": "15:00"
+      },
+      {
+        "dia_semana": 3,
+        "hora_inicio": "09:00",
+        "hora_fin": "15:00"
+      },
+      {
+        "dia_semana": 4,
+        "hora_inicio": "09:00",
+        "hora_fin": "15:00"
+      },
+      {
+        "dia_semana": 5,
+        "hora_inicio": "09:00",
+        "hora_fin": "15:00"
+      },
+      {
+        "dia_semana": 6,
+        "hora_inicio": "09:00",
+        "hora_fin": "15:00"
+      }
+    ]
+  },
+  {
+    "clave_externa": "E020",
+    "sucursal_clave": "T01",
+    "nombre": "Nombre20",
+    "apellido": "Apellido20",
+    "puesto_clave": "cajero",
+    "tipo_contrato": "medio_tiempo",
+    "jornada_contratada": 24,
+    "max_horas_semana": 24,
+    "habilidades": [
+      "caja",
+      "piso"
+    ],
+    "disponibilidad": [
+      {
+        "dia_semana": 1,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 2,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 3,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 4,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 5,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 6,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      },
+      {
+        "dia_semana": 7,
+        "hora_inicio": "13:00",
+        "hora_fin": "21:00"
+      }
+    ]
+  }
+]
