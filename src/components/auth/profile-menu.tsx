@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, CalendarDays, LayoutDashboard, LogOut, Settings, Shield } from "lucide-react";
+import { Activity, CalendarDays, LogOut, Settings, Shield } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
@@ -68,21 +68,20 @@ export function ProfileMenu({
             <span className="truncate text-xs font-normal text-muted-foreground">
               {user.correo}
             </span>
+            {user.sucursal && (
+              <span className="truncate text-xs font-normal text-muted-foreground">
+                {user.sucursal}
+              </span>
+            )}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
             <Link href="/dashboard">
-              <LayoutDashboard {...ICON} />
-              <span>Panel</span>
+              <Activity {...ICON} />
+              <span>Diagnóstico</span>
             </Link>
-          </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <a href="/dashboard#sucursales">
-              <Building2 {...ICON} />
-              <span>Mi sucursal · {user.sucursal}</span>
-            </a>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <a href="/dashboard#semanas">

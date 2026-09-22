@@ -11,13 +11,13 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <AuthShell
-      headline="Tu semana, con el tope encima."
+      headline="Tu semana, antes y después del tope."
       subline="Entra para ver el diagnóstico de tu sucursal."
     >
       <div className="rounded-2xl border bg-card p-6 shadow-lg">
         <h1 className="text-2xl font-semibold tracking-tight">Entrar</h1>
         <p className="mt-1 mb-6 text-sm text-muted-foreground">
-          Usa el correo con el que registraste tu sucursal.
+          Usa tu correo de trabajo.
         </p>
         {/* `LoginForm` lee `?next=` / `?error=` con `useSearchParams`, que en
             una ruta estática exige un límite de Suspense por encima. */}

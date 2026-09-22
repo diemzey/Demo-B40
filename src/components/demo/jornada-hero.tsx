@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CostoExtra } from "@/components/ui/costo-extra";
@@ -66,11 +67,8 @@ export function JornadaHero({
           activo={enAntes}
         />
         <div className="mt-8 md:mt-auto md:pt-8">
-          <Button
-            size="lg"
-            className="h-12 w-full bg-yellow-400 px-8 font-semibold text-neutral-950 text-base hover:bg-yellow-300 sm:w-auto"
-          >
-            Diagnosticar ahora
+          <Button variant="primary" size="lg" className="h-12 w-full px-8 text-base sm:w-auto" asChild>
+            <Link href="/registro">Diagnosticar ahora</Link>
           </Button>
         </div>
       </header>

@@ -1,35 +1,22 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { Download, FileSpreadsheet, TriangleAlert } from "lucide-react";
+import { Download } from "lucide-react";
 import { ProfileMenu, UserChip } from "@/components/auth/profile-menu";
-import { ImportarCsv } from "@/components/dashboard/importar-csv";
-import { Panel, PanelHeader, Pill, botonOutline, botonPrimario } from "@/components/dashboard/tabs/ui";
+import { ImportarYProgramar } from "@/components/dashboard/importar-y-programar";
 import { JornadaLogo } from "@/components/ui/jornada-logo";
 import { usePanel } from "@/lib/datos/panel-context";
 
 /**
- * Primer paso de una cuenta real sin datos: explica el CSV de turnos, ofrece
- * las plantillas y monta el importador. El layout del panel lo muestra en
- * lugar del shell mientras `datos.sinDatos` sea `true`; al terminar la
- * importación se refresca la ruta y aparece el panel normal.
+ * Primer paso de una cuenta real sin datos: una sola acción, soltar el CSV.
+ * `ImportarYProgramar` lee el archivo, guarda los turnos, corre el motor y
+ * refresca la ruta; el layout deja de estar en `sinDatos` y abre el
+ * Diagnóstico con el antes/después. El formato del archivo vive colapsado.
  */
 
+const PLANTILLA_EJEMPLO = "/plantillas/ejemplo-tienda-semana.csv";
 const PLANTILLA_MINIMA = "/plantillas/turnos-ejemplo.csv";
-const PLANTILLA_COMPLETA = "/plantillas/ejemplo-tienda-semana.csv";
 
-const PASOS = [
-  { n: 1, titulo: "Descarga la plantilla", detalle: "Un CSV con el encabezado listo y turnos de ejemplo." },
-  { n: 2, titulo: "Llénala con tus turnos", detalle: "Una fila por turno; un turno partido son dos filas." },
-  { n: 3, titulo: "Súbela aquí", detalle: "Se valida en tu navegador antes de guardar nada." },
-] as const;
-
-type Columna = {
-  nombre: string;
-  obligatoria: boolean;
-  ejemplo: string;
-  descripcion: string;
-};
+type Columna = { nombre: string; obligatoria: boolean; ejemplo: string; descripcion: string };
 
 const COLUMNAS: Columna[] = [
   { nombre: "clave", obligatoria: true, ejemplo: "EMP-001", descripcion: "Id del colaborador en tu nómina. Único por sucursal." },
@@ -37,20 +24,10 @@ const COLUMNAS: Columna[] = [
   { nombre: "apellido", obligatoria: true, ejemplo: "Ortega", descripcion: "Apellido(s)." },
   { nombre: "puesto", obligatoria: false, ejemplo: "Vendedor", descripcion: "Puesto; puede ir vacío." },
   { nombre: "jornada_contratada", obligatoria: false, ejemplo: "48", descripcion: "Horas semanales pactadas (p. ej. 48 o 24.5)." },
-  {
-    nombre: "sucursal",
-    obligatoria: false,
-    ejemplo: "Celaya",
-    descripcion: "Sucursal del turno; se crea si no existe. Si la columna falta, se te pedirá el nombre.",
-  },
+  { nombre: "sucursal", obligatoria: false, ejemplo: "Celaya", descripcion: "Sucursal del turno; se crea si no existe. Si falta, usamos la de tu empresa." },
   { nombre: "fecha", obligatoria: true, ejemplo: "2026-07-27", descripcion: "Día en que inicia el turno, YYYY-MM-DD." },
   { nombre: "hora_inicio", obligatoria: true, ejemplo: "09:00", descripcion: "Inicio del turno, HH:MM en 24 h." },
-  {
-    nombre: "hora_fin",
-    obligatoria: true,
-    ejemplo: "18:00",
-    descripcion: "Fin del turno, HH:MM. Si es menor o igual que hora_inicio, el turno cruza medianoche.",
-  },
+  { nombre: "hora_fin", obligatoria: true, ejemplo: "18:00", descripcion: "Fin del turno, HH:MM. Si es menor o igual que hora_inicio, cruza medianoche." },
   { nombre: "minutos_descanso", obligatoria: false, ejemplo: "60", descripcion: "Minutos de descanso a descontar; vacío cuenta como 0." },
 ];
 
@@ -62,7 +39,6 @@ const EJEMPLO = [
 ].join("\n");
 
 export function Onboarding() {
-  const router = useRouter();
   const datos = usePanel();
 
   return (
@@ -80,100 +56,70 @@ export function Onboarding() {
         </ProfileMenu>
       </header>
 
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-4 py-8 md:px-6 md:py-12">
-        <div>
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col gap-6 px-4 py-10 md:px-6 md:py-16">
+        <div className="text-center">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">Primer paso</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">
-            Sube la semana de tu sucursal
-          </h1>
-          <p className="mt-3 max-w-2xl text-pretty text-[13px] leading-relaxed text-muted-foreground">
-            Jornada40 no usa datos de ejemplo: el diagnóstico sale de tus turnos reales. Sube un CSV con
-            una fila por turno y en segundos verás cuántas horas exceden el tope semanal
-            {datos.empresa ? <> en {datos.empresa.nombre}</> : null}, quién queda fuera de norma y
-            cuánto cuesta.
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight md:text-3xl">Sube la semana de tu sucursal</h1>
+          <p className="mx-auto mt-3 max-w-xl text-pretty text-[13px] leading-relaxed text-muted-foreground">
+            Suelta el CSV con los turnos de una semana y en segundos verás el antes y el después
+            {datos.empresa ? <> de {datos.empresa.nombre}</> : null} a 40 h.
           </p>
         </div>
 
-        {!datos.empresa && (
-          <p
-            role="status"
-            className="flex items-start gap-2 rounded-md border border-amber-400/30 bg-amber-400/[0.06] px-3 py-2 text-xs"
-          >
-            <TriangleAlert className="mt-0.5 size-3.5 shrink-0 text-amber-400" strokeWidth={1.5} aria-hidden="true" />
-            <span>
-              Tu cuenta aún no está ligada a una empresa, así que no podrás guardar la importación. Pide a
-              quien administra la cuenta que te agregue.
-            </span>
-          </p>
-        )}
+        <ImportarYProgramar />
 
-        <ol className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          {PASOS.map((p) => (
-            <li key={p.n} className="flex gap-3 rounded-lg border border-border bg-card px-3 py-3">
-              <span
-                aria-hidden="true"
-                className="flex size-6 shrink-0 items-center justify-center rounded-full bg-yellow-400 text-[11px] font-semibold text-neutral-950"
-              >
-                {p.n}
-              </span>
-              <span className="min-w-0">
-                <span className="block text-[13px] font-semibold">{p.titulo}</span>
-                <span className="mt-0.5 block text-[11px] leading-snug text-muted-foreground">{p.detalle}</span>
-              </span>
-            </li>
-          ))}
-        </ol>
-
-        <Panel>
-          <PanelHeader
-            title="Cómo debe verse el CSV"
-            description="UTF-8, separado por comas, con esta primera fila de encabezados (el orden de las columnas no importa)."
-          />
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-[13px]">
-              <thead>
-                <tr className="text-left text-xs text-muted-foreground">
-                  <th className="h-9 px-4 font-medium">Columna</th>
-                  <th className="h-9 px-2.5 font-medium">Obligatoria</th>
-                  <th className="h-9 px-2.5 font-medium">Ejemplo</th>
-                  <th className="h-9 px-4 font-medium">Descripción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COLUMNAS.map((c) => (
-                  <tr key={c.nombre} className="border-t border-border/60 align-top">
-                    <td className="whitespace-nowrap px-4 py-2 font-mono text-xs text-amber-400">{c.nombre}</td>
-                    <td className="px-2.5 py-2">
-                      <Pill tone={c.obligatoria ? "amber" : "neutral"}>{c.obligatoria ? "Sí" : "No"}</Pill>
-                    </td>
-                    <td className="whitespace-nowrap px-2.5 py-2 font-mono text-xs">{c.ejemplo}</td>
-                    <td className="px-4 py-2 text-xs text-muted-foreground">{c.descripcion}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="border-t border-border/60 p-4">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Ejemplo: encabezado y tres turnos
+        <details className="group rounded-lg border border-border/60 bg-card/50 text-[13px]">
+          <summary className="cursor-pointer select-none px-4 py-3 font-medium text-muted-foreground transition-colors hover:text-foreground">
+            ¿Cómo debe verse el CSV?
+          </summary>
+          <div className="border-t border-border/60">
+            <p className="px-4 pt-3 text-xs text-muted-foreground">
+              UTF-8, separado por comas, una fila por turno (un turno partido son dos filas). El orden de las columnas no
+              importa.
             </p>
-            <pre className="overflow-x-auto rounded-md border border-border/60 bg-background/60 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-foreground/90">
-              {EJEMPLO}
-            </pre>
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <a href={PLANTILLA_MINIMA} download="turnos-ejemplo.csv" className={botonPrimario}>
-                <Download className="size-3.5" strokeWidth={2} aria-hidden="true" />
-                Plantilla mínima (12 filas)
-              </a>
-              <a href={PLANTILLA_COMPLETA} download="ejemplo-tienda-semana.csv" className={botonOutline}>
-                <FileSpreadsheet className="size-3.5" strokeWidth={1.5} aria-hidden="true" />
-                Ejemplo completo: una tienda, una semana (72 personas)
-              </a>
+            <div className="overflow-x-auto px-4 pt-3">
+              <table className="w-full min-w-[560px] text-xs">
+                <thead>
+                  <tr className="text-left text-[11px] uppercase tracking-wider text-muted-foreground">
+                    <th className="h-8 pr-3 font-medium">Columna</th>
+                    <th className="h-8 pr-3 font-medium">Ejemplo</th>
+                    <th className="h-8 font-medium">Descripción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COLUMNAS.map((c) => (
+                    <tr key={c.nombre} className="border-t border-border/60 align-top">
+                      <td className="whitespace-nowrap py-2 pr-3 font-mono text-amber-400">
+                        {c.nombre}
+                        {!c.obligatoria && <span className="ml-1.5 font-sans text-[10px] text-muted-foreground">opcional</span>}
+                      </td>
+                      <td className="whitespace-nowrap py-2 pr-3 font-mono">{c.ejemplo}</td>
+                      <td className="py-2 text-muted-foreground">{c.descripcion}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="p-4">
+              <pre className="overflow-x-auto rounded-md border border-border/60 bg-background/60 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-foreground/90">
+                {EJEMPLO}
+              </pre>
+              <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1">
+                <a
+                  href={PLANTILLA_EJEMPLO}
+                  download="ejemplo-tienda-semana.csv"
+                  className="inline-flex items-center gap-1.5 font-medium text-amber-400 hover:underline"
+                >
+                  <Download className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                  Descargar ejemplo (una tienda, una semana)
+                </a>
+                <a href={PLANTILLA_MINIMA} download="turnos-ejemplo.csv" className="text-xs text-muted-foreground hover:text-foreground hover:underline">
+                  Plantilla mínima
+                </a>
+              </p>
             </div>
           </div>
-        </Panel>
-
-        <ImportarCsv onImportado={() => router.refresh()} />
+        </details>
       </main>
     </div>
   );

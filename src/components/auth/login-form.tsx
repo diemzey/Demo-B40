@@ -30,8 +30,7 @@ type Status = "idle" | "pending" | "success";
 
 /** Mensajes para los avisos que llegan por query string (`?error=`, `?confirmado=1`). */
 const AVISOS_ERROR: Record<string, string> = {
-  confirmacion:
-    "No pudimos confirmar tu correo. El enlace puede haber caducado; pide uno nuevo desde el correo de registro.",
+  confirmacion: "El enlace caducó. Pide uno nuevo desde tu correo de registro.",
   sesion: "Tu sesión terminó. Vuelve a entrar para continuar.",
 };
 const AVISO_ERROR_GENERICO = "Ocurrió un problema. Inténtalo de nuevo.";

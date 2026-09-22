@@ -1,226 +1,156 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import {
-    NavigationMenu,
-    NavigationMenuContent,
-    NavigationMenuItem,
-    NavigationMenuLink,
-    NavigationMenuList,
-    NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import { Menu, MoveRight, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
+import { Menu, MoveRight, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { JornadaLogo } from "@/components/ui/jornada-logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ProfileMenu, UserChip } from "@/components/auth/profile-menu";
 import { iniciales, useSession } from "@/components/auth/session";
 
-type NavItem = {
-    title: string;
-    href?: string;
-    description?: string;
-    items?: { title: string; href: string }[];
-};
+/**
+ * Menú de la portada: tres anclas a secciones reales de `src/app/page.tsx`.
+ * `#como-funciona` → ReduccionTimelineDemo, `#preguntas` → FAQDemo,
+ * `#contacto` → ContactDemo.
+ */
+const NAV = [
+  { title: "Cómo funciona", href: "#como-funciona" },
+  { title: "Preguntas", href: "#preguntas" },
+  { title: "Contacto", href: "#contacto" },
+] as const;
 
 function Header1() {
-    const navigationItems: NavItem[] = [
-        { title: "Home", href: "/", description: "" },
-        {
-            title: "Product",
-            description: "Managing a small business today is already tough.",
-            items: [
-                { title: "Reports", href: "/reports" },
-                { title: "Statistics", href: "/statistics" },
-                { title: "Dashboards", href: "/dashboards" },
-                { title: "Recordings", href: "/recordings" },
-            ],
-        },
-        {
-            title: "Company",
-            description: "Managing a small business today is already tough.",
-            items: [
-                { title: "About us", href: "/about" },
-                { title: "Fundraising", href: "/fundraising" },
-                { title: "Investors", href: "/investors" },
-                { title: "Contact us", href: "/contact" },
-            ],
-        },
-    ];
+  const [isOpen, setOpen] = useState(false);
+  const menuId = useId();
+  const { user, ready, signOut } = useSession();
+  // Hasta que el cliente hidrata, `ready` es false y mostramos el estado
+  // "sin sesión" para que el markup coincida con el del servidor.
+  const loggedIn = ready && user !== null;
 
-    const [isOpen, setOpen] = useState(false);
-    const { user, ready, signOut } = useSession();
-    // Hasta que el cliente hidrata, `ready` es false y mostramos el estado
-    // "sin sesión" para que el markup coincida con el del servidor.
-    const loggedIn = ready && user !== null;
-    return (
-        <header className="w-full z-40 fixed top-0 left-0 bg-background">
-            <div className="container relative mx-auto min-h-20 px-4 flex gap-4 flex-row lg:grid lg:grid-cols-3 items-center">
-                <div className="justify-start items-center gap-4 lg:flex hidden flex-row">
-                    <NavigationMenu className="flex justify-start items-start">
-                        <NavigationMenuList className="flex justify-start gap-4 flex-row">
-                            {navigationItems.map((item) => (
-                                <NavigationMenuItem key={item.title}>
-                                    {item.href ? (
-                                        <>
-                                            <NavigationMenuLink asChild>
-                                                <Button variant="ghost" asChild>
-                                                    <Link href={item.href}>{item.title}</Link>
-                                                </Button>
-                                            </NavigationMenuLink>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <NavigationMenuTrigger className="font-medium text-sm">
-                                                {item.title}
-                                            </NavigationMenuTrigger>
-                                            <NavigationMenuContent className="!w-[450px] p-4">
-                                                <div className="flex flex-col lg:grid grid-cols-2 gap-4">
-                                                    <div className="flex flex-col h-full justify-between">
-                                                        <div className="flex flex-col">
-                                                            <p className="text-base">{item.title}</p>
-                                                            <p className="text-muted-foreground text-sm">
-                                                                {item.description}
-                                                            </p>
-                                                        </div>
-                                                        <Button size="sm" className="mt-10">
-                                                            Book a call today
-                                                        </Button>
-                                                    </div>
-                                                    <div className="flex flex-col text-sm h-full justify-end">
-                                                        {item.items?.map((subItem) => (
-                                                            <NavigationMenuLink
-                                                                href={subItem.href}
-                                                                key={subItem.title}
-                                                                className="flex flex-row justify-between items-center hover:bg-muted py-2 px-4 rounded"
-                                                            >
-                                                                <span>{subItem.title}</span>
-                                                                <MoveRight className="w-4 h-4 text-muted-foreground" />
-                                                            </NavigationMenuLink>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </NavigationMenuContent>
-                                        </>
-                                    )}
-                                </NavigationMenuItem>
-                            ))}
-                        </NavigationMenuList>
-                    </NavigationMenu>
-                </div>
-                <div className="flex lg:justify-center">
-                    <Link href="/" aria-label="Jornada40, inicio">
-                        <JornadaLogo size={40} className="h-8 w-auto text-foreground md:h-10" />
-                    </Link>
-                </div>
-                <div className="flex justify-end w-full gap-4">
-                    <Button variant="ghost" className="hidden md:inline-flex" asChild>
-                        <a href="#contacto">Agendar diagnóstico</a>
+  useEffect(() => {
+    if (!isOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [isOpen]);
+
+  return (
+    <header className="fixed top-0 left-0 z-40 w-full bg-background">
+      <div className="container relative mx-auto flex min-h-20 flex-row items-center gap-4 px-4 lg:grid lg:grid-cols-3">
+        <nav aria-label="Secciones" className="hidden flex-row items-center justify-start gap-1 lg:flex">
+          {NAV.map((item) => (
+            <Button key={item.href} variant="ghost" asChild>
+              <a href={item.href}>{item.title}</a>
+            </Button>
+          ))}
+        </nav>
+        <div className="flex lg:justify-center">
+          <Link href="/" aria-label="Jornada40, inicio">
+            <JornadaLogo size={40} className="h-8 w-auto text-foreground md:h-10" />
+          </Link>
+        </div>
+        <div className="flex w-full justify-end gap-4">
+          <Button variant="ghost" className="hidden md:inline-flex" asChild>
+            <a href="#contacto">Agendar diagnóstico</a>
+          </Button>
+          <div className="hidden border-r md:inline" aria-hidden="true" />
+          {loggedIn && user ? (
+            <ProfileMenu>
+              <button
+                type="button"
+                aria-label="Abrir menú de cuenta"
+                className="inline-flex items-center rounded-full transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background md:rounded-md md:px-2 md:py-1"
+              >
+                <UserChip className="hidden md:inline-flex" />
+                <Avatar className="size-9 md:hidden">
+                  <AvatarImage src={user.foto} alt="" />
+                  <AvatarFallback className="text-xs font-medium">{iniciales(user.nombre)}</AvatarFallback>
+                </Avatar>
+              </button>
+            </ProfileMenu>
+          ) : (
+            <>
+              {/* En móvil estos accesos viven en el cajón del menú. */}
+              <Button variant="outline" className="hidden md:inline-flex" asChild>
+                <Link href="/login">Entrar</Link>
+              </Button>
+              <Button variant="primary" className="hidden md:inline-flex" asChild>
+                <Link href="/registro">Crear cuenta</Link>
+              </Button>
+            </>
+          )}
+        </div>
+        <div className="flex w-12 shrink items-end justify-end lg:hidden">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setOpen(!isOpen)}
+            aria-label={isOpen ? "Cerrar menú" : "Abrir menú"}
+            aria-expanded={isOpen}
+            aria-controls={menuId}
+          >
+            {isOpen ? <X className="size-5" aria-hidden="true" /> : <Menu className="size-5" aria-hidden="true" />}
+          </Button>
+          {isOpen && (
+            <nav
+              id={menuId}
+              aria-label="Menú"
+              className="container absolute top-20 right-0 flex w-full flex-col gap-6 border-t bg-background py-4 shadow-lg"
+            >
+              {NAV.map((item) => (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className="flex min-h-11 items-center justify-between rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <span className="text-lg">{item.title}</span>
+                  <MoveRight className="size-4 stroke-1 text-muted-foreground" aria-hidden="true" />
+                </a>
+              ))}
+              <div className="flex flex-col gap-3 border-t pt-6">
+                {loggedIn && user ? (
+                  <>
+                    <UserChip />
+                    <Button variant="outline" asChild>
+                      <Link href="/dashboard" onClick={() => setOpen(false)}>
+                        Ir a mi panel
+                      </Link>
                     </Button>
-                    <div className="border-r hidden md:inline"></div>
-                    {loggedIn && user ? (
-                        <ProfileMenu>
-                            <button
-                                type="button"
-                                aria-label="Abrir menú de cuenta"
-                                className="inline-flex items-center rounded-full md:rounded-md md:px-2 md:py-1 hover:bg-muted transition-colors outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                            >
-                                <UserChip className="hidden md:inline-flex" />
-                                <Avatar className="size-9 md:hidden">
-                                    <AvatarImage src={user.foto} alt="" />
-                                    <AvatarFallback className="text-xs font-medium">
-                                        {iniciales(user.nombre)}
-                                    </AvatarFallback>
-                                </Avatar>
-                            </button>
-                        </ProfileMenu>
-                    ) : (
-                        <>
-                            {/* En móvil estos accesos viven en el cajón del menú. */}
-                            <Button variant="outline" className="hidden md:inline-flex" asChild>
-                                <Link href="/login">Entrar</Link>
-                            </Button>
-                            <Button className="hidden bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300 md:inline-flex" asChild>
-                                <Link href="/registro">Crear cuenta</Link>
-                            </Button>
-                        </>
-                    )}
-                </div>
-                <div className="flex w-12 shrink lg:hidden items-end justify-end">
-                    <Button variant="ghost" onClick={() => setOpen(!isOpen)}>
-                        {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        signOut();
+                        setOpen(false);
+                      }}
+                    >
+                      Cerrar sesión
                     </Button>
-                    {isOpen && (
-                        <div className="absolute top-20 border-t flex flex-col w-full right-0 bg-background shadow-lg py-4 container gap-8">
-                            {navigationItems.map((item) => (
-                                <div key={item.title}>
-                                    <div className="flex flex-col gap-2">
-                                        {item.href ? (
-                                            <Link
-                                                href={item.href}
-                                                className="flex justify-between items-center"
-                                            >
-                                                <span className="text-lg">{item.title}</span>
-                                                <MoveRight className="w-4 h-4 stroke-1 text-muted-foreground" />
-                                            </Link>
-                                        ) : (
-                                            <p className="text-lg">{item.title}</p>
-                                        )}
-                                        {item.items &&
-                                            item.items.map((subItem) => (
-                                                <Link
-                                                    key={subItem.title}
-                                                    href={subItem.href}
-                                                    className="flex justify-between items-center"
-                                                >
-                                                    <span className="text-muted-foreground">
-                                                        {subItem.title}
-                                                    </span>
-                                                    <MoveRight className="w-4 h-4 stroke-1" />
-                                                </Link>
-                                            ))}
-                                    </div>
-                                </div>
-                            ))}
-                            <div className="flex flex-col gap-3 border-t pt-6">
-                                {loggedIn && user ? (
-                                    <>
-                                        <UserChip />
-                                        <Button
-                                            variant="outline"
-                                            onClick={() => {
-                                                signOut();
-                                                setOpen(false);
-                                            }}
-                                        >
-                                            Cerrar sesión
-                                        </Button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Button variant="outline" asChild>
-                                            <Link href="/login" onClick={() => setOpen(false)}>
-                                                Entrar
-                                            </Link>
-                                        </Button>
-                                        <Button
-                                            className="bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300"
-                                            asChild
-                                        >
-                                            <Link href="/registro" onClick={() => setOpen(false)}>
-                                                Crear cuenta
-                                            </Link>
-                                        </Button>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </header>
-    );
+                  </>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild>
+                      <Link href="/login" onClick={() => setOpen(false)}>
+                        Entrar
+                      </Link>
+                    </Button>
+                    <Button variant="primary" asChild>
+                      <Link href="/registro" onClick={() => setOpen(false)}>
+                        Crear cuenta
+                      </Link>
+                    </Button>
+                  </>
+                )}
+              </div>
+            </nav>
+          )}
+        </div>
+      </div>
+    </header>
+  );
 }
 
 export { Header1 };

@@ -34,7 +34,7 @@ const MENSAJES_POR_CODIGO: Record<string, string> = {
   user_already_exists: "Ya existe una cuenta con ese correo. Entra o recupera tu contraseña.",
   email_exists: "Ya existe una cuenta con ese correo. Entra o recupera tu contraseña.",
   weak_password:
-    "La contraseña es demasiado débil. Usa al menos 8 caracteres y mezcla letras y números.",
+    "Usa al menos 8 caracteres con letras y números.",
   email_address_invalid: "Ese correo no parece válido.",
   email_address_not_authorized: "Ese correo no está autorizado para registrarse.",
   signup_disabled: "Por ahora no se aceptan registros nuevos.",

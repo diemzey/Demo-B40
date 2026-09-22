@@ -6,6 +6,16 @@ export const TOPE_2030 = 40;
 /** Nombre de la cookie con la sucursal elegida en el panel (uuid de `sucursales`). */
 export const COOKIE_SUCURSAL = "j40_sucursal";
 
+/** Empresa del usuario con sus parámetros de programación (`empresas`). */
+export type EmpresaPanel = {
+  id: string;
+  nombre: string;
+  /** `empresas.tope_objetivo`: tope (h/semana) al que se programan las propuestas. */
+  topeObjetivo: number;
+  /** `empresas.costo_hora_default`: costo por hora (MXN) para colaboradores sin tarifa. */
+  costoHoraDefault: number;
+};
+
 export type SucursalPanel = {
   id: string;
   nombre: string;
@@ -32,6 +42,11 @@ export type SemanaHistorial = {
   /** Lunes de la semana, `YYYY-MM-DD`. */
   inicio: string;
   iso: number;
+  /**
+   * Horas arriba del tope legal del año de la semana (`v_resumen_sucursal_semana`).
+   * Ojo: no es el tope de la propuesta; para comparar semanas entre sí usa
+   * `costoBaseline`/`costoPropuesta`, que salen del motor con un mismo tope.
+   */
   horasAlDoble: number;
   fueraDeNorma: number;
   colaboradores: number;
@@ -39,6 +54,27 @@ export type SemanaHistorial = {
   programada: boolean;
   /** Ahorro semanal de la propuesta publicada (MXN); ausente si no está programada. */
   ahorroMxn?: number;
+  /** Costo laboral de la semana como está hoy (MXN, `v_ahorro_escenario`); sólo si está programada. */
+  costoBaseline?: number;
+  /** Costo laboral con la propuesta (MXN); sólo si está programada. */
+  costoPropuesta?: number;
+  /** Tope (h/semana) con el que se programó; sólo si está programada. */
+  tope?: number;
+  /** Cobertura pico de la propuesta (0–100); null sin intervalos pico; ausente si no está programada. */
+  coberturaPicoPropuestaPct?: number | null;
+};
+
+/** Un intervalo de 30 min de `cobertura_intervalo`, con los dos escenarios unidos por `inicio`. */
+export type CoberturaPanel = {
+  /** Inicio del intervalo (ISO 8601 con zona). */
+  inicio: string;
+  /** Personas requeridas por la demanda. */
+  requerido: number;
+  /** Personas asignadas hoy (baseline). */
+  hoy: number;
+  /** Personas asignadas con la propuesta. */
+  propuesta: number;
+  esPico: boolean;
 };
 
 /**
@@ -69,6 +105,11 @@ export type ProgramacionPanel = {
   deficitPicoHoras: number;
   /** `escenarios.publicado_en` de la propuesta (ISO 8601); null si no consta. */
   publicadoEn: string | null;
+  /**
+   * Cobertura por intervalo de 30 min de toda la semana (7 × 48), baseline y
+   * propuesta unidos por `inicio`. Vacío si el escenario no la materializó.
+   */
+  cobertura: CoberturaPanel[];
 };
 
 /**
@@ -92,7 +133,7 @@ export type DatosPanel = {
   sinDatos: boolean;
   /** Supabase configurado pero sin usuario en la petición: el layout redirige a /login. */
   sinSesion?: boolean;
-  empresa: { id: string; nombre: string } | null;
+  empresa: EmpresaPanel | null;
   sucursales: SucursalPanel[];
   /** Sucursal seleccionada. */
   sucursal: { id: string; nombre: string } | null;

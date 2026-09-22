@@ -1,64 +1,83 @@
 "use client";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Save } from "lucide-react";
-import { SUCURSALES_SEMILLA, useSucursalesPropias } from "@/components/dashboard/tabs/sucursales";
 import {
+  BotonPrimario,
   Campo,
   Panel,
   PanelHeader,
   TabHeader,
-  botonPrimario,
   inputClass,
 } from "@/components/dashboard/tabs/ui";
-import { useConfig, type Config } from "@/components/dashboard/tabs/use-local-store";
+import { usePanel } from "@/lib/datos/panel-context";
+import { createClient } from "@/lib/supabase/client";
 
-const TOPES: { valor: number; etiqueta: string }[] = [
-  { valor: 48, etiqueta: "48 h · hasta 2026" },
-  { valor: 46, etiqueta: "46 h · 2027" },
-  { valor: 44, etiqueta: "44 h · 2028" },
-  { valor: 42, etiqueta: "42 h · 2029" },
-  { valor: 40, etiqueta: "40 h · 2030 (meta)" },
-];
+/**
+ * Configuración de la empresa: los dos parámetros que usa el motor al armar
+ * la propuesta (`programarSemana`, src/lib/motor/programar.ts):
+ *   - `empresas.tope_objetivo`      → "Tope objetivo"
+ *   - `empresas.costo_hora_default` → "Costo por hora"
+ * Se guardan con el cliente de Supabase del navegador; por RLS sólo el
+ * owner puede actualizarlos (política `empresas_update`).
+ */
+
+const TOPES = [40, 42, 44, 46, 48] as const;
+const TOPE_DEFAULT = 40;
+const COSTO_DEFAULT = 60;
+
+type Valores = { tope: number; costoHora: number };
+
+function normalizar(tope: unknown, costo: unknown): Valores {
+  const t = Number(tope);
+  const c = Number(costo);
+  return {
+    tope: (TOPES as readonly number[]).includes(t) ? t : TOPE_DEFAULT,
+    costoHora: Number.isFinite(c) && c > 0 ? c : COSTO_DEFAULT,
+  };
+}
+
+type Estado =
+  | { tipo: "idle" }
+  | { tipo: "guardado" }
+  | { tipo: "sin-permiso" }
+  | { tipo: "error" }
+  | { tipo: "demo" };
 
 function Formulario({
   inicial,
-  sucursales,
+  guardando,
   onGuardar,
 }: {
-  inicial: Config;
-  sucursales: string[];
-  onGuardar: (c: Config) => void;
+  inicial: Valores;
+  guardando: boolean;
+  onGuardar: (v: Valores) => void;
 }) {
   const [tope, setTope] = useState(String(inicial.tope));
   const [costoHora, setCostoHora] = useState(String(inicial.costoHora));
-  const [sucursal, setSucursal] = useState(inicial.sucursalPrincipal);
-  const [registro, setRegistro] = useState(inicial.registroConectado);
+  const costo = Number(costoHora);
+  const costoValido = Number.isFinite(costo) && costo > 0;
 
   function guardar(e: FormEvent) {
     e.preventDefault();
-    const costo = Number(costoHora);
-    onGuardar({
-      tope: Number(tope),
-      costoHora: Number.isFinite(costo) && costo > 0 ? costo : inicial.costoHora,
-      sucursalPrincipal: sucursal,
-      registroConectado: registro,
-    });
+    if (!costoValido) return;
+    onGuardar({ tope: Number(tope), costoHora: costo });
   }
 
   return (
     <form onSubmit={guardar} className="flex flex-col gap-4 p-4 pt-2">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Campo label="Tope vigente" htmlFor="cfg-tope" hint="Horas máximas por semana y colaborador.">
+        <Campo label="Tope objetivo" htmlFor="cfg-tope" hint="Horas por semana y colaborador con las que se arma tu propuesta.">
           <select id="cfg-tope" className={inputClass} value={tope} onChange={(e) => setTope(e.target.value)}>
             {TOPES.map((t) => (
-              <option key={t.valor} value={t.valor}>
-                {t.etiqueta}
+              <option key={t} value={t}>
+                {t} h{t === TOPE_DEFAULT ? " · meta 2030" : ""}
               </option>
             ))}
           </select>
         </Campo>
-        <Campo label="Costo por hora (MXN)" htmlFor="cfg-costo" hint="Referencia para el costo extra; la hora arriba del tope se paga al doble.">
+        <Campo label="Costo por hora (MXN)" htmlFor="cfg-costo" hint="Hora ordinaria. Arriba del tope se paga al doble.">
           <input
             id="cfg-costo"
             className={inputClass}
@@ -68,86 +87,92 @@ function Formulario({
             inputMode="decimal"
             value={costoHora}
             onChange={(e) => setCostoHora(e.target.value)}
+            aria-invalid={!costoValido || undefined}
             required
           />
         </Campo>
-        <Campo label="Sucursal principal" htmlFor="cfg-sucursal">
-          <select
-            id="cfg-sucursal"
-            className={inputClass}
-            value={sucursal}
-            onChange={(e) => setSucursal(e.target.value)}
-          >
-            {sucursales.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </Campo>
       </div>
 
-      <label className="flex items-start gap-2.5 rounded-md border border-border/60 p-3 text-[13px]">
-        <input
-          type="checkbox"
-          className="mt-0.5 size-4 shrink-0 accent-yellow-400"
-          checked={registro}
-          onChange={(e) => setRegistro(e.target.checked)}
-        />
-        <span>
-          <span className="font-medium">Registro electrónico de asistencia conectado</span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">
-            Toma las entradas y salidas directamente del checador en lugar del CSV semanal.
-          </span>
-        </span>
-      </label>
-
       <div className="flex items-center gap-3">
-        <button type="submit" className={botonPrimario}>
-          <Save className="size-4" strokeWidth={2} aria-hidden="true" />
-          Guardar
-        </button>
+        <BotonPrimario type="submit" disabled={guardando || !costoValido}>
+          <Save className="size-4" strokeWidth={1.5} aria-hidden="true" />
+          {guardando ? "Guardando…" : "Guardar"}
+        </BotonPrimario>
       </div>
     </form>
   );
 }
 
 export function ConfiguracionTab() {
-  const [config, setConfig] = useConfig();
-  const [propias] = useSucursalesPropias();
-  const [guardado, setGuardado] = useState(false);
+  const datos = usePanel();
+  const router = useRouter();
+  const empresa = datos.empresa;
+  const enSupabase = datos.origen === "supabase" && !!empresa;
+
+  // Valores iniciales: los del panel (`DatosPanel.empresa`), con 40 h y $60 de respaldo.
+  const [valores, setValores] = useState<Valores>(() =>
+    normalizar(empresa?.topeObjetivo ?? TOPE_DEFAULT, empresa?.costoHoraDefault ?? COSTO_DEFAULT),
+  );
+  const [estado, setEstado] = useState<Estado>({ tipo: "idle" });
+  const [guardando, setGuardando] = useState(false);
+  const [, startTransition] = useTransition();
 
   useEffect(() => {
-    if (!guardado) return;
-    const t = window.setTimeout(() => setGuardado(false), 2500);
+    if (estado.tipo !== "guardado") return;
+    const t = window.setTimeout(() => setEstado({ tipo: "idle" }), 3000);
     return () => window.clearTimeout(t);
-  }, [guardado]);
+  }, [estado]);
 
-  const sucursales = Array.from(
-    new Set([
-      ...SUCURSALES_SEMILLA.map((s) => s.nombre),
-      ...propias.map((s) => s.nombre),
-      config.sucursalPrincipal,
-    ]),
-  );
+  async function guardar(v: Valores) {
+    if (!enSupabase || !empresa) {
+      setValores(v);
+      setEstado({ tipo: "demo" });
+      return;
+    }
+    setGuardando(true);
+    setEstado({ tipo: "idle" });
+    try {
+      const { data, error } = await createClient()
+        .from("empresas")
+        .update({ tope_objetivo: v.tope, costo_hora_default: v.costoHora })
+        .eq("id", empresa.id)
+        .select("id");
+      if (error) {
+        setEstado({ tipo: /permission|policy|row-level|42501/i.test(error.message) ? "sin-permiso" : "error" });
+        return;
+      }
+      // Sin permiso, RLS no toca ninguna fila y no devuelve error.
+      if (!data || data.length === 0) {
+        setEstado({ tipo: "sin-permiso" });
+        return;
+      }
+      setValores(v);
+      setEstado({ tipo: "guardado" });
+      startTransition(() => router.refresh());
+    } catch {
+      setEstado({ tipo: "error" });
+    } finally {
+      setGuardando(false);
+    }
+  }
 
   return (
     <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
       <TabHeader
         eyebrow="Configuración"
         title="Configuración"
-        subtitle="Parámetros del diagnóstico. Se guardan en este navegador."
+        subtitle="El tope y el costo por hora con los que se arma tu propuesta."
       />
       <Panel className="max-w-3xl">
         <PanelHeader
-          title="Parámetros"
-          description="El costo por hora alimenta las tarjetas y la gráfica de costo del diagnóstico."
+          title="Propuesta"
+          description="Se aplican la próxima vez que programes una semana."
           aside={
             <span
               role="status"
               aria-live="polite"
               className={`inline-flex items-center gap-1.5 text-xs font-medium text-emerald-400 transition-opacity ${
-                guardado ? "opacity-100" : "opacity-0"
+                estado.tipo === "guardado" ? "opacity-100" : "opacity-0"
               }`}
             >
               <Check className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -155,16 +180,20 @@ export function ConfiguracionTab() {
             </span>
           }
         />
-        {/* `key` reinicia el formulario cuando cambia lo guardado (p. ej. tras hidratar). */}
+        {/* `key` reinicia el formulario cuando cambian los valores guardados. */}
         <Formulario
-          key={JSON.stringify(config)}
-          inicial={config}
-          sucursales={sucursales}
-          onGuardar={(c) => {
-            setConfig(c);
-            setGuardado(true);
-          }}
+          key={`${valores.tope}-${valores.costoHora}`}
+          inicial={valores}
+          guardando={guardando}
+          onGuardar={(v) => void guardar(v)}
         />
+        {estado.tipo !== "idle" && estado.tipo !== "guardado" && (
+          <p role="status" className="j40-muted border-t border-border/60 px-4 py-3">
+            {estado.tipo === "sin-permiso" && "Solo la persona dueña de la cuenta puede cambiar estos valores."}
+            {estado.tipo === "error" && "No pudimos guardar. Inténtalo de nuevo."}
+            {estado.tipo === "demo" && "En la demostración los cambios no se guardan."}
+          </p>
+        )}
       </Panel>
     </div>
   );

@@ -128,6 +128,33 @@
     @apply font-sans;
   }
 }
+
+/*
+ * Escala tipográfica de Jornada40 (un solo producto: portada, auth y panel).
+ *   j40-eyebrow  10 px mono, mayúsculas, tracking 0.14em, gris (etiqueta de sección)
+ *   j40-body     13 px, texto de lectura del panel
+ *   j40-muted    12 px, gris; texto secundario (hints, subtítulos, celdas de apoyo)
+ * No usar `text-[Npx]` fuera de estas tres utilidades.
+ */
+@utility j40-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@utility j40-body {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+@utility j40-muted {
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--muted-foreground);
+}
 /* Ondas concéntricas para RippleBackground */
 @keyframes ripple {
   0% {

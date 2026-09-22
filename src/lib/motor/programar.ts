@@ -60,6 +60,8 @@ export type ProgresoProgramacion = {
   paso: "catalogo" | "demanda" | "baseline" | "optimizando" | "guardando" | "resumiendo" | "listo";
   detalle?: string;
   pct: number;
+  /** Tope (h/semana) con el que corre esta programación; útil para las etiquetas cuando no se pasó `tope`. */
+  tope?: number;
 };
 
 export type ResultadoProgramacion = {
@@ -84,9 +86,15 @@ export type OpcionesProgramacion = {
   sucursalId: string;
   /** Lunes ISO "YYYY-MM-DD". */
   semanaIso: string;
-  /** Tope semanal de la propuesta (default 40). */
+  /**
+   * Tope semanal de la propuesta. Si se omite se lee `empresas.tope_objetivo`
+   * (0008_empresas_parametros.sql); si tampoco existe, 40.
+   */
   tope?: number;
-  /** Salario/hora para los puestos sin tabulador (default 60). */
+  /**
+   * Salario/hora para los puestos sin tabulador. Si se omite se lee
+   * `empresas.costo_hora_default`; si tampoco existe, 60.
+   */
   costoHoraDefault?: number;
   onProgreso?: (p: ProgresoProgramacion) => void;
 };
@@ -993,18 +1001,35 @@ async function guardarPropuesta(
 // Orquestación
 // ---------------------------------------------------------------------------
 
+/** Parámetros de programación de la empresa (`empresas.tope_objetivo`, `empresas.costo_hora_default`). */
+async function leerParametrosEmpresa(sb: Cliente, empresaId: string): Promise<{ tope: number; costoHora: number }> {
+  const { data, error } = await sb.from("empresas").select("tope_objetivo, costo_hora_default").eq("id", empresaId).maybeSingle();
+  if (error) throw fallo("leer parámetros de la empresa", error);
+  const tope = Number(data?.tope_objetivo);
+  const costoHora = Number(data?.costo_hora_default);
+  return {
+    tope: Number.isFinite(tope) && tope > 0 ? tope : TOPE_DEFAULT,
+    costoHora: Number.isFinite(costoHora) && costoHora > 0 ? costoHora : COSTO_HORA_DEFAULT,
+  };
+}
+
 export async function programarSemana(opts: OpcionesProgramacion): Promise<ResultadoProgramacion> {
   const t0 = Date.now();
   const { supabase: sb, sucursalId, semanaIso: semana } = opts;
-  const tope = opts.tope ?? TOPE_DEFAULT;
   if (!esLunes(semana)) throw new Error(`La semana debe ser un lunes (ISO): ${semana}`);
-  if (!(tope > 0 && tope <= 48)) throw new Error(`Tope semanal inválido: ${tope}`);
-  const progreso = opts.onProgreso ?? (() => {});
+  const onProgreso = opts.onProgreso ?? (() => {});
 
   const { data: suc, error: eSuc } = await sb.from("sucursales").select("id, nombre, hubs(empresa_id)").eq("id", sucursalId).maybeSingle();
   if (eSuc) throw fallo("leer sucursal", eSuc);
   const empresaId = suc?.hubs?.empresa_id;
   if (!suc || !empresaId) throw new Error("La sucursal no existe o no pertenece a tu empresa.");
+
+  // Tope y costo/hora: los pasados, o los de la empresa (Configuración).
+  const deEmpresa =
+    opts.tope === undefined || opts.costoHoraDefault === undefined ? await leerParametrosEmpresa(sb, empresaId) : null;
+  const tope = opts.tope ?? deEmpresa!.tope;
+  if (!(tope > 0 && tope <= 48)) throw new Error(`Tope semanal inválido: ${tope}`);
+  const progreso = (p: ProgresoProgramacion) => onProgreso({ ...p, tope });
 
   const ctx: Contexto = {
     sb,
@@ -1014,7 +1039,7 @@ export async function programarSemana(opts: OpcionesProgramacion): Promise<Resul
     semana,
     domingo: sumarDias(semana, 6),
     tope,
-    costoHora: opts.costoHoraDefault ?? COSTO_HORA_DEFAULT,
+    costoHora: opts.costoHoraDefault ?? deEmpresa!.costoHora,
     progreso,
   };
 

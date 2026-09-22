@@ -15,8 +15,6 @@ export type Semana = {
 };
 
 export const SEMANA_ACTUAL = 31;
-/** Factor con el que se paga la hora arriba del tope. */
-export const FACTOR_DOBLE = 2;
 
 const real = resumenDe(PLANTILLA_COAPA, "hoy", TOPE_2027);
 

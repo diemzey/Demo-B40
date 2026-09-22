@@ -17,12 +17,21 @@ const filledFinish =
   "bg-linear-to-b from-white/12 to-white/0 hover:from-white/20 active:translate-y-px active:from-white/5 shadow-[inset_0_1px_0_0_rgb(255_255_255/0.18),inset_0_-1px_0_0_rgb(0_0_0/0.18),0_0_0_1px_rgb(0_0_0/0.3)]"
 
 const buttonVariants = cva(
-  "relative isolate inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "relative isolate inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-[color,background-color,border-color,box-shadow,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default: cn(
           "bg-primary text-primary-foreground hover:bg-primary/90",
+          filledFinish,
+        ),
+        /**
+         * Botón principal de Jornada40: amarillo, texto oscuro. Es el único
+         * primario del producto (portada, auth y panel); `default` queda
+         * para los componentes de shadcn que lo esperan neutro.
+         */
+        primary: cn(
+          "bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300",
           filledFinish,
         ),
         destructive: cn(
@@ -40,7 +49,8 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
+        /** Botones del panel: 36 px en escritorio, 40 px en pantallas táctiles. */
+        sm: "h-10 rounded-md px-3 text-[13px] md:h-9",
         lg: "h-11 rounded-md px-8",
         icon: "h-10 w-10",
       },

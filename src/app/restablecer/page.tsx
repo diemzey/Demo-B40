@@ -15,9 +15,7 @@ export default function RestablecerPage() {
     >
       <div className="rounded-2xl border bg-card p-6 shadow-lg">
         <h1 className="text-2xl font-semibold tracking-tight">Nueva contraseña</h1>
-        <p className="mt-1 mb-6 text-sm text-muted-foreground">
-          Úsala la próxima vez que entres a Jornada40.
-        </p>
+        <p className="mt-1 mb-6 text-sm text-muted-foreground">Al menos 8 caracteres, con letras y números.</p>
         <RestablecerForm />
       </div>
     </AuthShell>

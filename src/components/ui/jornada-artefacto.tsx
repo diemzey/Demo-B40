@@ -86,7 +86,9 @@ const badgeLabel: Record<Estado, string> = {
   cumple: "Cumple",
 };
 
-const fmt = (h: number) => `${h.toFixed(1)} h`;
+const fmtHoras = new Intl.NumberFormat("es-MX", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+const fmtEntero = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 0 });
+const fmt = (h: number) => `${fmtHoras.format(h)} h`;
 
 function iniciales(nombre: string) {
   return nombre
@@ -393,11 +395,14 @@ export function JornadaTotales({
     <Table>
       <TableFooter>
         <TableRow>
-          <TableCell colSpan={3} className="py-4">
+          <TableCell colSpan={3} className="py-4" aria-live="polite">
+            {/* Tres cifras: en móvil la tercera baja a su propia fila (nada se encima a 390 px). */}
             <div
               className={cn(
-                "grid gap-4 [&_p:first-child]:whitespace-nowrap",
-                proyeccion2030 || conSinCubrir || conAhorro || conCosto ? "grid-cols-3" : "grid-cols-2",
+                "grid gap-x-4 gap-y-3 sm:gap-4 [&>div]:min-w-0",
+                proyeccion2030 || conSinCubrir || conAhorro || conCosto
+                  ? "grid-cols-2 sm:grid-cols-3 [&>div:last-child]:col-span-2 sm:[&>div:last-child]:col-span-1"
+                  : "grid-cols-2",
               )}
             >
               <div>
@@ -436,7 +441,7 @@ export function JornadaTotales({
                   </p>
                   <p
                     className={cn(
-                      "mt-1 whitespace-nowrap font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
+                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
                       conAhorro ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
                     )}
                   >
@@ -444,7 +449,7 @@ export function JornadaTotales({
                   </p>
                   <p className="mt-0.5 text-muted-foreground text-xs">
                     {conAhorro
-                      ? `${(resumen.ahorroPct ?? 0).toFixed(0)} % menos que hoy · misma plantilla`
+                      ? `${fmtEntero.format(resumen.ahorroPct ?? 0)} % menos que hoy · misma plantilla`
                       : "pagadas al doble"}
                   </p>
                 </div>
@@ -455,7 +460,7 @@ export function JornadaTotales({
                   </p>
                   <p
                     className={cn(
-                      "mt-1 whitespace-nowrap font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
+                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
                       (resumen.horasSinCubrir ?? 0) > 0 && "text-amber-600 dark:text-amber-400",
                     )}
                   >
@@ -521,7 +526,6 @@ export function JornadaArtefacto({
         barriendo && "j40-shimmer",
         className,
       )}
-      aria-live="polite"
       {...props}
     >
       <div className="mb-3 flex items-baseline justify-between px-2.5">

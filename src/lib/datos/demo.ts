@@ -1,19 +1,21 @@
 import {
-  PLANTILLA_BASE,
+  EJEMPLO,
   PLANTILLA_COAPA,
-  reacomodoDe,
+  TOPE,
+  resumenAntesEjemplo,
   resumenDe,
-  resumenDespues,
+  resumenDespuesEjemplo,
 } from "@/components/demo/plantilla-coapa";
 import { SEMANAS, SEMANA_ACTUAL } from "@/components/dashboard/semanas-data";
 import { TOPE_2027 } from "@/components/dashboard/colaboradores-table";
 import { semanaDesdeLunes } from "@/lib/datos/semana";
-import { TOPE_2030, type DatosPanel, type SucursalPanel } from "@/lib/datos/tipos";
+import { TOPE_2030, type DatosPanel, type ProgramacionPanel, type SucursalPanel } from "@/lib/datos/tipos";
 
 /**
- * Datos de muestra del panel: la plantilla sintética de Coapa (misma que la
- * portada) con el tope transitorio de 2027. Se usan cuando Supabase no está
- * configurado o la empresa aún no tiene datos.
+ * Datos de muestra del panel: la misma tienda-semana de la portada (corrida
+ * real del motor sobre datos sintéticos, `ejemplo-tienda.json`) presentada
+ * como una semana ya programada a 40 h. Se usan cuando Supabase no está
+ * configurado. Ninguna persona es real.
  */
 
 /** Lunes de la semana 31 de 2026 (misma semana que `supabase/seed.sql`). */
@@ -41,29 +43,48 @@ function lunesDeSemanaDemo(semana: number): string {
   return new Date(d.getTime() - (SEMANA_ACTUAL - semana) * 7 * DIA_MS).toISOString().slice(0, 10);
 }
 
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+/** La propuesta del ejemplo con la misma forma que una fila de `v_ahorro_escenario`. */
+const PROGRAMACION_DEMO: ProgramacionPanel = {
+  propuestaId: "demo-propuesta",
+  baselineId: "demo-baseline",
+  tope: TOPE,
+  costoBaseline: r2(EJEMPLO.baseline.costoTotal),
+  costoPropuesta: r2(EJEMPLO.propuesta.costoTotal),
+  ahorroMxn: r2(EJEMPLO.ahorro.mxn),
+  ahorroPct: r2(EJEMPLO.ahorro.pct),
+  costoDoblesBaseline: r2(EJEMPLO.baseline.costoDobles),
+  horasDoblesBaseline: EJEMPLO.baseline.horasDobles,
+  costoSobrestaffingBaseline: r2(EJEMPLO.baseline.costoSobrestaffing),
+  costoSobrestaffingPropuesta: r2(EJEMPLO.propuesta.costoSobrestaffing),
+  coberturaPicoBaselinePct: EJEMPLO.baseline.coberturaPicoPct,
+  coberturaPicoPropuestaPct: EJEMPLO.propuesta.coberturaPicoPct,
+  deficitPicoHoras: EJEMPLO.propuesta.deficitPicoHoras,
+  publicadoEn: null,
+  // El ejemplo exportado no trae la cobertura por intervalo: la gráfica se omite.
+  cobertura: [],
+};
+
 export function datosDemo(aviso: DatosPanel["aviso"] = null): DatosPanel {
-  // La columna reacomodada sale del motor con el tope del panel (mismo 46 h que la portada).
-  const { personas, resumen: reacomodo } = reacomodoDe(
-    PLANTILLA_BASE.map((p) => ({ ...p, detalle: "Piso de venta" })),
-    TOPE_2027,
-  );
+  const personas = PLANTILLA_COAPA;
   const semana = semanaDesdeLunes(LUNES_DEMO);
   return {
     origen: "demo",
     aviso,
     sinDatos: false,
-    empresa: { id: "demo", nombre: "Grupo Solmar" },
+    empresa: { id: "demo", nombre: "Grupo Solmar", topeObjetivo: TOPE, costoHoraDefault: 60 },
     sucursales: SUCURSALES_DEMO,
     sucursal: { id: "coapa", nombre: "Coapa" },
     semana,
-    tope: TOPE_2027,
-    topeLegal: TOPE_2027,
-    topeAnio: 2027,
-    topeAnterior: 48,
+    tope: TOPE,
+    topeLegal: 48,
+    topeAnio: semana.anio,
+    topeAnterior: null,
     tope2030: TOPE_2030,
     personas,
-    antes: resumenDe(personas, "hoy", TOPE_2027),
-    despues: resumenDespues(personas, reacomodo),
+    antes: resumenAntesEjemplo(),
+    despues: resumenDespuesEjemplo(),
     antes2030: resumenDe(personas, "hoy", TOPE_2030),
     semanas: SEMANAS.map((s) => ({
       inicio: lunesDeSemanaDemo(s.semana),
@@ -71,9 +92,17 @@ export function datosDemo(aviso: DatosPanel["aviso"] = null): DatosPanel {
       horasAlDoble: s.horasAlDoble,
       fueraDeNorma: s.fueraDeNorma,
       colaboradores: PLANTILLA_COAPA.length,
-      // En la muestra, "Reacomodada" equivale a una semana ya programada.
-      programada: s.estado === "Reacomodada",
+      programada: s.semana === SEMANA_ACTUAL,
+      ...(s.semana === SEMANA_ACTUAL
+        ? {
+            ahorroMxn: PROGRAMACION_DEMO.ahorroMxn,
+            costoBaseline: PROGRAMACION_DEMO.costoBaseline,
+            costoPropuesta: PROGRAMACION_DEMO.costoPropuesta,
+            tope: TOPE,
+            coberturaPicoPropuestaPct: PROGRAMACION_DEMO.coberturaPicoPropuestaPct,
+          }
+        : {}),
     })),
-    programacion: null,
+    programacion: PROGRAMACION_DEMO,
   };
 }

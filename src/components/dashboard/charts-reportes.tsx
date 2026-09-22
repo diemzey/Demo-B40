@@ -1,11 +1,9 @@
 "use client";
 
-import type { ReactNode } from "react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   LabelList,
   ResponsiveContainer,
   Tooltip,
@@ -14,64 +12,72 @@ import {
   type LabelProps,
   type TooltipContentProps,
 } from "recharts";
+import {
+  AHORRO,
+  AMBAR,
+  AXIS_TICK,
+  DESTRUCTIVO,
+  HOY,
+  Leyenda,
+  Leyendas,
+  REJILLA,
+  TINTA_MUTED,
+  TooltipCaja,
+  TooltipFila,
+  fmtEjeMXN,
+  fmtInt,
+  fmtMXN,
+  pct,
+} from "@/components/dashboard/charts";
+import type { FilaReporte } from "@/lib/datos/tipos";
+import { numeroSemanaIso, rangoCorto, semanaDesdeLunes } from "@/lib/datos/semana";
 
 /*
- * Gráficas del reporte ejecutivo. Mismo lenguaje que `charts.tsx`: marcas
- * delgadas (≤ 12 px) con extremo redondeado, rejilla de un solo paso, texto
- * siempre con tokens de texto. Una sola serie (el ahorro) → un solo color;
- * el verde es estado ("ahorro"), el destructivo marca un componente que
- * encareció en lugar de ahorrar.
+ * Gráficas del reporte de la empresa. Mismo lenguaje que `charts.tsx`:
+ * gris = hoy, ámbar = propuesta, emerald = ahorro; texto con tokens de texto.
  */
 
-/** Verde de ahorro (mismo que `text-emerald-400`). */
-const AHORRO = "#34d399";
-const DESTRUCTIVO = "var(--destructive)";
-const TINTA_MUTED = "var(--muted-foreground)";
-const REJILLA = "var(--border)";
-const AXIS_TICK = { fill: TINTA_MUTED, fontSize: 11 } as const;
+/* ---------- Costo por semana: barras agrupadas hoy vs propuesta ---------- */
 
-const fmtMXN = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  maximumFractionDigits: 0,
-});
-const fmtPct = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
-const fmtEjeMXN = (v: number) => {
-  const abs = Math.abs(v);
-  const s = abs >= 1_000_000 ? `$${fmtPct.format(abs / 1_000_000)}M` : abs >= 1000 ? `$${Math.round(abs / 1000)}k` : `$${abs}`;
-  return v < 0 ? `−${s}` : s;
+type PuntoSemana = {
+  etiqueta: string;
+  rango: string;
+  tiendas: number;
+  costoBaseline: number;
+  costoPropuesta: number;
+  ahorro: number;
+  ahorroTexto: string;
 };
 
-function TooltipCaja({ titulo, children }: { titulo: ReactNode; children: ReactNode }) {
+function TooltipSemana({ active, payload }: TooltipContentProps) {
+  if (!active || !payload?.length) return null;
+  const d = payload[0].payload as PuntoSemana;
   return (
-    <div className="rounded-md border border-border bg-popover px-2.5 py-2 text-xs text-popover-foreground shadow-lg shadow-black/20">
-      <p className="mb-1 font-medium">{titulo}</p>
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">{children}</dl>
-    </div>
+    <TooltipCaja
+      titulo={
+        <>
+          {d.etiqueta} <span className="font-normal text-muted-foreground">· {d.rango}</span>
+        </>
+      }
+    >
+      <TooltipFila color={HOY} etiqueta="Hoy" valor={fmtMXN.format(d.costoBaseline)} tipo="rect" />
+      <TooltipFila color={AMBAR} etiqueta="Propuesta" valor={fmtMXN.format(d.costoPropuesta)} tipo="rect" />
+      <TooltipFila color={AHORRO} etiqueta="Ahorro" valor={fmtMXN.format(d.ahorro)} />
+      <dt className="text-muted-foreground">Sucursales</dt>
+      <dd className="text-right tabular-nums">{fmtInt.format(d.tiendas)}</dd>
+    </TooltipCaja>
   );
 }
 
-function TooltipFila({ color, etiqueta, valor }: { color: string; etiqueta: string; valor: string }) {
-  return (
-    <>
-      <dt className="flex items-center gap-1.5 text-muted-foreground">
-        <span aria-hidden="true" className="inline-block h-0.5 w-3 rounded-full" style={{ backgroundColor: color }} />
-        {etiqueta}
-      </dt>
-      <dd className="text-right font-semibold tabular-nums text-foreground">{valor}</dd>
-    </>
-  );
-}
-
-/** Etiqueta directa a la derecha de la barra, en una sola línea. */
-function EtiquetaBarra(props: LabelProps) {
+/** Etiqueta del ahorro sobre la barra de "hoy", una sola línea, en tinta de texto. */
+function EtiquetaAhorro(props: LabelProps) {
   const { viewBox, value } = props;
   if (!viewBox || !("width" in viewBox) || value == null) return <></>;
   return (
     <text
-      x={viewBox.x + viewBox.width + 6}
-      y={viewBox.y + viewBox.height / 2}
-      dy={4}
+      x={viewBox.x + viewBox.width}
+      y={viewBox.y - 6}
+      textAnchor="start"
       fill="var(--foreground)"
       fontSize={11}
       fontWeight={600}
@@ -81,16 +87,67 @@ function EtiquetaBarra(props: LabelProps) {
   );
 }
 
-function TickNombre(props: unknown) {
-  const { x, y, payload } = props as { x: number; y: number; payload: { value: string } };
+export function AhorroPorSemanaChart({ semanas }: { semanas: FilaReporte[] }) {
+  const data: PuntoSemana[] = semanas.map((s) => ({
+    etiqueta: `S${numeroSemanaIso(s.semanaIso)}`,
+    rango: rangoCorto(semanaDesdeLunes(s.semanaIso)),
+    tiendas: s.tiendas,
+    costoBaseline: s.costoBaseline,
+    costoPropuesta: s.costoPropuesta,
+    ahorro: s.ahorroMxn,
+    ahorroTexto: `−${fmtMXN.format(Math.abs(s.ahorroMxn))}`,
+  }));
+  const max = Math.max(1, ...data.map((d) => d.costoBaseline));
+  const total = data.reduce((a, d) => a + d.ahorro, 0);
+  // Etiquetas directas sólo cuando caben (pocas semanas); el resto va al tooltip.
+  const conEtiquetas = data.length <= 8;
+
   return (
-    <text x={x} y={y} dx={-6} dy={4} textAnchor="end" fill={TINTA_MUTED} fontSize={11}>
-      {payload.value}
-    </text>
+    <figure>
+      <div
+        role="img"
+        aria-label={`Costo laboral por semana, hoy contra la propuesta, en ${fmtInt.format(data.length)} semanas; ahorro total ${fmtMXN.format(total)}.`}
+        className="h-[200px] w-full"
+      >
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 18, right: 8, bottom: 0, left: 0 }} barGap={2} barCategoryGap="28%">
+            <CartesianGrid vertical={false} stroke={REJILLA} strokeWidth={1} />
+            <XAxis dataKey="etiqueta" tick={AXIS_TICK} tickLine={false} axisLine={false} interval={0} tickMargin={6} />
+            <YAxis
+              domain={[0, Math.ceil((max * 1.15) / 1000) * 1000]}
+              tickCount={3}
+              tick={AXIS_TICK}
+              tickLine={false}
+              axisLine={false}
+              width={48}
+              tickFormatter={fmtEjeMXN}
+            />
+            <Tooltip
+              cursor={{ fill: "var(--foreground)", fillOpacity: 0.04 }}
+              content={TooltipSemana}
+              isAnimationActive={false}
+            />
+            <Bar dataKey="costoBaseline" name="Hoy" fill={HOY} fillOpacity={0.55} radius={[4, 4, 0, 0]} maxBarSize={18} isAnimationActive={false}>
+              {conEtiquetas && <LabelList dataKey="ahorroTexto" content={EtiquetaAhorro} />}
+            </Bar>
+            <Bar dataKey="costoPropuesta" name="Propuesta" fill={AMBAR} radius={[4, 4, 0, 0]} maxBarSize={18} isAnimationActive={false} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      <Leyendas>
+        <Leyenda color={TINTA_MUTED} tipo="rect">
+          Costo hoy
+        </Leyenda>
+        <Leyenda color={AMBAR} tipo="rect">
+          Costo con la propuesta
+        </Leyenda>
+        {conEtiquetas && <span>La cifra sobre cada par es el ahorro de la semana.</span>}
+      </Leyendas>
+    </figure>
   );
 }
 
-/* ---------- Desglose del ahorro ---------- */
+/* ---------- De dónde sale el ahorro: barra apilada al 100 % ---------- */
 
 export type DesgloseAhorro = {
   dobles: number;
@@ -99,103 +156,90 @@ export type DesgloseAhorro = {
   sobrestaffing: number;
 };
 
-type DesgloseDatum = { clave: keyof DesgloseAhorro; nombre: string; valor: number; etiqueta: string; parte: number };
+const COMPONENTES: Array<{ clave: keyof DesgloseAhorro; nombre: string; color: string }> = [
+  { clave: "dobles", nombre: "Horas dobles", color: "#34d399" },
+  { clave: "triples", nombre: "Horas triples", color: "#10b981" },
+  { clave: "prima", nombre: "Prima dominical", color: "#6ee7b7" },
+  { clave: "sobrestaffing", nombre: "Personal de más", color: "#059669" },
+];
 
-const NOMBRES: Record<keyof DesgloseAhorro, string> = {
-  dobles: "Horas dobles",
-  triples: "Horas triples",
-  prima: "Prima dominical",
-  sobrestaffing: "Sobrestaffing",
-};
+type Parte = { clave: keyof DesgloseAhorro; nombre: string; color: string; valor: number; parte: number };
 
 function TooltipDesglose({ active, payload }: TooltipContentProps) {
   if (!active || !payload?.length) return null;
-  const d = payload[0].payload as DesgloseDatum;
+  const partes = payload[0].payload as Record<string, unknown> & { partes: Parte[] };
   return (
-    <TooltipCaja titulo={d.nombre}>
-      <TooltipFila color={d.valor < 0 ? DESTRUCTIVO : AHORRO} etiqueta="Ahorro" valor={fmtMXN.format(d.valor)} />
-      <TooltipFila color={AHORRO} etiqueta="Del total" valor={`${fmtPct.format(d.parte)} %`} />
+    <TooltipCaja titulo="De dónde sale el ahorro">
+      {partes.partes.map((p) => (
+        <TooltipFila key={p.clave} color={p.color} etiqueta={p.nombre} valor={`${fmtMXN.format(p.valor)} · ${pct(p.parte)}`} tipo="rect" />
+      ))}
     </TooltipCaja>
   );
 }
 
 /**
- * Barras horizontales con los cuatro componentes del ahorro
+ * Una sola fila apilada al 100 % con los componentes del ahorro
  * (`ahorro_dobles`, `ahorro_triples`, `ahorro_prima`, `ahorro_sobrestaffing`
- * de `reporte_ejecutivo()`), ordenadas de mayor a menor.
+ * de `reporte_ejecutivo()`), de mayor a menor. Un componente negativo (la
+ * propuesta encareció ese rubro) no entra en la barra y se anota debajo.
  */
-export function DesgloseAhorroChart({ desglose, total }: { desglose: DesgloseAhorro; total: number }) {
-  const data: DesgloseDatum[] = (Object.keys(NOMBRES) as Array<keyof DesgloseAhorro>)
-    .map((clave) => {
-      const valor = desglose[clave];
-      return {
-        clave,
-        nombre: NOMBRES[clave],
-        valor,
-        etiqueta: fmtMXN.format(valor),
-        parte: total > 0 ? (100 * valor) / total : 0,
-      };
-    })
+export function DesgloseAhorroBarra({ desglose }: { desglose: DesgloseAhorro }) {
+  const positivos = COMPONENTES.map((c) => ({ ...c, valor: desglose[c.clave] })).filter((c) => c.valor > 0);
+  const negativos = COMPONENTES.map((c) => ({ ...c, valor: desglose[c.clave] })).filter((c) => c.valor < 0);
+  const suma = positivos.reduce((a, c) => a + c.valor, 0);
+  const partes: Parte[] = positivos
+    .map((c) => ({ ...c, parte: suma > 0 ? (100 * c.valor) / suma : 0 }))
     .sort((a, b) => b.valor - a.valor);
-  const max = Math.max(1, ...data.map((d) => d.valor));
-  const min = Math.min(0, ...data.map((d) => d.valor));
-  const negativos = data.filter((d) => d.valor < 0);
-  const mayor = data[0];
+  const fila: Record<string, number | Parte[]> = { partes };
+  for (const p of partes) fila[p.clave] = p.parte;
+  const mayor = partes[0];
+
+  if (!mayor) {
+    return <p className="py-4 text-xs text-muted-foreground">Sin ahorro que desglosar.</p>;
+  }
 
   return (
     <figure>
       <div
         role="img"
-        aria-label={`Desglose del ahorro por componente; el mayor es ${mayor.nombre} con ${mayor.etiqueta} (${fmtPct.format(mayor.parte)} % del total).`}
-        className="h-[132px] w-full"
+        aria-label={`Desglose del ahorro: ${partes.map((p) => `${p.nombre} ${pct(p.parte)}`).join(", ")}.`}
+        className="h-12 w-full"
       >
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{ top: 4, right: 88, bottom: 0, left: 0 }} barCategoryGap={6}>
-            <CartesianGrid horizontal={false} stroke={REJILLA} strokeWidth={1} />
-            <XAxis
-              type="number"
-              domain={[min, max * 1.05]}
-              tick={AXIS_TICK}
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={fmtEjeMXN}
-              tickCount={4}
-            />
-            <YAxis
-              type="category"
-              dataKey="nombre"
-              width={104}
-              tick={TickNombre}
-              tickLine={false}
-              axisLine={false}
-              interval={0}
-            />
-            <Tooltip
-              cursor={{ fill: "var(--foreground)", fillOpacity: 0.04 }}
-              content={TooltipDesglose}
-              isAnimationActive={false}
-            />
-            <Bar dataKey="valor" name="Ahorro" radius={[0, 4, 4, 0]} maxBarSize={12} minPointSize={2} isAnimationActive={false}>
-              {data.map((d) => (
-                <Cell key={d.clave} fill={d.valor < 0 ? DESTRUCTIVO : AHORRO} />
-              ))}
-              <LabelList dataKey="etiqueta" content={EtiquetaBarra} />
-            </Bar>
+          <BarChart data={[fila]} layout="vertical" margin={{ top: 4, right: 0, bottom: 4, left: 0 }} barCategoryGap={0}>
+            <XAxis type="number" domain={[0, 100]} hide />
+            <YAxis type="category" dataKey={() => ""} hide />
+            <Tooltip cursor={false} content={TooltipDesglose} isAnimationActive={false} />
+            {partes.map((p, i) => (
+              <Bar
+                key={p.clave}
+                dataKey={p.clave}
+                name={p.nombre}
+                stackId="ahorro"
+                fill={p.color}
+                stroke="var(--card)"
+                strokeWidth={2}
+                radius={i === 0 ? [4, 0, 0, 4] : i === partes.length - 1 ? [0, 4, 4, 0] : 0}
+                maxBarSize={40}
+                isAnimationActive={false}
+              />
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </div>
-      <figcaption className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5">
-          <span aria-hidden="true" className="inline-block size-2.5 rounded-[3px]" style={{ backgroundColor: AHORRO }} />
-          Ahorro (baseline − propuesta)
-        </span>
-        {negativos.length > 0 && (
-          <span className="inline-flex items-center gap-1.5">
-            <span aria-hidden="true" className="inline-block size-2.5 rounded-[3px]" style={{ backgroundColor: DESTRUCTIVO }} />
-            Encareció con la propuesta
-          </span>
-        )}
-      </figcaption>
+      <Leyendas>
+        {partes.map((p) => (
+          <Leyenda key={p.clave} color={p.color} tipo="rect">
+            {p.nombre} <span className="tabular-nums text-foreground">{pct(p.parte)}</span> ·{" "}
+            <span className="tabular-nums">{fmtMXN.format(p.valor)}</span>
+          </Leyenda>
+        ))}
+        {negativos.map((n) => (
+          <Leyenda key={n.clave} color={DESTRUCTIVO} tipo="rect">
+            {n.nombre} encareció {fmtMXN.format(Math.abs(n.valor))}
+          </Leyenda>
+        ))}
+      </Leyendas>
     </figure>
   );
 }

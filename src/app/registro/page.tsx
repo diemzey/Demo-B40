@@ -16,7 +16,7 @@ export default function RegistroPage() {
       <div className="rounded-2xl border bg-card p-6 shadow-lg">
         <h1 className="text-2xl font-semibold tracking-tight">Crear cuenta</h1>
         <p className="mt-1 mb-6 text-sm text-muted-foreground">
-          Sin tarjeta. Solo lo necesario para subir tu primera semana.
+          Sin tarjeta. En dos minutos subes tu primera semana.
         </p>
         <RegisterForm />
       </div>

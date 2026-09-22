@@ -4,20 +4,19 @@
  * Dashboard Sidebar — portado de 21st.dev
  * https://21st.dev/@arunjdass/components/dashboard-sidebar (autor: arunjdass)
  *
- * Fuente original: https://cdn.21st.dev/arunjdass/dashboard-sidebar/code.1781812419318.tsx
- *
- * Adaptaciones para este proyecto:
- * - Los datos de navegación (`groups`, `bottomItems`, workspaces) llegan por
- *   props en lugar de estar fijos en el archivo.
- * - Cada item acepta `href`; cuando lo tiene se renderiza con `next/link`.
- * - Slots `header` / `footer` para el logo y el bloque de usuario.
- * - `cn` de "@/lib/utils" en lugar de template strings; textos en español.
- * La estructura, clases y animaciones del componente original se conservan.
+ * Adaptaciones para Jornada40:
+ * - Los datos de navegación (`groups`, `bottomItems`, sucursales) llegan por
+ *   props.
+ * - Cada ítem es un `<a href="#id">` plano: la pestaña activa la lleva el
+ *   shell en estado de React (no `next/link`, no navegación).
+ * - `WorkspaceSwitcher` (selector de sucursal) es un `<button>` con
+ *   `aria-expanded` y una lista `role="listbox"` navegable con flechas,
+ *   Enter/Espacio y Escape.
+ * - Anillo `focus-visible` y objetivos táctiles de 40 px en todos los ítems.
  */
 
 import * as React from "react";
-import { useState } from "react";
-import Link from "next/link";
+import { useEffect, useId, useRef, useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +24,7 @@ export type NavItemData = {
   id: string;
   title: string;
   icon: React.ElementType;
+  /** Destino real (navegación completa). Sin `href`, el ítem es una pestaña `#id`. */
   href?: string;
   badge?: number | string;
   shortcut?: string;
@@ -36,76 +36,181 @@ export type NavGroupData = {
   items: NavItemData[];
 };
 
+const FOCUS_RING =
+  "outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card";
+
+/**
+ * Selector de sucursal. Botón + listbox: Enter/Espacio/↓ abren, ↑↓ mueven,
+ * Enter elige, Escape cierra y devuelve el foco al botón.
+ */
 export function WorkspaceSwitcher({
   workspaces,
   selected,
   onSelect,
-  plan = "Grupo Solmar",
-  createLabel = "Crear sucursal",
+  plan = "",
+  hint = "¿Otra sucursal? Súbela en el CSV.",
 }: {
   workspaces: string[];
   selected?: string;
   onSelect?: (ws: string) => void;
+  /** Texto bajo el nombre (la empresa). */
   plan?: string;
-  createLabel?: string;
+  /** Nota no interactiva al pie de la lista; `null` la oculta. */
+  hint?: string | null;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [internalSelected, setInternalSelected] = useState(workspaces[0] ?? "");
-
   const current = selected || internalSelected;
   const handleSelect = onSelect || setInternalSelected;
 
+  const listId = useId();
+  const botonRef = useRef<HTMLButtonElement>(null);
+  const listaRef = useRef<HTMLUListElement>(null);
+  const indiceActual = Math.max(0, workspaces.indexOf(current));
+  const [activo, setActivo] = useState(indiceActual);
+
+  const abrir = () => {
+    setActivo(indiceActual);
+    setIsOpen(true);
+  };
+  const cerrar = (devolverFoco = true) => {
+    setIsOpen(false);
+    if (devolverFoco) botonRef.current?.focus();
+  };
+  const elegir = (ws: string) => {
+    handleSelect(ws);
+    cerrar();
+  };
+
+  useEffect(() => {
+    if (isOpen) listaRef.current?.focus();
+  }, [isOpen]);
+
+  const unaSola = workspaces.length <= 1;
+
+  const onKeyBoton = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      e.preventDefault();
+      abrir();
+    }
+  };
+
+  const onKeyLista = (e: React.KeyboardEvent) => {
+    switch (e.key) {
+      case "ArrowDown":
+        e.preventDefault();
+        setActivo((i) => Math.min(workspaces.length - 1, i + 1));
+        break;
+      case "ArrowUp":
+        e.preventDefault();
+        setActivo((i) => Math.max(0, i - 1));
+        break;
+      case "Home":
+        e.preventDefault();
+        setActivo(0);
+        break;
+      case "End":
+        e.preventDefault();
+        setActivo(workspaces.length - 1);
+        break;
+      case "Enter":
+      case " ":
+        e.preventDefault();
+        if (workspaces[activo]) elegir(workspaces[activo]);
+        break;
+      case "Escape":
+        e.preventDefault();
+        cerrar();
+        break;
+      case "Tab":
+        cerrar(false);
+        break;
+    }
+  };
+
   return (
-    <div className="relative">
-      <div
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between px-2 py-2 mb-4 rounded-lg hover:bg-black/5 dark:hover:bg-white/5 cursor-pointer transition-colors select-none group"
+    <div className="relative mb-4">
+      <button
+        ref={botonRef}
+        type="button"
+        onClick={() => (isOpen ? cerrar() : abrir())}
+        onKeyDown={onKeyBoton}
+        disabled={unaSola}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-controls={isOpen ? listId : undefined}
+        aria-label={unaSola ? `Sucursal ${current}` : `Sucursal ${current}. Cambiar de sucursal`}
+        className={cn(
+          "group flex min-h-10 w-full items-center justify-between rounded-lg px-2 py-2 text-left transition-colors select-none",
+          !unaSola && "cursor-pointer hover:bg-black/5 dark:hover:bg-white/5",
+          FOCUS_RING,
+        )}
       >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-[6px] bg-primary text-primary-foreground flex items-center justify-center font-semibold text-[13px] shadow-sm">
-            {current.charAt(0)}
-          </div>
-          <div className="flex flex-col overflow-hidden">
-            <span className="text-[13px] font-medium leading-none mb-1 text-foreground truncate max-w-[120px]">
-              {current}
-            </span>
-            <span className="text-[11px] text-muted-foreground leading-none">
-              {plan}
-            </span>
-          </div>
-        </div>
-        <ChevronDown
-          className="w-4 h-4 text-muted-foreground/50 group-hover:text-foreground/70 transition-colors shrink-0"
-          strokeWidth={1.5}
-        />
-      </div>
+        <span className="flex min-w-0 items-center gap-3">
+          <span
+            aria-hidden="true"
+            className="flex size-8 shrink-0 items-center justify-center rounded-[6px] bg-yellow-400 text-[13px] font-semibold text-neutral-950 shadow-sm"
+          >
+            {current.charAt(0).toUpperCase()}
+          </span>
+          <span className="flex min-w-0 flex-col">
+            <span className="j40-body mb-1 truncate font-medium leading-none text-foreground">{current}</span>
+            {plan && <span className="j40-muted truncate leading-none">{plan}</span>}
+          </span>
+        </span>
+        {!unaSola && (
+          <ChevronDown
+            aria-hidden="true"
+            className={cn(
+              "size-4 shrink-0 text-muted-foreground transition-transform group-hover:text-foreground",
+              isOpen && "rotate-180",
+            )}
+            strokeWidth={1.5}
+          />
+        )}
+      </button>
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-[52px] left-0 w-full bg-card border border-border/50 rounded-lg shadow-xl z-50 py-1 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-100">
-            {workspaces.map((ws) => (
-              <div
-                key={ws}
-                onClick={() => {
-                  handleSelect(ws);
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "px-3 py-2 mx-1 text-[13px] rounded-md cursor-pointer transition-colors",
-                  current === ws
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground/80 hover:bg-black/5 dark:hover:bg-white/5",
-                )}
-              >
-                {ws}
-              </div>
-            ))}
-            <div className="h-px bg-border/50 my-1 mx-2" />
-            <div className="px-3 py-2 mx-1 text-[13px] text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 rounded-md cursor-pointer flex items-center gap-2 transition-colors">
-              <span className="text-[16px] leading-none mb-0.5">+</span>{" "}
-              {createLabel}
-            </div>
+          <div className="fixed inset-0 z-40" aria-hidden="true" onClick={() => cerrar(false)} />
+          <div className="absolute top-[48px] left-0 z-50 flex w-full flex-col gap-0.5 rounded-lg border border-border/50 bg-card py-1 shadow-xl animate-in fade-in zoom-in-95 duration-100">
+            <ul
+              id={listId}
+              ref={listaRef}
+              role="listbox"
+              tabIndex={-1}
+              aria-label="Sucursales"
+              aria-activedescendant={`${listId}-${activo}`}
+              onKeyDown={onKeyLista}
+              className={cn("flex flex-col gap-0.5 rounded-md", FOCUS_RING)}
+            >
+              {workspaces.map((ws, i) => {
+                const seleccionada = current === ws;
+                return (
+                  <li
+                    key={ws}
+                    id={`${listId}-${i}`}
+                    role="option"
+                    aria-selected={seleccionada}
+                    onClick={() => elegir(ws)}
+                    onMouseEnter={() => setActivo(i)}
+                    className={cn(
+                      "j40-body mx-1 flex min-h-10 cursor-pointer items-center rounded-md px-3 py-2 transition-colors",
+                      seleccionada ? "bg-yellow-400/10 font-medium text-yellow-300" : "text-foreground",
+                      activo === i && "bg-black/5 dark:bg-white/10",
+                    )}
+                  >
+                    {ws}
+                  </li>
+                );
+              })}
+            </ul>
+            {hint && (
+              <>
+                <div className="mx-2 my-1 h-px bg-border/50" />
+                <p className="j40-muted mx-1 px-3 py-2">{hint}</p>
+              </>
+            )}
           </div>
         </>
       )}
@@ -128,90 +233,86 @@ export function NavItem({
   const hasChildren = !!item.children;
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleClick = () => {
-    if (hasChildren) {
-      setIsOpen(!isOpen);
-    } else {
-      onSelect(item.id);
-    }
-  };
-
   const rowClassName = cn(
-    "group flex items-center justify-between px-2.5 py-[7px] rounded-[6px] cursor-pointer transition-all duration-200 select-none",
+    "group flex min-h-10 md:min-h-9 items-center justify-between px-2.5 py-1.5 rounded-[6px] cursor-pointer transition-colors duration-200 select-none",
     isActive
       ? "bg-black/5 dark:bg-white/10 text-foreground font-medium"
-      : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground/90",
+      : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground",
+    FOCUS_RING,
   );
   const rowStyle = { paddingLeft: `${level * 12 + 10}px` };
 
   const content = (
     <>
-      <div className="flex items-center gap-2.5 min-w-0">
+      <span className="flex min-w-0 items-center gap-2.5">
         <item.icon
+          aria-hidden="true"
           className={cn(
-            "w-[16px] h-[16px] transition-colors shrink-0",
-            isActive
-              ? "text-amber-400"
-              : "text-muted-foreground/70 group-hover:text-foreground/70",
+            "size-4 shrink-0 transition-colors",
+            isActive ? "text-yellow-400" : "text-muted-foreground group-hover:text-foreground",
           )}
           strokeWidth={1.5}
         />
-        <span className="text-[13px] tracking-wide truncate">{item.title}</span>
-      </div>
+        <span className="j40-body truncate tracking-wide">{item.title}</span>
+      </span>
 
-      <div className="flex items-center gap-2">
+      <span className="flex items-center gap-2">
         {item.shortcut && (
-          <kbd className="hidden group-hover:inline-flex items-center justify-center h-5 px-1.5 text-[10px] font-medium font-mono text-muted-foreground/60 bg-background/50 border border-border/50 rounded-[4px] shadow-xs">
+          <kbd className="hidden h-5 items-center justify-center rounded-[4px] border border-border/50 bg-background/50 px-1.5 font-mono text-[10px] font-medium text-muted-foreground shadow-xs group-hover:inline-flex group-focus-visible:inline-flex">
             {item.shortcut}
           </kbd>
         )}
         {item.badge && (
-          <span className="flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-medium rounded-full bg-primary/10 text-primary">
+          <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-yellow-400/15 px-1.5 text-[10px] font-medium text-yellow-300">
             {item.badge}
           </span>
         )}
         {hasChildren && (
           <ChevronRight
+            aria-hidden="true"
             className={cn(
-              "w-3.5 h-3.5 text-muted-foreground/50 transition-transform duration-200",
+              "size-3.5 text-muted-foreground transition-transform duration-200",
               isOpen && "rotate-90",
             )}
             strokeWidth={2}
           />
         )}
-      </div>
+      </span>
     </>
   );
 
   return (
-    <div className="flex flex-col w-full">
-      {item.href && !hasChildren ? (
-        <Link
-          href={item.href}
-          className={rowClassName}
+    <div className="flex w-full flex-col">
+      {hasChildren ? (
+        <button
+          type="button"
+          className={cn(rowClassName, "w-full text-left")}
           style={rowStyle}
-          onClick={handleClick}
-          aria-current={isActive ? "page" : undefined}
+          onClick={() => setIsOpen(!isOpen)}
+          aria-expanded={isOpen}
         >
           {content}
-        </Link>
+        </button>
+      ) : item.href ? (
+        <a href={item.href} className={rowClassName} style={rowStyle} aria-current={isActive ? "page" : undefined}>
+          {content}
+        </a>
       ) : (
-        <div
+        // Pestaña del panel: enlace plano `#id`; el shell decide qué mostrar
+        // y escribe el hash con replaceState (sin navegación).
+        <a
+          href={item.id === "diagnostico" ? "#" : `#${item.id}`}
           className={rowClassName}
           style={rowStyle}
-          onClick={handleClick}
-          role="button"
-          tabIndex={0}
-          aria-expanded={hasChildren ? isOpen : undefined}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              handleClick();
-            }
+          aria-current={isActive ? "page" : undefined}
+          aria-keyshortcuts={item.shortcut}
+          onClick={(e) => {
+            e.preventDefault();
+            onSelect(item.id);
           }}
         >
           {content}
-        </div>
+        </a>
       )}
 
       {hasChildren && (
@@ -221,19 +322,13 @@ export function NavItem({
             isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
           )}
         >
-          <div className="overflow-hidden min-h-0 relative flex flex-col gap-0.5 mt-0.5">
+          <div className="relative mt-0.5 flex min-h-0 flex-col gap-0.5 overflow-hidden">
             <div
               className="absolute top-0 bottom-0 border-l border-black/5 dark:border-white/5"
               style={{ left: `${level * 12 + 17.5}px` }}
             />
             {item.children!.map((child) => (
-              <NavItem
-                key={child.id}
-                item={child}
-                activeId={activeId}
-                onSelect={onSelect}
-                level={level + 1}
-              />
+              <NavItem key={child.id} item={child} activeId={activeId} onSelect={onSelect} level={level + 1} />
             ))}
           </div>
         </div>
@@ -246,9 +341,9 @@ export type SidebarNavProps = {
   className?: string;
   groups: NavGroupData[];
   bottomItems?: NavItemData[];
-  /** Rendered above the workspace switcher (e.g. the logo). */
+  /** Encima del selector de sucursal (p. ej. el logo). */
   header?: React.ReactNode;
-  /** Rendered below the bottom items (e.g. current user). */
+  /** Debajo de los ítems inferiores (p. ej. la cuenta). */
   footer?: React.ReactNode;
   activeId?: string;
   defaultActiveId?: string;
@@ -257,7 +352,8 @@ export type SidebarNavProps = {
   activeWorkspace?: string;
   onWorkspaceSelect?: (ws: string) => void;
   workspacePlan?: string;
-  workspaceCreateLabel?: string;
+  workspaceHint?: string | null;
+  "aria-label"?: string;
 };
 
 export function SidebarNav({
@@ -273,21 +369,15 @@ export function SidebarNav({
   activeWorkspace,
   onWorkspaceSelect,
   workspacePlan,
-  workspaceCreateLabel,
+  workspaceHint,
+  "aria-label": ariaLabel = "Secciones del panel",
 }: SidebarNavProps) {
-  const [internalId, setInternalId] = useState(
-    defaultActiveId ?? groups[0]?.items[0]?.id ?? "",
-  );
+  const [internalId, setInternalId] = useState(defaultActiveId ?? groups[0]?.items[0]?.id ?? "");
   const currentId = activeId !== undefined ? activeId : internalId;
   const handleSelect = onSelect || setInternalId;
 
   return (
-    <div
-      className={cn(
-        "flex flex-col w-[260px] h-full bg-card/50 border-r border-border/50 p-3 font-sans",
-        className,
-      )}
-    >
+    <div className={cn("flex h-full w-[260px] flex-col border-r border-border/50 bg-card/50 p-3 font-sans", className)}>
       {header}
       {workspaces.length > 0 && (
         <WorkspaceSwitcher
@@ -295,39 +385,28 @@ export function SidebarNav({
           selected={activeWorkspace}
           onSelect={onWorkspaceSelect}
           plan={workspacePlan}
-          createLabel={workspaceCreateLabel}
+          hint={workspaceHint}
         />
       )}
 
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] flex flex-col gap-4 mt-2">
+      <nav
+        aria-label={ariaLabel}
+        className="mt-2 flex flex-1 flex-col gap-4 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {groups.map((group, idx) => (
           <div key={group.heading ?? idx} className="flex flex-col gap-0.5">
-            {group.heading && (
-              <span className="px-2.5 mb-1 text-[11px] font-semibold tracking-wider text-muted-foreground/50 uppercase">
-                {group.heading}
-              </span>
-            )}
+            {group.heading && <span className="j40-eyebrow mb-1 px-2.5">{group.heading}</span>}
             {group.items.map((item) => (
-              <NavItem
-                key={item.id}
-                item={item}
-                activeId={currentId}
-                onSelect={handleSelect}
-              />
+              <NavItem key={item.id} item={item} activeId={currentId} onSelect={handleSelect} />
             ))}
           </div>
         ))}
-      </div>
+      </nav>
 
       {(bottomItems.length > 0 || footer) && (
-        <div className="mt-auto pt-4 border-t border-border/50 flex flex-col gap-0.5">
+        <div className="mt-auto flex flex-col gap-0.5 border-t border-border/50 pt-4">
           {bottomItems.map((item) => (
-            <NavItem
-              key={item.id}
-              item={item}
-              activeId={currentId}
-              onSelect={handleSelect}
-            />
+            <NavItem key={item.id} item={item} activeId={currentId} onSelect={handleSelect} />
           ))}
           {footer}
         </div>

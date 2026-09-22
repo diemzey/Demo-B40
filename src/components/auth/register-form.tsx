@@ -279,7 +279,7 @@ export function RegisterForm() {
               <p className="text-foreground/90">
                 Enviamos un enlace de confirmación a{" "}
                 <span className="font-medium break-all text-foreground">{values.email.trim()}</span>
-                . Al abrirlo entrarás directo a tu panel; no hace falta volver a iniciar sesión.
+                . Al abrirlo entras directo a tu panel.
               </p>
               <p className="text-muted-foreground">
                 Si no lo ves en unos minutos, revisa la carpeta de spam.

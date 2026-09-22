@@ -63,8 +63,10 @@ export default function ContactDemo() {
               <label htmlFor="contact-puesto">Puesto</label>
               <input id="contact-puesto" name="puesto" type="text" tabIndex={-1} autoComplete="off" />
             </div>
-            <Button className="w-full bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300" type="button">
-              Agendar diagnóstico de una sucursal
+            <Button variant="primary" className="w-full" asChild>
+              <a href="mailto:contacto@aivena.ai?subject=Diagn%C3%B3stico%20de%20una%20sucursal">
+                Agendar diagnóstico de una sucursal
+              </a>
             </Button>
             <p className="text-muted-foreground text-xs">
               Usamos tus datos solo para contactarte. No compartimos nada con

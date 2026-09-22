@@ -11,7 +11,9 @@ import { numeroSemanaIso, semanaDesdeLunes } from "@/lib/datos/semana";
 import {
   COOKIE_SUCURSAL,
   TOPE_2030,
+  type CoberturaPanel,
   type DatosPanel,
+  type EmpresaPanel,
   type ProgramacionPanel,
   type SemanaHistorial,
   type SucursalPanel,
@@ -175,10 +177,24 @@ async function cargarProgramada(db: SupabaseProgramacion, fila: AhorroFila): Pro
   const baselineId = fila.escenario_baseline_id;
   if (!propuestaId || !baselineId) return null;
 
-  const [{ data: resumenes }, { data: escenario }, { data: filasHoras }] = await Promise.all([
+  const coberturaDe = (escenarioId: string) =>
+    db
+      .from("cobertura_intervalo")
+      .select("inicio, requerido_total, asignado_total, es_pico")
+      .eq("escenario_id", escenarioId)
+      .order("inicio");
+  const [
+    { data: resumenes },
+    { data: escenario },
+    { data: filasHoras },
+    { data: coberturaBaseline },
+    { data: coberturaPropuesta },
+  ] = await Promise.all([
     db.from("resumen_escenario").select("*").in("escenario_id", [baselineId, propuestaId]),
     db.from("escenarios").select("id, publicado_en").eq("id", propuestaId).maybeSingle(),
     db.from("v_asignacion_horas_semana").select("empleado_id, horas").eq("escenario_id", propuestaId),
+    coberturaDe(baselineId),
+    coberturaDe(propuestaId),
   ]);
   const baseline = resumenes?.find((r) => r.escenario_id === baselineId);
   const propuesta = resumenes?.find((r) => r.escenario_id === propuestaId);
@@ -187,6 +203,34 @@ async function cargarProgramada(db: SupabaseProgramacion, fila: AhorroFila): Pro
   const horasPropuesta = new Map<string, number>();
   for (const h of filasHoras ?? []) {
     horasPropuesta.set(h.empleado_id, num(horasPropuesta.get(h.empleado_id)) + num(h.horas));
+  }
+
+  // Los dos escenarios comparten los intervalos (misma demanda); se unen por
+  // `inicio` y la demanda es la del baseline (o la de la propuesta si falta).
+  const cobertura = new Map<string, CoberturaPanel>();
+  for (const c of coberturaBaseline ?? []) {
+    cobertura.set(c.inicio, {
+      inicio: c.inicio,
+      requerido: num(c.requerido_total),
+      hoy: num(c.asignado_total),
+      propuesta: 0,
+      esPico: c.es_pico,
+    });
+  }
+  for (const c of coberturaPropuesta ?? []) {
+    const fila = cobertura.get(c.inicio);
+    if (fila) {
+      fila.propuesta = num(c.asignado_total);
+      fila.esPico = fila.esPico || c.es_pico;
+    } else {
+      cobertura.set(c.inicio, {
+        inicio: c.inicio,
+        requerido: num(c.requerido_total),
+        hoy: 0,
+        propuesta: num(c.asignado_total),
+        esPico: c.es_pico,
+      });
+    }
   }
 
   return {
@@ -206,6 +250,7 @@ async function cargarProgramada(db: SupabaseProgramacion, fila: AhorroFila): Pro
       coberturaPicoPropuestaPct: oNull(fila.cobertura_pico_propuesta_pct),
       deficitPicoHoras: num(fila.deficit_pico_horas_propuesta ?? propuesta.deficit_pico_horas),
       publicadoEn: escenario?.publicado_en ?? null,
+      cobertura: [...cobertura.values()].sort((a, b) => a.inicio.localeCompare(b.inicio)),
     },
     horasPropuesta,
   };
@@ -225,11 +270,17 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
 
   const { data: perfil } = await supabase
     .from("perfiles")
-    .select("empresa_id, empresas(id, nombre)")
+    .select("empresa_id, empresas(id, nombre, tope_objetivo, costo_hora_default)")
     .eq("id", user.id)
     .maybeSingle();
-  const empresa = perfil?.empresas ?? null;
-  if (!perfil?.empresa_id || !empresa) return panelVacio(null, TOPES_RESPALDO);
+  const filaEmpresa = perfil?.empresas ?? null;
+  if (!perfil?.empresa_id || !filaEmpresa) return panelVacio(null, TOPES_RESPALDO);
+  const empresa: EmpresaPanel = {
+    id: filaEmpresa.id,
+    nombre: filaEmpresa.nombre,
+    topeObjetivo: num(filaEmpresa.tope_objetivo) || TOPE_2030,
+    costoHoraDefault: num(filaEmpresa.costo_hora_default),
+  };
 
   const [{ data: filasSucursales }, { data: filasTopes }] = await Promise.all([
     supabase
@@ -240,7 +291,7 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
     supabase.from("topes_semanales").select("anio, tope_horas").order("anio"),
   ]);
   const catalogo = filasTopes?.length ? filasTopes : TOPES_RESPALDO;
-  const vacio = () => panelVacio({ id: empresa.id, nombre: empresa.nombre }, catalogo);
+  const vacio = () => panelVacio(empresa, catalogo);
   if (!filasSucursales?.length) return vacio();
 
   // Un solo viaje para el resumen de todas las sucursales: alimenta la lista,
@@ -423,7 +474,15 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
         fueraDeNorma: r.fuera_de_norma ?? 0,
         colaboradores: r.colaboradores ?? 0,
         programada: ahorro !== undefined,
-        ...(ahorro ? { ahorroMxn: num(ahorro.ahorro_mxn) } : {}),
+        ...(ahorro
+          ? {
+              ahorroMxn: num(ahorro.ahorro_mxn),
+              costoBaseline: num(ahorro.costo_total_baseline),
+              costoPropuesta: num(ahorro.costo_total_propuesta),
+              tope: num(ahorro.tope_semanal) || TOPE_2030,
+              coberturaPicoPropuestaPct: oNull(ahorro.cobertura_pico_propuesta_pct),
+            }
+          : {}),
       };
     })
     .reverse();
@@ -439,7 +498,7 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
     origen: "supabase",
     aviso: null,
     sinDatos: false,
-    empresa: { id: empresa.id, nombre: empresa.nombre },
+    empresa,
     sucursales: sucursalesConsistentes,
     sucursal: { id: elegida.id, nombre: elegida.nombre },
     semana,

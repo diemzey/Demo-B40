@@ -48,7 +48,7 @@ function Mark({ children }: { children: React.ReactNode }) {
 
 export default function ReduccionTimelineDemo() {
   return (
-    <section className="container mx-auto px-4 py-16 md:py-24">
+    <section id="como-funciona" className="container mx-auto px-4 py-16 md:py-24">
       <div className="mx-auto grid max-w-5xl gap-10 md:grid-cols-[1fr_1.2fr] md:gap-16">
         <Timeline
           items={items}
