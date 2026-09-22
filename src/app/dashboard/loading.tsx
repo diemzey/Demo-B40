@@ -3,6 +3,8 @@
  * Se muestra dentro del `<main>` del shell (el layout ya resolvió los datos),
  * así que dibuja lo que va ahí: cabecera de página y tres bloques.
  */
+import { LogoCargando } from "@/components/ui/logo-cargando";
+
 function Bloque({ className }: { className: string }) {
   return <div aria-hidden="true" className={`animate-pulse rounded-lg bg-muted ${className}`} />;
 }
@@ -15,7 +17,10 @@ export default function DashboardLoading() {
       aria-live="polite"
       aria-label="Cargando tu panel"
     >
-      <span className="sr-only">Cargando tu panel…</span>
+      <div className="mb-6 flex items-center gap-3 text-muted-foreground">
+        <LogoCargando size={28} label="" className="text-foreground" />
+        <span className="text-[13px]">Cargando tu panel…</span>
+      </div>
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-2">
           <Bloque className="h-3 w-24" />

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { CalendarDays } from "lucide-react";
+import { LogoCargando } from "@/components/ui/logo-cargando";
 import { usePanel } from "@/lib/datos/panel-context";
 import { COOKIE_SEMANA } from "@/lib/datos/tipos";
 import { rangoCorto, semanaDesdeLunes } from "@/lib/datos/semana";
@@ -26,7 +27,11 @@ export function SelectorSemana({ className }: { className?: string }) {
 
   return (
     <label className={cn("inline-flex items-center gap-2", className)}>
-      <CalendarDays className="size-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+      {pendiente ? (
+        <LogoCargando size={16} label="" className="text-foreground" />
+      ) : (
+        <CalendarDays className="size-4 text-muted-foreground" strokeWidth={1.5} aria-hidden="true" />
+      )}
       <span className="sr-only">Semana</span>
       <select
         value={datos.semana.inicio}
@@ -65,7 +70,14 @@ export function VerSemana({ inicio, actual }: { inicio: string; actual: boolean 
       }}
       className="inline-flex h-8 items-center rounded-md border border-border/60 px-2.5 text-xs font-medium text-foreground transition-colors hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-400/60 disabled:opacity-60"
     >
-      {pendiente ? "Abriendo…" : "Ver"}
+      {pendiente ? (
+        <span className="inline-flex items-center gap-1.5">
+          <LogoCargando size={14} label="" />
+          Abriendo…
+        </span>
+      ) : (
+        "Ver"
+      )}
     </button>
   );
 }

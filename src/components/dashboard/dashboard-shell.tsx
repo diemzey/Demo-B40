@@ -18,6 +18,7 @@ import {
   type NavItemData,
 } from "@/components/ui/dashboard-sidebar";
 import { JornadaLogo } from "@/components/ui/jornada-logo";
+import { LogoCargando } from "@/components/ui/logo-cargando";
 import { ProfileMenu } from "@/components/auth/profile-menu";
 import { iniciales, useSession } from "@/components/auth/session";
 import { SemanasTab } from "@/components/dashboard/tabs/semanas";
@@ -297,10 +298,22 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           key={tabId}
           aria-busy={cambiando || undefined}
           className={cn(
-            "flex-1 overflow-y-auto transition-opacity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+            "relative flex-1 overflow-y-auto transition-opacity [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
             cambiando && "opacity-60",
           )}
         >
+          {cambiando && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="pointer-events-none absolute inset-x-0 top-6 z-10 flex justify-center"
+            >
+              <span className="inline-flex items-center gap-2 rounded-full border border-border/60 bg-card/95 px-3 py-1.5 text-[13px] shadow-lg">
+                <LogoCargando size={18} label="" className="text-foreground" />
+                Cambiando de sucursal…
+              </span>
+            </div>
+          )}
           {ActiveTab ? <ActiveTab /> : children}
         </main>
       </div>

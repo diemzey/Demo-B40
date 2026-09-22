@@ -9,7 +9,8 @@ import {
   type ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import { CircleCheck, FileText, Loader2, RotateCcw, TriangleAlert, Upload } from "lucide-react";
+import { CircleCheck, FileText, RotateCcw, TriangleAlert, Upload } from "lucide-react";
+import { LogoCargando } from "@/components/ui/logo-cargando";
 import { Button } from "@/components/ui/button";
 import { COOKIE_SUCURSAL } from "@/lib/datos/tipos";
 import { usePanel } from "@/lib/datos/panel-context";
@@ -492,7 +493,7 @@ export function ProgresoNarrativo({
         {hecho ? (
           <CircleCheck className="size-4 shrink-0 text-emerald-400" aria-hidden="true" />
         ) : (
-          <Loader2 className="size-4 shrink-0 animate-spin text-amber-400" aria-hidden="true" />
+          <LogoCargando size={18} label="" className="text-muted-foreground" />
         )}
         <span className="min-w-0 flex-1 truncate">{etiqueta}</span>
         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">{valor} %</span>
