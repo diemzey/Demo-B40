@@ -1,0 +1,101 @@
+{
+  "empresa": "Almacenes del Valle",
+  "semilla": 40,
+  "parametros": {
+    "tiendas": 1,
+    "semanas_historia": 8,
+    "semanas_objetivo": 4,
+    "semana_final": "2026-07-27",
+    "clientes_por_colaborador_30min": 10,
+    "transacciones_por_cajero_30min": 16
+  },
+  "semanas": {
+    "historia": [
+      "2026-05-11",
+      "2026-05-18",
+      "2026-05-25",
+      "2026-06-01",
+      "2026-06-08",
+      "2026-06-15",
+      "2026-06-22",
+      "2026-06-29"
+    ],
+    "objetivo": [
+      "2026-07-06",
+      "2026-07-13",
+      "2026-07-20",
+      "2026-07-27"
+    ],
+    "quincena": [
+      "2026-05-11",
+      "2026-05-25",
+      "2026-06-15",
+      "2026-06-29",
+      "2026-07-13",
+      "2026-07-27"
+    ]
+  },
+  "tiendas": 1,
+  "hubs": 1,
+  "tiendas_por_hub": {
+    "H-VAL": 1
+  },
+  "fte_promedio": 90,
+  "empleados": {
+    "total": 90,
+    "tiempo_completo": 63,
+    "medio_tiempo": 27,
+    "pct_tiempo_completo": 70,
+    "por_puesto": {
+      "almacenista": 14,
+      "cajero": 20,
+      "vendedor": 43,
+      "supervisor": 7,
+      "gerente": 2,
+      "asesor_credito": 4
+    },
+    "plantilla_baseline": {
+      "cierre": 25,
+      "apertura": 38,
+      "medio_manana": 16,
+      "medio_tarde": 11
+    },
+    "con_disponibilidad_restringida": {
+      "total": 12,
+      "medio_tiempo": 10,
+      "tiempo_completo": 2,
+      "pct": 13.3
+    }
+  },
+  "trafico": {
+    "filas": 2016,
+    "filas_por_tienda": 2016,
+    "clientes_por_hora_promedio": 426,
+    "clientes_por_dia_tienda": 5111.9,
+    "clientes_por_semana_tienda": 35783.3,
+    "max_30min": 445,
+    "valle_09_11_promedio_30min": 112.5,
+    "pico_1830_2030_promedio_30min": 279.9,
+    "ratio_pico_valle": 2.49,
+    "ventas_semana_tienda_mxn": 9662870,
+    "ticket_promedio_mxn": 772
+  },
+  "turnos_vigentes": {
+    "filas": 1944,
+    "horas_semana_promedio_tiempo_completo": 48,
+    "horas_semana_promedio_medio_tiempo": 24,
+    "horas_semana_tienda": 3672,
+    "horas_semana_tienda_con_tope_40": 3168
+  },
+  "requerimiento": {
+    "horas_requeridas_semana_tienda": 2426.3,
+    "cobertura_horas_baseline_pct": 66.1
+  },
+  "nomina": {
+    "tarifa_media_hora_mxn": 63.81,
+    "semanal_promedio_tienda_mxn": 246357,
+    "semanal_total_mxn": 246357,
+    "anual_estimada_tienda_mxn": 12810551
+  },
+  "segundos": 0.03
+}

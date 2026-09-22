@@ -23,7 +23,9 @@ supabase/
 │   ├── 0002_esquema_base.sql             tablas, triggers, handle_new_user()
 │   ├── 0003_rls.sql                      RLS, funciones auxiliares, políticas
 │   ├── 0004_vistas_y_semilla_topes.sql   topes, vistas, RPC resumen_sucursal
-│   └── 0005_reacomodo.sql                motor de reacomodo (RPC)
+│   ├── 0005_reacomodo.sql                motor de reacomodo (RPC)
+│   ├── 0006_programacion.sql             programación de turnos: tablas, reglas, RLS
+│   └── 0007_vistas_programacion.sql      costo, cobertura, baseline, ahorro, reporte
 ├── seed.sql                              datos demo (Grupo Solmar)
 ├── plantillas/
 │   └── turnos-ejemplo.csv                ejemplo del CSV que importa la app
@@ -40,7 +42,9 @@ Aplicar con el MCP de Supabase (`apply_migration`) o con `supabase db push`,
 3. `0003_rls.sql`
 4. `0004_vistas_y_semilla_topes.sql`
 5. `0005_reacomodo.sql`
-6. (opcional) `seed.sql` — datos de demostración. Ejecutarlo con el rol
+6. `0006_programacion.sql`
+7. `0007_vistas_programacion.sql`
+8. (opcional) `seed.sql` — datos de demostración. Ejecutarlo con el rol
    `postgres`/service role (RLS no aplica). Es idempotente: si ya existe la
    empresa "Grupo Solmar" no inserta nada.
 
@@ -209,6 +213,86 @@ const { data } = await supabase.rpc('resumen_reacomodo', {
   p_semana: '2026-07-29',
   p_tope: 40, // opcional
 });
+```
+
+## Programación de turnos (`0006`–`0007`)
+
+Diseño y justificación en [`docs/arquitectura.md`](../docs/arquitectura.md).
+Zona horaria de cálculo: `America/Mexico_City`. Todo respeta RLS por empresa
+(cadena `hubs.empresa_id` → sucursal → empleado / escenario) con los mismos
+helpers de `0003`: catálogos escriben `es_admin()`, operación `puede_editar()`.
+
+### Tablas (`0006_programacion.sql`)
+
+| Tabla | Qué guarda | Notas |
+|-------|------------|-------|
+| `habilidades`, `puestos`, `tabuladores`, `plantillas_turno` | Catálogos por empresa (roles `caja/piso/almacen/supervision`, puesto → habilidad exigida, tarifa por hora con vigencia, turnos tipo). | `unique (empresa_id, clave)`; tabulador `unique (puesto_id, vigente_desde)`. |
+| `reglas_laborales` | Parámetros por vigencia: `tope_semanal`, `max_horas_dia` 8, `horas_dobles_max` 9, `factor_doble` 2, `factor_triple` 3, `prima_dominical_pct` 25, `descanso_entre_turnos_horas` 12, `max_dias_semana` 6. | `empresa_id null` = regla global (sembradas 2026→2030: 48/46/44/42/40; sólo lectura desde la API). |
+| `empleados` (ALTER) | `+ puesto_id`, `tipo_contrato`, `max_horas_semana` (1–48, default 40), `fecha_alta`. | |
+| `empleado_habilidades`, `disponibilidad` | Habilidades vigentes por colaborador; ventanas semanales (`dia_semana` 1=lun…7=dom). | Sin ventanas = disponible siempre. |
+| `trafico_observado`, `pronosticos`, `demanda_intervalo` | Tráfico histórico a 30 min; versiones de pronóstico; requerimiento por intervalo (`requerido_total`, `requerido_caja`, `es_pico`). | `trafico_observado` y `demanda_intervalo` particionadas por `semana_iso`. |
+| `escenarios` | Programación completa de una sucursal-semana: `tipo` `baseline`/`propuesta`, `version`, `padre_id`, `estado` `borrador`/`publicado`/`archivado`, `tope_semanal`, `reglas_id`, `pronostico_id`. | `unique (sucursal_id, semana_iso, tipo, version)`. |
+| `asignaciones` | Un turno por fila (`inicio`, `fin`, `descanso_min`, `habilidad_id`); `horas` y `es_domingo` generadas. | Particionada por `semana_iso` (pk `(id, semana_iso)`). `EXCLUDE` GiST anti-traslape. |
+| `cobertura_intervalo`, `resumen_escenario` | Cobertura por intervalo y costo/cobertura por escenario. | Escritas sólo por `resumir_escenario()`. |
+| `auditoria` | Antes/después (JSONB) de toda escritura en `escenarios` y `asignaciones`. | Append-only: sólo `select` para `authenticated`; insertan los triggers. |
+
+Particiones creadas: `_2026q1`…`_2026q4` (trimestres calendario) y `_default`
+para cada tabla particionada. Para 2027 basta `create table … partition of …
+for values from ('2027-01-01') to ('2027-04-01')` (índices, triggers y RLS se
+heredan); las particiones no son accesibles directamente por la API.
+
+### Reglas que la base impide violar (§3.2 del diseño)
+
+Sobre `asignaciones` de escenarios **`propuesta`** (el baseline registra la
+realidad y sólo aplica la regla 1):
+
+1. **Traslape** de turnos del mismo empleado en el escenario: `EXCLUDE`.
+2. **Jornada diaria**: `check` ≤ 12 h por turno y Σ horas por día local ≤
+   `reglas.max_horas_dia`.
+3. **Tope semanal**: Σ horas por semana ≤ `least(escenarios.tope_semanal,
+   empleados.max_horas_semana)`.
+4. **Descanso entre turnos** consecutivos ≥ `reglas.descanso_entre_turnos_horas`.
+5. **Días trabajados** ≤ `reglas.max_dias_semana`.
+6. **Disponibilidad** (si hay ventanas ese día, el turno cabe en una) y
+   **habilidad** vigente en `empleado_habilidades`.
+7. **Inmutabilidad**: un escenario `publicado` sólo puede pasar a `archivado`;
+   sus asignaciones no admiten `update/delete`. Una corrección es un escenario
+   nuevo con `padre_id`.
+
+Las reglas 2–6 viven en el constraint trigger `trg_asignaciones_validar`
+(`DEFERRABLE INITIALLY DEFERRED`): se evalúan al `COMMIT` con la semana
+completa, y fallan con `check_violation` y un mensaje en español que nombra al
+colaborador y la regla. Insertar la semana de un empleado en **una sola
+transacción** es por tanto obligatorio para el motor. Además, `semana_iso`
+debe ser lunes y coincidir con la del escenario y con `inicio` en hora local.
+
+### Puntos de entrada (`0007_vistas_programacion.sql`)
+
+Todo es `security invoker` (aplica RLS del usuario).
+
+| Objeto | Uso |
+|--------|-----|
+| `tarifa_vigente(puesto, fecha)` | Tarifa/hora del último tabulador ≤ fecha (0 si no hay). |
+| `v_asignacion_horas_semana` | `(escenario_id, empleado_id, semana_iso, horas, horas_domingo, dias_trabajados)`. |
+| `v_costo_empleado_semana` | Por escenario-empleado: `horas_regulares = min(horas, tope)`, `horas_dobles = min(max(horas − tope, 0), horas_dobles_max)`, `horas_triples` = resto, `costo_*` y `costo_total` (prima dominical sobre `horas_domingo`). |
+| `materializar_baseline(p_sucursal, p_semana, p_reglas default null)` → `uuid` | Crea y publica un escenario `baseline` (versión siguiente) a partir de `horarios` de esa semana ISO; habilidad = la del puesto o `piso`. No llama a `resumir_escenario`. |
+| `resumir_escenario(p_escenario)` | Regenera `cobertura_intervalo` (demanda del `pronostico_id` del escenario o el más reciente de la sucursal-semana) y hace upsert de `resumen_escenario` (costo por empleado + sobrestaffing a tarifa media ponderada + cobertura pico). Llamarla al publicar. |
+| `v_subdotacion_pico` | Intervalos pico con `requerido_total > asignado_total`. |
+| `v_ahorro_escenario` | Por sucursal-semana: último baseline publicado vs última propuesta publicada: `costo_total_*`, `ahorro_mxn`, `ahorro_pct`, `ahorro_dobles/triples/prima/sobrestaffing`, `cobertura_pico_*_pct`, `deficit_pico_horas_propuesta`, `horas_*`. |
+| `reporte_ejecutivo(p_semana default null)` | Agregado por semana ISO de `v_ahorro_escenario` para la empresa del usuario: `tiendas`, costos, ahorro y desglose, `tiendas_con_subdotacion_pico`, `deficit_pico_horas`. |
+
+Flujo del motor por tienda-semana: `materializar_baseline` → insertar
+`escenarios` (`propuesta`, `borrador`) + `asignaciones` en una transacción →
+`update escenarios set estado = 'publicado'` → `resumir_escenario(id)` → la UI
+lee `v_ahorro_escenario` / `reporte_ejecutivo`.
+
+```ts
+const { data: baselineId } = await supabase.rpc('materializar_baseline', {
+  p_sucursal: sucursalId,
+  p_semana: '2026-07-29',
+});
+await supabase.rpc('resumir_escenario', { p_escenario: baselineId });
+const { data: reporte } = await supabase.rpc('reporte_ejecutivo', { p_semana: '2026-07-29' });
 ```
 
 ## Contrato del CSV de turnos

@@ -44,3 +44,11 @@ next-env.d.ts
 # OpenNext / Cloudflare build output
 .open-next
 .wrangler
+
+# datos sintéticos generados (npm run sintetico:generar); se conserva sólo .gitkeep
+/scripts/sintetico/salida/*
+!/scripts/sintetico/salida/.gitkeep
+
+# salida del motor (npm run motor); se conserva sólo el resumen agregado
+/scripts/motor/salida/*
+!/scripts/motor/salida/resumen.json
