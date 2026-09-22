@@ -123,6 +123,29 @@ export function ReportesTab() {
   const deltaHoras = total.horasPropuesta - total.horasBaseline;
   const peores = porSucursal.slice(0, 8);
 
+  if (!demo && semanas.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
+        <TabHeader
+          eyebrow="Reportes"
+          title={empresa ? `Reporte ejecutivo · ${empresa}` : "Reporte ejecutivo"}
+          subtitle="Se llena cuando el motor programa tus semanas."
+        />
+        <Panel className="p-6">
+          <p className="text-[13px] font-semibold">Aún no hay escenarios publicados</p>
+          <p className="mt-1 max-w-xl text-[13px] text-muted-foreground">
+            El reporte ejecutivo compara la programación actual (baseline) con la propuesta del
+            motor para cada sucursal y semana. Sube tus semanas en CSV en la pestaña Semanas; al
+            programarlas aparecerán aquí el ahorro en pesos, el desglose y la cobertura en picos.
+          </p>
+          <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            Trazabilidad · resumen_escenario → v_ahorro_escenario → reporte_ejecutivo()
+          </p>
+        </Panel>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
       <TabHeader

@@ -294,7 +294,10 @@ async function cargarDesdeSupabase(supabase: Supabase): Promise<DatosReporte> {
     .eq("id", user.id)
     .maybeSingle();
   const empresa = perfil?.empresas ?? null;
-  if (!perfil?.empresa_id || !empresa) return reporteDeMuestra("sin-datos");
+  // Cuenta con sesión pero sin empresa: reporte vacío (nunca datos de muestra).
+  if (!perfil?.empresa_id || !empresa) {
+    return armar({ origen: "supabase", aviso: "sin-datos", empresa: null }, [], [], new Map());
+  }
 
   // RLS ya limita las tres consultas a la empresa del usuario (cadena
   // hubs.empresa_id → sucursal → escenario); `reporte_ejecutivo` es security invoker.
@@ -306,7 +309,15 @@ async function cargarDesdeSupabase(supabase: Supabase): Promise<DatosReporte> {
       .select("id, nombre, hubs!inner(empresa_id)")
       .eq("hubs.empresa_id", empresa.id),
   ]);
-  if (!filasReporte?.length) return reporteDeMuestra("sin-datos");
+  // Sin escenarios publicados: reporte vacío con la empresa real, sin muestra.
+  if (!filasReporte?.length) {
+    return armar(
+      { origen: "supabase", aviso: "sin-datos", empresa: { id: empresa.id, nombre: empresa.nombre } },
+      [],
+      [],
+      new Map(),
+    );
+  }
 
   const nombres = new Map((filasSucursales ?? []).map((s) => [s.id, s.nombre] as const));
   return armar(
