@@ -1,18 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import { Building2, MapPin, Plus, Trash2, Users } from "lucide-react";
-import {
-  Campo,
-  Panel,
-  PanelHeader,
-  Pill,
-  TabHeader,
-  botonPrimario,
-  inputClass,
-  type PillTone,
-} from "@/components/dashboard/tabs/ui";
-import { nuevoId, useLocalStore } from "@/components/dashboard/tabs/use-local-store";
+import { Building2, MapPin, Trash2, Users } from "lucide-react";
+import { Panel, PanelHeader, Pill, TabHeader, type PillTone } from "@/components/dashboard/tabs/ui";
+import { useLocalStore } from "@/components/dashboard/tabs/use-local-store";
 import { SUCURSALES_DEMO } from "@/lib/datos/demo";
 import { usePanel } from "@/lib/datos/panel-context";
 import type { SucursalPanel } from "@/lib/datos/tipos";
@@ -98,38 +88,13 @@ function SucursalCard({ s, onDelete }: { s: Sucursal; onDelete?: () => void }) {
 export function SucursalesTab() {
   const datos = usePanel();
   const demo = datos.origen === "demo";
-  const [propias, setPropias] = useSucursalesPropias();
-  const [nombre, setNombre] = useState("");
-  const [ciudad, setCiudad] = useState("");
-  const [personas, setPersonas] = useState("");
+  const [propias] = useSucursalesPropias();
 
   // En demo se conservan las sucursales guardadas en este navegador; con
-  // Supabase se muestran sólo las reales de la empresa.
+  // Supabase se muestran sólo las reales de la empresa. Las sucursales se
+  // crean únicamente al importar un CSV.
   const reales = datos.sucursales.map(aSucursal);
   const todas = demo ? [...reales, ...propias] : reales;
-
-  function agregar(e: FormEvent) {
-    e.preventDefault();
-    const n = nombre.trim();
-    const c = ciudad.trim();
-    const p = Math.max(0, Math.round(Number(personas)));
-    if (!n || !c || !Number.isFinite(p)) return;
-    setPropias((prev) => [
-      ...prev,
-      {
-        id: nuevoId("suc"),
-        nombre: n,
-        ciudad: c,
-        personas: p,
-        estado: "Sin diagnóstico",
-        tono: "neutral",
-        propia: true,
-      },
-    ]);
-    setNombre("");
-    setCiudad("");
-    setPersonas("");
-  }
 
   return (
     <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
@@ -145,74 +110,21 @@ export function SucursalesTab() {
             <SucursalCard
               key={s.id}
               s={s}
-              onDelete={
-                demo && s.propia
-                  ? () => setPropias((prev) => prev.filter((x) => x.id !== s.id))
-                  : undefined
-              }
             />
           ))}
         </div>
 
-        {demo ? (
-          <Panel className="self-start">
-            <PanelHeader
-              title="Agregar sucursal"
-              description="Se guarda en este navegador y aparece en la lista."
-            />
-            <form onSubmit={agregar} className="flex flex-col gap-3 p-4 pt-2">
-              <Campo label="Nombre" htmlFor="suc-nombre">
-                <input
-                  id="suc-nombre"
-                  className={inputClass}
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej. Del Valle"
-                  required
-                />
-              </Campo>
-              <Campo label="Ciudad" htmlFor="suc-ciudad">
-                <input
-                  id="suc-ciudad"
-                  className={inputClass}
-                  value={ciudad}
-                  onChange={(e) => setCiudad(e.target.value)}
-                  placeholder="Ej. Ciudad de México"
-                  required
-                />
-              </Campo>
-              <Campo label="Colaboradores" htmlFor="suc-personas">
-                <input
-                  id="suc-personas"
-                  className={inputClass}
-                  type="number"
-                  min={0}
-                  step={1}
-                  inputMode="numeric"
-                  value={personas}
-                  onChange={(e) => setPersonas(e.target.value)}
-                  placeholder="0"
-                  required
-                />
-              </Campo>
-              <button type="submit" className={botonPrimario}>
-                <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
-                Agregar sucursal
-              </button>
-            </form>
-          </Panel>
-        ) : (
-          <Panel className="self-start">
-            <PanelHeader
-              title="Sucursales de la empresa"
-              description="Las cifras salen de la semana más reciente importada en cada sucursal."
-            />
-            <p className="px-4 pb-4 text-xs text-muted-foreground">
-              Las sucursales se crean al registrar la empresa; para agregar otra escríbenos y la
-              damos de alta en tu cuenta.
-            </p>
-          </Panel>
-        )}
+        <Panel className="self-start">
+          <PanelHeader
+            title="Sucursales de la empresa"
+            description="Las cifras salen de la semana más reciente importada en cada sucursal."
+          />
+          <p className="px-4 pb-4 text-xs text-muted-foreground">
+            Las sucursales se crean al importar un CSV: usa la columna{" "}
+            <code className="font-mono text-[11px]">sucursal</code> (o el nombre que se te pide al
+            subirlo) y aparecerán aquí con su diagnóstico.
+          </p>
+        </Panel>
       </div>
     </div>
   );

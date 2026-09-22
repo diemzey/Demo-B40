@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { TriangleAlert, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -156,10 +155,10 @@ export default async function DashboardPage() {
         <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-start">
           <ProgramarSemana />
           <Button asChild size="sm" variant="outline" className="text-[13px] font-medium">
-            <Link href="#semanas">
+            <a href="#semanas">
               <Upload className="mr-2 size-4" strokeWidth={2} aria-hidden="true" />
               Subir semana (CSV)
-            </Link>
+            </a>
           </Button>
         </div>
       </div>

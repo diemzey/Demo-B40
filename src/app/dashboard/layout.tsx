@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { Onboarding } from "@/components/dashboard/onboarding";
 import { obtenerDatosPanel } from "@/lib/datos/dashboard";
@@ -22,6 +23,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function DashboardLayout({ children }: LayoutProps<"/dashboard">) {
   const [datos, reporte] = await Promise.all([obtenerDatosPanel(), obtenerReporte()]);
+  if (datos.sinSesion) redirect("/login?next=/dashboard");
   return (
     <div className="dark min-h-dvh bg-background text-foreground" style={{ colorScheme: "dark" }}>
       <PanelProvider datos={datos} reporte={reporte}>

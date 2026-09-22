@@ -90,6 +90,8 @@ export type DatosPanel = {
    * en modo demo (sin Supabase).
    */
   sinDatos: boolean;
+  /** Supabase configurado pero sin usuario en la petición: el layout redirige a /login. */
+  sinSesion?: boolean;
   empresa: { id: string; nombre: string } | null;
   sucursales: SucursalPanel[];
   /** Sucursal seleccionada. */

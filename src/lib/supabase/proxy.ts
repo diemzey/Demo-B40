@@ -65,6 +65,18 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname, search } = request.nextUrl;
 
+  // Peticiones del router de Next (carga de un segmento RSC al navegar o al
+  // hacer prefetch): nunca se redirigen. Una redirección aquí hace que el
+  // cliente abandone la navegación (se pierde el #hash de la pestaña) y, si
+  // el usuario sí tiene sesión pero el token se estaba renovando, lo manda a
+  // /login y de vuelta. La página protegida decide por sí misma qué mostrar
+  // sin usuario; la redirección se aplica sólo a navegaciones completas.
+  const esPeticionRouter =
+    request.headers.get("rsc") === "1" || request.headers.get("next-router-prefetch") === "1";
+  if (esPeticionRouter) {
+    return supabaseResponse;
+  }
+
   if (!user && matchesPrefix(pathname, PROTECTED_PREFIXES)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

@@ -79,25 +79,25 @@ export function ProfileMenu({
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard#sucursales">
+            <a href="/dashboard#sucursales">
               <Building2 {...ICON} />
               <span>Mi sucursal · {user.sucursal}</span>
-            </Link>
+            </a>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard#semanas">
+            <a href="/dashboard#semanas">
               <CalendarDays {...ICON} />
               <span>Semanas</span>
-            </Link>
+            </a>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard#configuracion">
+            <a href="/dashboard#configuracion">
               <Settings {...ICON} />
               <span>Configuración</span>
-            </Link>
+            </a>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
             <Link href="/privacidad">

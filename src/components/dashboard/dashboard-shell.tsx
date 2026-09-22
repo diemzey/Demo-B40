@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore, type ComponentType } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState, type ComponentType } from "react";
+import { useRouter } from "next/navigation";
 import {
   Activity,
   Building2,
@@ -9,7 +9,6 @@ import {
   FileBarChart2,
   PanelLeftClose,
   PanelLeftOpen,
-  Search,
   Settings,
   Users,
   X,
@@ -21,7 +20,6 @@ import {
   type NavItemData,
 } from "@/components/ui/dashboard-sidebar";
 import { JornadaLogo } from "@/components/ui/jornada-logo";
-import { CommandSearch } from "@/components/dashboard/command-search";
 import { ProfileMenu } from "@/components/auth/profile-menu";
 import { iniciales, useSession } from "@/components/auth/session";
 import { SucursalesTab } from "@/components/dashboard/tabs/sucursales";
@@ -38,25 +36,23 @@ function navGroups(colaboradores: number): NavGroupData[] {
   return [
     {
       items: [
-        { id: "search", title: "Buscar", icon: Search, shortcut: "⌘K" },
-        { id: "diagnostico", title: "Diagnóstico", icon: Activity, href: "/dashboard" },
-        { id: "sucursales", title: "Sucursales", icon: Building2, href: "/dashboard#sucursales" },
-        { id: "semanas", title: "Semanas", icon: CalendarDays, href: "/dashboard#semanas" },
+        { id: "diagnostico", title: "Diagnóstico", icon: Activity },
+        { id: "sucursales", title: "Sucursales", icon: Building2 },
+        { id: "semanas", title: "Semanas", icon: CalendarDays },
         {
           id: "colaboradores",
           title: "Colaboradores",
           icon: Users,
-          href: "/dashboard#colaboradores",
           badge: colaboradores,
         },
-        { id: "reportes", title: "Reportes", icon: FileBarChart2, href: "/dashboard#reportes" },
+        { id: "reportes", title: "Reportes", icon: FileBarChart2 },
       ],
     },
   ];
 }
 
 const BOTTOM_ITEMS: NavItemData[] = [
-  { id: "configuracion", title: "Configuración", icon: Settings, href: "/dashboard#configuracion", shortcut: "⌘," },
+  { id: "configuracion", title: "Configuración", icon: Settings, shortcut: "⌘," },
 ];
 
 const ALL_ITEMS = flattenNavItems([
@@ -76,39 +72,10 @@ const TABS: Record<string, ComponentType> = {
   configuracion: ConfiguracionTab,
 };
 
-/**
- * Observa el hash. `next/link` cambia el hash con `history.pushState`, que no
- * dispara `hashchange`, así que también se envuelven `pushState` y
- * `replaceState` mientras el panel está montado.
- */
-function subscribeHash(onChange: () => void) {
-  window.addEventListener("hashchange", onChange);
-  window.addEventListener("popstate", onChange);
-  const { pushState, replaceState } = window.history;
-  window.history.pushState = function (...args) {
-    pushState.apply(this, args);
-    onChange();
-  };
-  window.history.replaceState = function (...args) {
-    replaceState.apply(this, args);
-    onChange();
-  };
-  return () => {
-    window.removeEventListener("hashchange", onChange);
-    window.removeEventListener("popstate", onChange);
-    window.history.pushState = pushState;
-    window.history.replaceState = replaceState;
-  };
-}
-const getHash = () => window.location.hash;
-const getServerHash = () => "";
-
-function idFromLocation(pathname: string, hash: string): string {
+/** Pestaña a partir de un `#hash` (`#semanas` → "semanas"); todo lo demás es Diagnóstico. */
+function idDesdeHash(hash: string): string {
   const slug = hash.replace(/^#/, "");
-  if (slug === "" || slug === "home" || slug === "diagnostico") return "diagnostico";
   if (slug in TABS) return slug;
-  const exact = ALL_ITEMS.find((i) => i.href === `${pathname}${hash}`);
-  if (exact) return exact.id;
   return "diagnostico";
 }
 
@@ -151,38 +118,35 @@ function UserBlock({ org }: { org?: string }) {
 }
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const router = useRouter();
   const datos = usePanel();
   const [isOpen, setIsOpen] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   // Sucursales reales (o de muestra) del panel; la activa es la seleccionada en el servidor.
   const sucursales = datos.sucursales.map((s) => s.nombre);
   const [workspaceLocal, setWorkspaceLocal] = useState<string | null>(null);
   const activeWorkspace = workspaceLocal ?? datos.sucursal?.nombre ?? sucursales[0] ?? "";
-  const hash = useSyncExternalStore(subscribeHash, getHash, getServerHash);
-  // Selección hecha con clic en el menú, junto con el hash que había en ese
-  // momento: si la URL ya cambió, manda la URL; si por lo que sea el cambio
-  // de hash no se detectó (navegadores que no pasan por pushState), manda el
-  // clic. Así la pestaña cambia siempre al instante.
-  const [seleccion, setSeleccion] = useState<{ id: string; hash: string } | null>(null);
-  // El item activo se deriva de la URL (pathname + hash); así los enlaces
-  // del menú de perfil y el botón "atrás" también cambian de pestaña.
-  const activeId =
-    seleccion && seleccion.hash === hash ? seleccion.id : idFromLocation(pathname, hash);
+  // La pestaña activa es estado propio: no depende del router de Next ni de
+  // interceptar pushState. Se lee del #hash al montar (enlaces profundos,
+  // menú de perfil) y al cambiar el hash por un enlace plano; al elegir en
+  // el menú se escribe con replaceState para que la URL siga siendo
+  // compartible sin provocar ninguna navegación.
+  const [activeId, setActiveId] = useState("diagnostico");
+  useEffect(() => {
+    const leer = () => setActiveId(idDesdeHash(window.location.hash));
+    leer();
+    window.addEventListener("hashchange", leer);
+    window.addEventListener("popstate", leer);
+    return () => {
+      window.removeEventListener("hashchange", leer);
+      window.removeEventListener("popstate", leer);
+    };
+  }, []);
   const ActiveTab = TABS[activeId];
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMobileOpen(false);
-        setIsSearchOpen(false);
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        setIsSearchOpen((v) => !v);
-      }
+      if (e.key === "Escape") setMobileOpen(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -205,15 +169,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   };
 
   const handleSelect = (id: string) => {
-    if (id === "search") {
-      setIsSearchOpen(true);
-      return;
-    }
     if (id in TABS) {
-      setSeleccion({ id, hash: window.location.hash });
-      // Tras la navegación del enlace, fuerza una relectura del hash por si
-      // el navegador no pasó por el pushState interceptado.
-      window.setTimeout(() => window.dispatchEvent(new Event("hashchange")), 0);
+      setActiveId(id);
+      const hash = id === "diagnostico" ? "" : `#${id}`;
+      window.history.replaceState(null, "", `${window.location.pathname}${hash}`);
     }
     setMobileOpen(false);
   };
@@ -310,17 +269,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              className="hidden h-8 w-64 items-center gap-2 rounded-md bg-black/5 px-2.5 text-left text-[13px] text-muted-foreground/70 transition-colors hover:text-foreground md:flex dark:bg-white/5"
-            >
-              <Search className="size-4 shrink-0" strokeWidth={1.5} />
-              <span className="flex-1 truncate">Buscar sucursal, semana o persona...</span>
-              <kbd className="inline-flex h-5 items-center rounded-[4px] border border-border/50 px-1.5 font-mono text-[10px] text-muted-foreground/60">
-                ⌘K
-              </kbd>
-            </button>
             <ProfileMenu align="end" />
           </div>
         </div>
@@ -333,7 +281,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      <CommandSearch open={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </div>
   );
 }

@@ -219,7 +219,9 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return datosDemo();
+  // Sin usuario (sesión caducada o petición del router sin cookies válidas):
+  // nunca datos de muestra; el layout redirige a /login.
+  if (!user) return { ...datosDemo(), sinSesion: true };
 
   const { data: perfil } = await supabase
     .from("perfiles")
