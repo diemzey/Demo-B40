@@ -16,10 +16,14 @@ type JornadaHeroProps = {
   colaboradores: number;
   antes: JornadaResumen;
   despues: JornadaResumen;
-  /** Resumen con el tope de 2030 (40 h) y los turnos de hoy. */
-  antes2030: JornadaResumen;
-  /** Costo por hora ordinaria usado para la estimación, en MXN. */
-  costoHora: number;
+  /** Cifras semanales reales del motor para la tienda del ejemplo. */
+  costo: {
+    doblesSemanal: number;
+    ahorroSemanal: number;
+    ahorroPct: number;
+    coberturaPicoAntes: number;
+    coberturaPicoDespues: number;
+  };
 };
 
 export function JornadaHero({
@@ -28,8 +32,7 @@ export function JornadaHero({
   colaboradores,
   antes,
   despues,
-  antes2030,
-  costoHora,
+  costo,
 }: JornadaHeroProps) {
   const { fase, barriendo } = useFaseCiclica(3500);
   const enAntes = fase === "antes";
@@ -53,12 +56,14 @@ export function JornadaHero({
         <CostoExtra
           className="mt-6"
           horasAlDoble={antes.horasAlDoble}
-          horasAlDoble2030={antes2030.horasAlDoble}
-          costoHora={costoHora}
-          activo={enAntes}
-          horasAbsorbidas={despues.horasAbsorbidas}
-          vacantes={despues.vacantes}
+          fueraDeNorma={antes.fueraDeNorma}
+          costoDoblesSemanal={costo.doblesSemanal}
+          ahorroSemanal={costo.ahorroSemanal}
+          ahorroPct={costo.ahorroPct}
+          coberturaPicoAntes={costo.coberturaPicoAntes}
+          coberturaPicoDespues={costo.coberturaPicoDespues}
           tope={tope}
+          activo={enAntes}
         />
         <div className="mt-8 md:mt-auto md:pt-8">
           <Button
@@ -75,7 +80,6 @@ export function JornadaHero({
         colaboradores={colaboradores}
         antes={antes}
         despues={despues}
-        antes2030={antes2030}
         fase={fase}
         barriendo={barriendo}
       />

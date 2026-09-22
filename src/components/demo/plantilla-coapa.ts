@@ -1,51 +1,30 @@
 import type { JornadaPersona, JornadaResumen } from "@/components/ui/jornada-artefacto";
 import { reacomodar, type ResumenReacomodo } from "@/lib/reacomodo";
+import ejemplo from "./ejemplo-tienda.json";
 
-/** Tope transitorio que usa la portada y el panel de muestra (2027). */
-export const TOPE = 46;
+/**
+ * Ejemplo real de la portada: una tienda-semana tomada de la corrida del
+ * motor de programación (scripts/motor) sobre los datos sintéticos
+ * calibrados de 50 tiendas. Se regenera con
+ * `npx tsx scripts/motor/exportar-ejemplo.ts`. Ninguna persona es real.
+ */
+export const EJEMPLO = ejemplo;
+
+/** Tope con el que se programó el ejemplo (2030: 40 h). */
+export const TOPE = ejemplo.tope;
 /** Tope final de la reforma, desde enero de 2030. */
 export const TOPE_2030 = 40;
 
 /** Colaborador sin la columna reacomodada: el motor la calcula. */
 export type PersonaBase = Omit<JornadaPersona, "reacomodada">;
 
-/**
- * Plantilla sintética de la sucursal Coapa: 30 colaboradores con las horas
- * de la semana 31 como está (`hoy`). La columna `reacomodada` no se escribe
- * a mano: sale de `reacomodar` con el tope vigente. Ninguna persona es real.
- */
-export const PLANTILLA_BASE: PersonaBase[] = [
-  { nombre: "Ortega Bruno", foto: "/avatars/ortega-bruno.jpg", hoy: 49.0 },
-  { nombre: "Cárdenas Ismael", foto: "/avatars/cardenas-ismael.jpg", hoy: 49.0 },
-  { nombre: "Quintero Diego", foto: "/avatars/quintero-diego.jpg", hoy: 49.0 },
-  { nombre: "Téllez Rodrigo", foto: "/avatars/tellez-rodrigo.jpg", hoy: 49.0 },
-  { nombre: "Nájera Paola", foto: "/avatars/najera-paola.jpg", hoy: 48.5 },
-  { nombre: "Olvera Héctor", foto: "/avatars/olvera-hector.jpg", hoy: 44.0 },
-  { nombre: "Escobar Tomás", foto: "/avatars/escobar-tomas.jpg", hoy: 25.0 },
-  { nombre: "Molina Rocío", foto: "/avatars/molina-rocio.jpg", hoy: 24.5 },
-  { nombre: "Aguilar Mateo", foto: "/avatars/aguilar-mateo.jpg", hoy: 52.0 },
-  { nombre: "Beltrán Sofía", foto: "/avatars/beltran-sofia.jpg", hoy: 50.5 },
-  { nombre: "Castro Julián", foto: "/avatars/castro-julian.jpg", hoy: 51.0 },
-  { nombre: "Domínguez Valeria", foto: "/avatars/dominguez-valeria.jpg", hoy: 49.5 },
-  { nombre: "Espinoza Andrés", foto: "/avatars/espinoza-andres.jpg", hoy: 53.0 },
-  { nombre: "Flores Camila", foto: "/avatars/flores-camila.jpg", hoy: 48.0 },
-  { nombre: "García Emilio", foto: "/avatars/garcia-emilio.jpg", hoy: 50.0 },
-  { nombre: "Herrera Daniela", foto: "/avatars/herrera-daniela.jpg", hoy: 51.5 },
-  { nombre: "Ibarra Sebastián", foto: "/avatars/ibarra-sebastian.jpg", hoy: 52.5 },
-  { nombre: "Jiménez Fernanda", foto: "/avatars/jimenez-fernanda.jpg", hoy: 49.0 },
-  { nombre: "Lara Nicolás", foto: "/avatars/lara-nicolas.jpg", hoy: 54.0 },
-  { nombre: "Mendoza Regina", foto: "/avatars/mendoza-regina.jpg", hoy: 50.5 },
-  { nombre: "Navarro Santiago", foto: "/avatars/navarro-santiago.jpg", hoy: 51.0 },
-  { nombre: "Ochoa Ximena", foto: "/avatars/ochoa-ximena.jpg", hoy: 48.5 },
-  { nombre: "Pacheco Leonardo", foto: "/avatars/pacheco-leonardo.jpg", hoy: 53.5 },
-  { nombre: "Ramírez Mariana", foto: "/avatars/ramirez-mariana.jpg", hoy: 50.0 },
-  { nombre: "Salinas Gabriel", foto: "/avatars/salinas-gabriel.jpg", hoy: 52.0 },
-  { nombre: "Torres Renata", foto: "/avatars/torres-renata.jpg", hoy: 49.5 },
-  { nombre: "Urbina Alejandro", foto: "/avatars/urbina-alejandro.jpg", hoy: 55.0 },
-  { nombre: "Vargas Lucía", foto: "/avatars/vargas-lucia.jpg", hoy: 51.5 },
-  { nombre: "Zamora Diego", foto: "/avatars/zamora-diego.jpg", hoy: 50.0 },
-  { nombre: "Zúñiga Abril", foto: "/avatars/zuniga-abril.jpg", hoy: 48.5 },
-];
+/** Plantilla de la tienda del ejemplo con las horas de su semana como está. */
+export const PLANTILLA_BASE: PersonaBase[] = ejemplo.personas.map((p) => ({
+  nombre: p.nombre,
+  foto: p.foto,
+  detalle: p.puesto,
+  hoy: p.hoy,
+}));
 
 /**
  * Corre el motor de reacomodo sobre la plantilla y devuelve a cada persona
@@ -66,12 +45,19 @@ export function reacomodoDe<T extends PersonaBase>(
   };
 }
 
-const coapa = reacomodoDe(PLANTILLA_BASE, TOPE);
-
-/** Plantilla de Coapa ya reacomodada con el tope de 46 h. */
-export const PLANTILLA_COAPA: JornadaPersona[] = coapa.personas;
-/** Resumen del reacomodo de Coapa con el tope de 46 h. */
-export const REACOMODO_COAPA: ResumenReacomodo = coapa.resumen;
+/**
+ * Plantilla del ejemplo con la semana que programó el motor: `reacomodada`
+ * son las horas reales de la propuesta (tope 40 h, misma plantilla).
+ */
+export const PLANTILLA_COAPA: JornadaPersona[] = ejemplo.personas.map((p) => ({
+  nombre: p.nombre,
+  foto: p.foto,
+  detalle: p.puesto,
+  hoy: p.hoy,
+  reacomodada: p.reacomodada,
+}));
+/** Reacomodo de horas (motor simple) sobre la misma plantilla, para el panel de muestra. */
+export const REACOMODO_COAPA: ResumenReacomodo = reacomodoDe(PLANTILLA_BASE, TOPE).resumen;
 /** Mismos turnos de hoy reacomodados con el tope de 2030 (40 h). */
 export const REACOMODO_COAPA_2030: ResumenReacomodo = reacomodoDe(PLANTILLA_BASE, TOPE_2030).resumen;
 
@@ -106,5 +92,24 @@ export function resumenDespues(
     horasAbsorbidas: reacomodo.horasAbsorbidas,
     horasSinCubrir: reacomodo.horasSinCubrir,
     vacantes: reacomodo.vacantesSugeridas,
+  };
+}
+
+/** Resumen "Antes" del ejemplo: horas al doble y su costo semanal real. */
+export function resumenAntesEjemplo(): JornadaResumen {
+  return {
+    ...resumenDe(PLANTILLA_COAPA, "hoy", TOPE),
+    costoExtraMxn: ejemplo.baseline.costoDobles,
+  };
+}
+
+/** Resumen "Después" del ejemplo: lo que queda al doble (0) y el ahorro semanal del motor. */
+export function resumenDespuesEjemplo(): JornadaResumen {
+  return {
+    ...resumenDe(PLANTILLA_COAPA, "reacomodada", TOPE),
+    horasSinCubrir: ejemplo.propuesta.vacantesHoras,
+    vacantes: Math.ceil(ejemplo.propuesta.vacantesHoras / TOPE),
+    ahorroMxn: ejemplo.ahorro.mxn,
+    ahorroPct: ejemplo.ahorro.pct,
   };
 }

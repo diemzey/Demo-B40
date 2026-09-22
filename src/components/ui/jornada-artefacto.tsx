@@ -32,6 +32,12 @@ export type JornadaResumen = {
   horasSinCubrir?: number;
   /** Vacantes sugeridas: ⌈horasSinCubrir / tope⌉. */
   vacantes?: number;
+  /** Costo semanal de las horas al doble (MXN), sólo en "Antes". */
+  costoExtraMxn?: number;
+  /** Ahorro semanal frente a la programación actual (MXN), sólo en "Después". */
+  ahorroMxn?: number;
+  /** Ahorro como % del costo laboral semanal. */
+  ahorroPct?: number;
 };
 
 export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
@@ -354,6 +360,12 @@ export function JornadaTabla({
  * cifra es la proyección de 2030 en "Antes" y, en "Después", lo que el
  * reacomodo no pudo cubrir con la plantilla actual (vacantes sugeridas).
  */
+const mxnEntero = new Intl.NumberFormat("es-MX", {
+  style: "currency",
+  currency: "MXN",
+  maximumFractionDigits: 0,
+});
+
 export function JornadaTotales({
   resumen,
   colaboradores,
@@ -368,12 +380,15 @@ export function JornadaTotales({
   proyeccion2030?: JornadaResumen | null;
 }) {
   const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
-  const conSinCubrir = resumen.horasSinCubrir !== undefined;
+  const conAhorro = resumen.ahorroMxn !== undefined;
+  const conCosto = !conAhorro && resumen.costoExtraMxn !== undefined;
+  const conSinCubrir = !conAhorro && !conCosto && resumen.horasSinCubrir !== undefined;
   const vacantes = resumen.vacantes ?? 0;
   const horas = useContador(resumen.horasAlDoble, 900);
   const fuera = useContador(resumen.fueraDeNorma, 900);
   const horas2030 = useContador(proyeccion2030?.horasAlDoble ?? 0, 900);
   const sinCubrir = useContador(resumen.horasSinCubrir ?? 0, 900);
+  const dinero = useContador(resumen.ahorroMxn ?? resumen.costoExtraMxn ?? 0, 900);
   return (
     <Table>
       <TableFooter>
@@ -382,7 +397,7 @@ export function JornadaTotales({
             <div
               className={cn(
                 "grid gap-4 [&_p:first-child]:whitespace-nowrap",
-                proyeccion2030 || conSinCubrir ? "grid-cols-3" : "grid-cols-2",
+                proyeccion2030 || conSinCubrir || conAhorro || conCosto ? "grid-cols-3" : "grid-cols-2",
               )}
             >
               <div>
@@ -414,7 +429,26 @@ export function JornadaTotales({
                   </span>
                 </p>
               </div>
-              {conSinCubrir ? (
+              {conAhorro || conCosto ? (
+                <div>
+                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
+                    {conAhorro ? "Ahorro · semana" : "Al doble · semana"}
+                  </p>
+                  <p
+                    className={cn(
+                      "mt-1 whitespace-nowrap font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
+                      conAhorro ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
+                    )}
+                  >
+                    {mxnEntero.format(dinero)}
+                  </p>
+                  <p className="mt-0.5 text-muted-foreground text-xs">
+                    {conAhorro
+                      ? `${(resumen.ahorroPct ?? 0).toFixed(0)} % menos que hoy · misma plantilla`
+                      : "pagadas al doble"}
+                  </p>
+                </div>
+              ) : conSinCubrir ? (
                 <div>
                   <p className="text-muted-foreground text-xs uppercase tracking-wider">
                     Sin cubrir · vacantes

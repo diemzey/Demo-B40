@@ -1,0 +1,766 @@
+{
+  "origen": "scripts/motor (corrida sobre datos sintéticos calibrados; ver docs/reporte-resultados.md)",
+  "sucursal": "Celaya",
+  "clave": "T020",
+  "semana": "2026-07-20",
+  "tope": 40,
+  "personas": [
+    {
+      "clave": "T020-001",
+      "nombre": "Chávez Castillo Guadalupe",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/ortega-bruno.jpg"
+    },
+    {
+      "clave": "T020-022",
+      "nombre": "Domínguez Zamora Mónica",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/cardenas-ismael.jpg"
+    },
+    {
+      "clave": "T020-018",
+      "nombre": "González Gutiérrez Rodrigo",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/quintero-diego.jpg"
+    },
+    {
+      "clave": "T020-005",
+      "nombre": "Guerrero Ortiz Ana",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/tellez-rodrigo.jpg"
+    },
+    {
+      "clave": "T020-019",
+      "nombre": "Hernández Núñez Miguel",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/najera-paola.jpg"
+    },
+    {
+      "clave": "T020-030",
+      "nombre": "Ibarra Fuentes Elizabeth",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/olvera-hector.jpg"
+    },
+    {
+      "clave": "T020-007",
+      "nombre": "Jiménez Cortés Luis",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/escobar-tomas.jpg"
+    },
+    {
+      "clave": "T020-009",
+      "nombre": "Meza Camacho Patricia",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/molina-rocio.jpg"
+    },
+    {
+      "clave": "T020-021",
+      "nombre": "Ramos Téllez Héctor",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/aguilar-mateo.jpg"
+    },
+    {
+      "clave": "T020-002",
+      "nombre": "Santiago García Francisco",
+      "puesto": "Almacenista",
+      "contrato": 48,
+      "tarifa": 55,
+      "hoy": 48,
+      "reacomodada": 40,
+      "foto": "/avatars/beltran-sofia.jpg"
+    },
+    {
+      "clave": "T020-020",
+      "nombre": "Bautista Castillo Carmen",
+      "puesto": "Asesor(a) de crédito",
+      "contrato": 48,
+      "tarifa": 62,
+      "hoy": 48,
+      "reacomodada": 39,
+      "foto": "/avatars/castro-julian.jpg"
+    },
+    {
+      "clave": "T020-033",
+      "nombre": "Molina Velázquez Eduardo",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 39,
+      "foto": "/avatars/dominguez-valeria.jpg"
+    },
+    {
+      "clave": "T020-010",
+      "nombre": "Zamora Luna Estela",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 39,
+      "foto": "/avatars/espinoza-andres.jpg"
+    },
+    {
+      "clave": "T020-017",
+      "nombre": "Estrada Fuentes Andrés",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 38,
+      "foto": "/avatars/flores-camila.jpg"
+    },
+    {
+      "clave": "T020-026",
+      "nombre": "Guerrero Chávez Tomás",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 38,
+      "foto": "/avatars/garcia-emilio.jpg"
+    },
+    {
+      "clave": "T020-034",
+      "nombre": "Juárez Díaz Julio",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 38,
+      "foto": "/avatars/herrera-daniela.jpg"
+    },
+    {
+      "clave": "T020-050",
+      "nombre": "Luna Molina Arturo",
+      "puesto": "Supervisor(a) de piso",
+      "contrato": 48,
+      "tarifa": 95,
+      "hoy": 48,
+      "reacomodada": 38,
+      "foto": "/avatars/ibarra-sebastian.jpg"
+    },
+    {
+      "clave": "T020-013",
+      "nombre": "Méndez Juárez Mauricio",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 38,
+      "foto": "/avatars/jimenez-fernanda.jpg"
+    },
+    {
+      "clave": "T020-027",
+      "nombre": "Rodríguez Contreras Brenda",
+      "puesto": "Supervisor(a) de piso",
+      "contrato": 48,
+      "tarifa": 95,
+      "hoy": 48,
+      "reacomodada": 38,
+      "foto": "/avatars/lara-nicolas.jpg"
+    },
+    {
+      "clave": "T020-003",
+      "nombre": "Hernández Aguilar Jimena",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 37,
+      "foto": "/avatars/mendoza-regina.jpg"
+    },
+    {
+      "clave": "T020-015",
+      "nombre": "Lara Meza Adrián",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 37,
+      "foto": "/avatars/navarro-santiago.jpg"
+    },
+    {
+      "clave": "T020-011",
+      "nombre": "Rivera Rodríguez Ricardo",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 37,
+      "foto": "/avatars/ochoa-ximena.jpg"
+    },
+    {
+      "clave": "T020-039",
+      "nombre": "Rojas Estrada Ximena",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 37,
+      "foto": "/avatars/pacheco-leonardo.jpg"
+    },
+    {
+      "clave": "T020-024",
+      "nombre": "Valdez Meza Rocío",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 37,
+      "foto": "/avatars/ramirez-mariana.jpg"
+    },
+    {
+      "clave": "T020-029",
+      "nombre": "Morales Rojas Laura",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 36,
+      "foto": "/avatars/salinas-gabriel.jpg"
+    },
+    {
+      "clave": "T020-037",
+      "nombre": "Cruz Luna Rosa",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 35,
+      "foto": "/avatars/torres-renata.jpg"
+    },
+    {
+      "clave": "T020-028",
+      "nombre": "Estrada Salazar Miguel",
+      "puesto": "Asesor(a) de crédito",
+      "contrato": 48,
+      "tarifa": 62,
+      "hoy": 48,
+      "reacomodada": 35,
+      "foto": "/avatars/urbina-alejandro.jpg"
+    },
+    {
+      "clave": "T020-051",
+      "nombre": "Pacheco Vázquez Jimena",
+      "puesto": "Supervisor(a) de piso",
+      "contrato": 48,
+      "tarifa": 95,
+      "hoy": 48,
+      "reacomodada": 34,
+      "foto": "/avatars/vargas-lucia.jpg"
+    },
+    {
+      "clave": "T020-032",
+      "nombre": "Ramos Molina Antonio",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 34,
+      "foto": "/avatars/zamora-diego.jpg"
+    },
+    {
+      "clave": "T020-063",
+      "nombre": "Cervantes Santiago José",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 33,
+      "foto": "/avatars/zuniga-abril.jpg"
+    },
+    {
+      "clave": "T020-044",
+      "nombre": "Cortés Luna Rubén",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 33,
+      "foto": ""
+    },
+    {
+      "clave": "T020-045",
+      "nombre": "Guzmán Guerrero Mauricio",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 33,
+      "foto": ""
+    },
+    {
+      "clave": "T020-066",
+      "nombre": "Luna Rivera Diego",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 33,
+      "foto": ""
+    },
+    {
+      "clave": "T020-043",
+      "nombre": "Rojas Quintero Karla",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 33,
+      "foto": ""
+    },
+    {
+      "clave": "T020-072",
+      "nombre": "Solís Nájera Carlos",
+      "puesto": "Supervisor(a) de piso",
+      "contrato": 48,
+      "tarifa": 95,
+      "hoy": 48,
+      "reacomodada": 33,
+      "foto": ""
+    },
+    {
+      "clave": "T020-038",
+      "nombre": "Campos Gutiérrez Ricardo",
+      "puesto": "Almacenista",
+      "contrato": 48,
+      "tarifa": 55,
+      "hoy": 48,
+      "reacomodada": 32,
+      "foto": ""
+    },
+    {
+      "clave": "T020-058",
+      "nombre": "Salazar Peña Gabriela",
+      "puesto": "Almacenista",
+      "contrato": 48,
+      "tarifa": 55,
+      "hoy": 48,
+      "reacomodada": 32,
+      "foto": ""
+    },
+    {
+      "clave": "T020-052",
+      "nombre": "Quintero Cervantes Mónica",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 48,
+      "tarifa": 60,
+      "hoy": 48,
+      "reacomodada": 31,
+      "foto": ""
+    },
+    {
+      "clave": "T020-049",
+      "nombre": "Jiménez Trejo Iván",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 29,
+      "foto": ""
+    },
+    {
+      "clave": "T020-067",
+      "nombre": "Ortega Cruz Jimena",
+      "puesto": "Supervisor(a) de piso",
+      "contrato": 48,
+      "tarifa": 95,
+      "hoy": 48,
+      "reacomodada": 29,
+      "foto": ""
+    },
+    {
+      "clave": "T020-041",
+      "nombre": "Ortiz Ibarra Guillermo",
+      "puesto": "Asesor(a) de crédito",
+      "contrato": 48,
+      "tarifa": 62,
+      "hoy": 48,
+      "reacomodada": 28,
+      "foto": ""
+    },
+    {
+      "clave": "T020-046",
+      "nombre": "Guerrero Domínguez Yolanda",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 27,
+      "foto": ""
+    },
+    {
+      "clave": "T020-068",
+      "nombre": "Bautista Contreras Juan",
+      "puesto": "Cajero(a)",
+      "contrato": 48,
+      "tarifa": 58,
+      "hoy": 48,
+      "reacomodada": 26,
+      "foto": ""
+    },
+    {
+      "clave": "T020-048",
+      "nombre": "Medina Moreno Enrique",
+      "puesto": "Almacenista",
+      "contrato": 48,
+      "tarifa": 55,
+      "hoy": 48,
+      "reacomodada": 26,
+      "foto": ""
+    },
+    {
+      "clave": "T020-060",
+      "nombre": "Delgado Ramos Javier",
+      "puesto": "Asesor(a) de crédito",
+      "contrato": 48,
+      "tarifa": 62,
+      "hoy": 48,
+      "reacomodada": 25,
+      "foto": ""
+    },
+    {
+      "clave": "T020-069",
+      "nombre": "Castillo Morales Luis",
+      "puesto": "Almacenista",
+      "contrato": 48,
+      "tarifa": 55,
+      "hoy": 48,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-071",
+      "nombre": "Herrera Torres Guillermo",
+      "puesto": "Supervisor(a) de piso",
+      "contrato": 48,
+      "tarifa": 95,
+      "hoy": 48,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-016",
+      "nombre": "Luna García María",
+      "puesto": "Almacenista",
+      "contrato": 48,
+      "tarifa": 55,
+      "hoy": 48,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-008",
+      "nombre": "Romero Guerrero Rosa",
+      "puesto": "Gerente de tienda",
+      "contrato": 48,
+      "tarifa": 160,
+      "hoy": 48,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-065",
+      "nombre": "Valdez Cortés Arturo",
+      "puesto": "Almacenista",
+      "contrato": 48,
+      "tarifa": 55,
+      "hoy": 48,
+      "reacomodada": 10,
+      "foto": ""
+    },
+    {
+      "clave": "T020-004",
+      "nombre": "Bautista Fuentes Jimena",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-006",
+      "nombre": "Camacho Sánchez Héctor",
+      "puesto": "Cajero(a)",
+      "contrato": 24,
+      "tarifa": 58,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-042",
+      "nombre": "Carrillo Reyes Pablo",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-055",
+      "nombre": "Castillo Velázquez Sofía",
+      "puesto": "Cajero(a)",
+      "contrato": 24,
+      "tarifa": 58,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-054",
+      "nombre": "Díaz Núñez Yolanda",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-025",
+      "nombre": "Domínguez Peña Mónica",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-035",
+      "nombre": "Medina Bautista Margarita",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-036",
+      "nombre": "Medina Juárez Rubén",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-031",
+      "nombre": "Moreno Méndez Beatriz",
+      "puesto": "Cajero(a)",
+      "contrato": 24,
+      "tarifa": 58,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-057",
+      "nombre": "Rodríguez Campos Héctor",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-070",
+      "nombre": "Téllez Téllez Estela",
+      "puesto": "Almacenista",
+      "contrato": 24,
+      "tarifa": 55,
+      "hoy": 24,
+      "reacomodada": 24,
+      "foto": ""
+    },
+    {
+      "clave": "T020-012",
+      "nombre": "Cortés Luna Araceli",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 23,
+      "foto": ""
+    },
+    {
+      "clave": "T020-014",
+      "nombre": "González Chávez Mónica",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 23,
+      "foto": ""
+    },
+    {
+      "clave": "T020-053",
+      "nombre": "Nájera Pérez Elizabeth",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 23,
+      "foto": ""
+    },
+    {
+      "clave": "T020-047",
+      "nombre": "Núñez Solís Carmen",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 23,
+      "foto": ""
+    },
+    {
+      "clave": "T020-040",
+      "nombre": "Aguilar Moreno Javier",
+      "puesto": "Almacenista",
+      "contrato": 24,
+      "tarifa": 55,
+      "hoy": 24,
+      "reacomodada": 22,
+      "foto": ""
+    },
+    {
+      "clave": "T020-023",
+      "nombre": "Zamora Ramírez Paola",
+      "puesto": "Almacenista",
+      "contrato": 24,
+      "tarifa": 55,
+      "hoy": 24,
+      "reacomodada": 22,
+      "foto": ""
+    },
+    {
+      "clave": "T020-056",
+      "nombre": "Santiago Méndez Raúl",
+      "puesto": "Cajero(a)",
+      "contrato": 24,
+      "tarifa": 58,
+      "hoy": 24,
+      "reacomodada": 20,
+      "foto": ""
+    },
+    {
+      "clave": "T020-059",
+      "nombre": "Salazar Ruiz Verónica",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 19,
+      "foto": ""
+    },
+    {
+      "clave": "T020-062",
+      "nombre": "Fuentes Ríos Norma",
+      "puesto": "Almacenista",
+      "contrato": 24,
+      "tarifa": 55,
+      "hoy": 24,
+      "reacomodada": 18,
+      "foto": ""
+    },
+    {
+      "clave": "T020-064",
+      "nombre": "Castro Campos Jorge",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 16,
+      "foto": ""
+    },
+    {
+      "clave": "T020-061",
+      "nombre": "Pacheco Vargas Elizabeth",
+      "puesto": "Vendedor(a) de piso",
+      "contrato": 24,
+      "tarifa": 60,
+      "hoy": 24,
+      "reacomodada": 16,
+      "foto": ""
+    }
+  ],
+  "baseline": {
+    "horasTotales": 2928,
+    "horasDobles": 400,
+    "horasDomingo": 400,
+    "costoRegular": 161368,
+    "costoDobles": 52144,
+    "costoPrimaDominical": 6392.5,
+    "horasSobrestaffing": 1186,
+    "costoSobrestaffing": 75923.44,
+    "costoTotal": 295827.94,
+    "intervalosPico": 36,
+    "intervalosPicoCubiertos": 22,
+    "coberturaPicoPct": 84.21,
+    "deficitPicoHoras": 97,
+    "empleadosConTurno": 72
+  },
+  "propuesta": {
+    "horasTotales": 2182,
+    "horasDobles": 0,
+    "horasDomingo": 371,
+    "costoRegular": 138048,
+    "costoDobles": 0,
+    "costoPrimaDominical": 6010.5,
+    "horasSobrestaffing": 248.5,
+    "costoSobrestaffing": 15721.78,
+    "costoTotal": 159780.28,
+    "intervalosPico": 36,
+    "intervalosPicoCubiertos": 36,
+    "coberturaPicoPct": 100,
+    "deficitPicoHoras": 0,
+    "empleadosConTurno": 72,
+    "vacantesHoras": 0
+  },
+  "ahorro": {
+    "mxn": 136047.66,
+    "pct": 45.99
+  }
+}
