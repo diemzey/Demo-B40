@@ -23,7 +23,9 @@ import {
  *   1. Sin variables de Supabase (`hasSupabaseEnv()` false) → demo.
  *   2. Sin usuario autenticado → demo (el proxy ya redirige a /login).
  *   3. Usuario sin `perfiles.empresa_id`, empresa sin sucursales o sin
- *      horarios en ninguna → demo con `aviso: "sin-datos"`.
+ *      horarios en ninguna → panel vacío de Supabase (`sinDatos: true`,
+ *      `aviso: "sin-datos"`, sin personas de muestra): el layout muestra el
+ *      onboarding para subir el primer CSV.
  *   4. En cualquier otro caso → Supabase.
  * RLS filtra todas las consultas a la empresa del usuario; aquí sólo se
  * repite el filtro por claridad.
@@ -54,6 +56,40 @@ function topeDe(catalogo: ReadonlyArray<{ anio: number; tope_horas: number }>, a
 
 const redondea = (n: number) => Math.round(n * 10) / 10;
 
+const SIN_EXCESO = { horasAlDoble: 0, fueraDeNorma: 0 };
+
+/**
+ * Panel vacío para una cuenta real que aún no tiene nada que mostrar. Nunca
+ * lleva datos de muestra: el layout lo detecta por `sinDatos` y muestra el
+ * onboarding. El tope es el del año en curso, sólo informativo.
+ */
+function panelVacio(
+  empresa: DatosPanel["empresa"],
+  catalogo: ReadonlyArray<{ anio: number; tope_horas: number }>,
+): DatosPanel {
+  const anio = new Date().getUTCFullYear();
+  const tope = topeDe(catalogo, anio);
+  const topeAnterior = topeDe(catalogo, anio - 1);
+  return {
+    origen: "supabase",
+    aviso: "sin-datos",
+    sinDatos: true,
+    empresa,
+    sucursales: [],
+    sucursal: null,
+    semana: null,
+    tope,
+    topeAnio: anio,
+    topeAnterior: topeAnterior === tope ? null : topeAnterior,
+    tope2030: TOPE_2030,
+    personas: [],
+    antes: { ...SIN_EXCESO },
+    despues: { ...SIN_EXCESO, horasAbsorbidas: 0, horasSinCubrir: 0, vacantes: 0 },
+    antes2030: { ...SIN_EXCESO },
+    semanas: [],
+  };
+}
+
 function nombreCompleto(e: Pick<Tables<"empleados">, "nombre" | "apellido">): string {
   return `${e.apellido} ${e.nombre}`.trim();
 }
@@ -70,7 +106,7 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
     .eq("id", user.id)
     .maybeSingle();
   const empresa = perfil?.empresas ?? null;
-  if (!perfil?.empresa_id || !empresa) return datosDemo("sin-datos");
+  if (!perfil?.empresa_id || !empresa) return panelVacio(null, TOPES_RESPALDO);
 
   const [{ data: filasSucursales }, { data: filasTopes }] = await Promise.all([
     supabase
@@ -80,8 +116,9 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
       .order("nombre"),
     supabase.from("topes_semanales").select("anio, tope_horas").order("anio"),
   ]);
-  if (!filasSucursales?.length) return datosDemo("sin-datos");
   const catalogo = filasTopes?.length ? filasTopes : TOPES_RESPALDO;
+  const vacio = () => panelVacio({ id: empresa.id, nombre: empresa.nombre }, catalogo);
+  if (!filasSucursales?.length) return vacio();
 
   // Un solo viaje para el resumen de todas las sucursales: alimenta la lista,
   // la elección de sucursal por defecto y el historial de la elegida.
@@ -97,7 +134,7 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
     (r): r is ResumenFila & { sucursal_id: string; semana_iso: string } =>
       typeof r.sucursal_id === "string" && typeof r.semana_iso === "string",
   );
-  if (!resumen.length) return datosDemo("sin-datos");
+  if (!resumen.length) return vacio();
 
   const ultimaPorSucursal = new Map<string, (typeof resumen)[number]>();
   for (const r of resumen) {
@@ -122,7 +159,7 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
     (sucursalPedida && ultimaPorSucursal.has(sucursalPedida)
       ? filasSucursales.find((s) => s.id === sucursalPedida)
       : undefined) ?? filasSucursales.find((s) => s.id === resumen[0].sucursal_id);
-  if (!elegida) return datosDemo("sin-datos");
+  if (!elegida) return vacio();
 
   const historial = resumen.filter((r) => r.sucursal_id === elegida.id);
   const semana = semanaDesdeLunes(historial[0].semana_iso);
@@ -204,6 +241,7 @@ async function cargarDesdeSupabase(supabase: Supabase, sucursalPedida: string | 
   return {
     origen: "supabase",
     aviso: null,
+    sinDatos: false,
     empresa: { id: empresa.id, nombre: empresa.nombre },
     sucursales: sucursalesConsistentes,
     sucursal: { id: elegida.id, nombre: elegida.nombre },

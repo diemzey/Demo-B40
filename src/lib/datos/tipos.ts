@@ -45,9 +45,17 @@ export type DatosPanel = {
   origen: "supabase" | "demo";
   /**
    * `sin-datos`: hay sesión de Supabase pero la empresa aún no tiene
-   * sucursales u horarios, así que se muestran datos de muestra.
+   * sucursales u horarios importados. Va junto con `sinDatos: true`.
    */
   aviso: "sin-datos" | null;
+  /**
+   * `true` cuando hay sesión de Supabase pero no hay nada que mostrar (sin
+   * empresa, sin sucursales o sin semanas importadas): el layout del panel
+   * muestra la pantalla de onboarding (subir el primer CSV) en lugar del
+   * shell, y `personas`/`sucursales`/`semanas` vienen vacíos. Siempre `false`
+   * en modo demo (sin Supabase).
+   */
+  sinDatos: boolean;
   empresa: { id: string; nombre: string } | null;
   sucursales: SucursalPanel[];
   /** Sucursal seleccionada. */

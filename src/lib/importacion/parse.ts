@@ -18,7 +18,10 @@ export const COLUMNAS_CSV = [
   "minutos_descanso",
 ] as const;
 
-export type ColumnaCsv = (typeof COLUMNAS_CSV)[number];
+/** Columnas opcionales: pueden faltar en el encabezado sin que sea error. */
+export const COLUMNAS_OPCIONALES = ["sucursal"] as const;
+
+export type ColumnaCsv = (typeof COLUMNAS_CSV)[number] | (typeof COLUMNAS_OPCIONALES)[number];
 
 const COLUMNAS_OBLIGATORIAS: readonly ColumnaCsv[] = [
   "clave",
@@ -38,6 +41,8 @@ export type FilaTurno = {
   apellido: string;
   puesto: string | null;
   jornadaContratada: number | null;
+  /** Sucursal del turno (columna opcional `sucursal`); null si falta o va vacía. */
+  sucursal: string | null;
   /** `YYYY-MM-DD`, día en que inicia el turno. */
   fecha: string;
   /** `HH:MM` (24 h). */
@@ -63,6 +68,8 @@ export type ResultadoParseo = {
   errores: ErrorFila[];
   /** Filas de datos encontradas en el archivo (válidas + con error). */
   totales: number;
+  /** `true` si el encabezado trae la columna opcional `sucursal`. */
+  columnaSucursal: boolean;
 };
 
 const RE_FECHA = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -119,6 +126,7 @@ export function parsearTurnos(texto: string): ResultadoParseo {
   const totales = data.length;
   const campos = new Set((parsed.meta.fields ?? []).map((f) => f.trim().toLowerCase()));
   const faltantes = COLUMNAS_CSV.filter((c) => !campos.has(c));
+  const columnaSucursal = campos.has("sucursal");
 
   if (faltantes.length > 0) {
     errores.push({
@@ -126,9 +134,9 @@ export function parsearTurnos(texto: string): ResultadoParseo {
       columna: faltantes.join(", "),
       mensaje:
         `Faltan columnas en el encabezado: ${faltantes.join(", ")}. ` +
-        `El encabezado debe ser: ${COLUMNAS_CSV.join(",")}`,
+        `El encabezado debe incluir: ${COLUMNAS_CSV.join(",")} (y opcionalmente sucursal).`,
     });
-    return { filas, errores, totales };
+    return { filas, errores, totales, columnaSucursal };
   }
 
   // Errores estructurales de papaparse (comillas sin cerrar, campos de más).
@@ -159,7 +167,7 @@ export function parsearTurnos(texto: string): ResultadoParseo {
       erroresFila.push({ fila, columna, mensaje });
 
     const valores = Object.fromEntries(
-      COLUMNAS_CSV.map((c) => [c, limpiar(raw[c])]),
+      [...COLUMNAS_CSV, ...COLUMNAS_OPCIONALES].map((c) => [c, limpiar(raw[c])]),
     ) as Record<ColumnaCsv, string>;
 
     for (const c of COLUMNAS_OBLIGATORIAS) {
@@ -242,6 +250,7 @@ export function parsearTurnos(texto: string): ResultadoParseo {
       apellido: valores.apellido,
       puesto: valores.puesto || null,
       jornadaContratada,
+      sucursal: valores.sucursal || null,
       fecha: valores.fecha,
       horaInicio: minutosAHora(ini as number),
       horaFin: minutosAHora(fin as number),
@@ -252,7 +261,7 @@ export function parsearTurnos(texto: string): ResultadoParseo {
   });
 
   errores.sort((a, b) => a.fila - b.fila);
-  return { filas, errores, totales };
+  return { filas, errores, totales, columnaSucursal };
 }
 
 /* ---------- Resumen para la vista previa ---------- */
@@ -321,6 +330,13 @@ export type ResumenTurnos = {
   fechas: string[];
   /** Lunes ISO distintos, ordenados. */
   semanas: string[];
+  /**
+   * Sucursales distintas de la columna `sucursal`, en orden de aparición y
+   * sin distinguir mayúsculas (se conserva la primera grafía; sin las vacías).
+   */
+  sucursales: string[];
+  /** Filas válidas sin valor en `sucursal`. */
+  filasSinSucursal: number;
   /** Totales por colaborador y semana ISO. */
   porEmpleadoSemana: ResumenEmpleadoSemana[];
 };
@@ -335,6 +351,8 @@ export function resumirTurnos(filas: readonly FilaTurno[]): ResumenTurnos {
   const claves = new Set<string>();
   const fechas = new Set<string>();
   const semanas = new Set<string>();
+  const sucursales = new Map<string, string>();
+  let filasSinSucursal = 0;
   let horasTotales = 0;
 
   for (const f of filas) {
@@ -342,6 +360,12 @@ export function resumirTurnos(filas: readonly FilaTurno[]): ResumenTurnos {
     claves.add(f.clave);
     fechas.add(f.fecha);
     semanas.add(semana);
+    if (f.sucursal) {
+      const llave = f.sucursal.toLocaleLowerCase("es-MX");
+      if (!sucursales.has(llave)) sucursales.set(llave, f.sucursal);
+    } else {
+      filasSinSucursal += 1;
+    }
     horasTotales += f.horas;
     const k = `${f.clave}|${semana}`;
     const g = grupos.get(k);
@@ -372,6 +396,8 @@ export function resumirTurnos(filas: readonly FilaTurno[]): ResumenTurnos {
     horasTotales: redondear(horasTotales),
     fechas: [...fechas].sort(),
     semanas: [...semanas].sort(),
+    sucursales: [...sucursales.values()],
+    filasSinSucursal,
     porEmpleadoSemana,
   };
 }

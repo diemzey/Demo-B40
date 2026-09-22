@@ -297,13 +297,17 @@ const { data: reporte } = await supabase.rpc('reporte_ejecutivo', { p_semana: '2
 
 ## Contrato del CSV de turnos
 
-Archivo de ejemplo: [`plantillas/turnos-ejemplo.csv`](plantillas/turnos-ejemplo.csv).
+Archivos de ejemplo: [`plantillas/turnos-ejemplo.csv`](plantillas/turnos-ejemplo.csv)
+(12 filas, sin columna `sucursal`) y
+[`plantillas/ejemplo-tienda-semana.csv`](plantillas/ejemplo-tienda-semana.csv)
+(una tienda completa, una semana, 72 personas, con `sucursal = Celaya`).
 
 - Codificación **UTF-8** (sin BOM de preferencia), separador **coma**, primera
-  fila de encabezados exactamente como sigue:
+  fila de encabezados con estas columnas (el orden no importa; `sucursal` es
+  opcional y puede omitirse):
 
 ```
-clave,nombre,apellido,puesto,jornada_contratada,fecha,hora_inicio,hora_fin,minutos_descanso
+clave,nombre,apellido,puesto,jornada_contratada,sucursal,fecha,hora_inicio,hora_fin,minutos_descanso
 ```
 
 | Columna | Tipo | Obligatoria | Descripción |
@@ -313,6 +317,7 @@ clave,nombre,apellido,puesto,jornada_contratada,fecha,hora_inicio,hora_fin,minut
 | `apellido` | texto | sí | Apellido(s). |
 | `puesto` | texto | no | Puesto. |
 | `jornada_contratada` | decimal | no | Horas semanales pactadas (p. ej. `48`, `24.5`). |
+| `sucursal` | texto | no (columna opcional) | Sucursal del turno. Se busca por nombre sin distinguir mayúsculas y, si no existe, la app la **crea** en el primer hub de la empresa (o crea el hub "Principal" si no hay ninguno; requiere rol owner/admin). Si la columna falta o la celda va vacía, la fila va a la sucursal elegida o escrita en la app. |
 | `fecha` | `YYYY-MM-DD` | sí | Día en que inicia el turno. |
 | `hora_inicio` | `HH:MM` 24 h | sí | Inicio del segmento. |
 | `hora_fin` | `HH:MM` 24 h | sí | Fin del segmento. Si es menor o igual que `hora_inicio` el turno **cruza medianoche** (`cruza_medianoche = true`). |
@@ -325,10 +330,13 @@ Reglas:
 - Las filas del mismo `clave` repiten los datos del colaborador; la app hace
   *upsert* de `empleados` por `(sucursal_id, clave_externa)` y luego inserta
   `horarios` con `origen = 'csv'` e `importacion_id` de la carga.
+- Las filas se agrupan por `sucursal`: una carga (una fila de
+  `importaciones_csv`) por sucursal distinta del archivo, en orden de
+  aparición. Los errores de parseo del archivo se registran sólo en la primera.
 - Cada carga se registra en `importaciones_csv` (`filas_totales`, `filas_ok`,
   `filas_error`, `errores` como `[{"fila": n, "columna": "...", "mensaje": "..."}]`).
-- Re-importar la misma fila (`empleado`, `fecha`, `hora_inicio`) choca con la
-  restricción única; la app decide si actualiza o reporta el error.
+- Re-importar la misma fila (`empleado`, `fecha`, `hora_inicio`) hace *upsert*
+  de `horarios`: actualiza el turno en vez de duplicarlo o fallar.
 
 ## Datos de demostración (`seed.sql`)
 

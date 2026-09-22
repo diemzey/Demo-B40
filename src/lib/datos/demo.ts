@@ -51,6 +51,7 @@ export function datosDemo(aviso: DatosPanel["aviso"] = null): DatosPanel {
   return {
     origen: "demo",
     aviso,
+    sinDatos: false,
     empresa: { id: "demo", nombre: "Grupo Solmar" },
     sucursales: SUCURSALES_DEMO,
     sucursal: { id: "coapa", nombre: "Coapa" },

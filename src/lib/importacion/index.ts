@@ -1,5 +1,6 @@
 export {
   COLUMNAS_CSV,
+  COLUMNAS_OPCIONALES,
   esFechaValida,
   etiquetaSemana,
   horaAMinutos,
@@ -16,9 +17,14 @@ export {
 } from "./parse";
 
 export {
+  HUB_POR_DEFECTO,
   TAMANO_LOTE,
+  asegurarSucursal,
   importarTurnos,
+  llaveSucursal,
   type ClienteSupabase,
+  type DestinoImportacion,
   type ParametrosImportacion,
   type ResultadoImportacion,
+  type SucursalImportacion,
 } from "./importar";

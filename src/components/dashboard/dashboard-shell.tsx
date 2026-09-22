@@ -23,6 +23,7 @@ import {
 import { JornadaLogo } from "@/components/ui/jornada-logo";
 import { CommandSearch } from "@/components/dashboard/command-search";
 import { ProfileMenu } from "@/components/auth/profile-menu";
+import { iniciales, useSession } from "@/components/auth/session";
 import { SucursalesTab } from "@/components/dashboard/tabs/sucursales";
 import { ColaboradoresTab } from "@/components/dashboard/tabs/colaboradores";
 import { SemanasTab } from "@/components/dashboard/tabs/semanas";
@@ -75,12 +76,6 @@ const TABS: Record<string, ComponentType> = {
   configuracion: ConfiguracionTab,
 };
 
-const USER = {
-  name: "Cesar González",
-  org: "Grupo Solmar",
-  avatar: "/avatars/ortega-bruno.jpg",
-};
-
 /**
  * Observa el hash. `next/link` cambia el hash con `history.pushState`, que no
  * dispara `hashchange`, así que también se envuelven `pushState` y
@@ -117,28 +112,37 @@ function idFromLocation(pathname: string, hash: string): string {
   return "diagnostico";
 }
 
-function UserBlock({ org }: { org: string }) {
+function UserBlock({ org }: { org?: string }) {
+  const { user } = useSession();
+  const nombre = user?.nombre ?? "Tu cuenta";
+  const empresa = org ?? user?.empresa ?? "";
   return (
     <ProfileMenu align="start">
       <button
         type="button"
         className="mt-2 flex w-full items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-black/5 dark:hover:bg-white/5"
-        aria-label={`Cuenta de ${USER.name}`}
+        aria-label={`Cuenta de ${nombre}`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={USER.avatar}
-          alt=""
-          width={32}
-          height={32}
-          className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border/60"
-        />
+        {user?.foto ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={user.foto}
+            alt=""
+            width={32}
+            height={32}
+            className="size-8 shrink-0 rounded-full object-cover ring-1 ring-border/60"
+          />
+        ) : (
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-muted-foreground ring-1 ring-border/60">
+            {iniciales(nombre)}
+          </span>
+        )}
         <div className="flex min-w-0 flex-col">
           <span className="truncate text-[13px] font-medium leading-none text-foreground">
-            {USER.name}
+            {nombre}
           </span>
           <span className="mt-1 truncate text-[11px] leading-none text-muted-foreground">
-            {org}
+            {empresa}
           </span>
         </div>
       </button>
@@ -210,6 +214,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       activeId={activeId}
       onSelect={handleSelect}
       workspaces={sucursales}
+      workspacePlan={datos.empresa?.nombre ?? ""}
       activeWorkspace={activeWorkspace}
       onWorkspaceSelect={handleWorkspaceSelect}
       header={
@@ -225,7 +230,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
       }
-      footer={<UserBlock org={datos.empresa?.nombre ?? USER.org} />}
+      footer={<UserBlock org={datos.empresa?.nombre} />}
     />
   );
 

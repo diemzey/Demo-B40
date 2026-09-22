@@ -5,7 +5,11 @@ import { lunesIso, type ErrorFila, type FilaTurno } from "./parse";
 /**
  * Escritura en Supabase de un CSV ya parseado (ver `parse.ts`):
  *
- * 1. registra la carga en `importaciones_csv` (estado `procesando`);
+ * 0. resuelve la(s) sucursal(es) destino: la columna opcional `sucursal` del
+ *    CSV manda; las filas sin ella van a la sucursal elegida (`sucursalId`) o
+ *    escrita (`sucursalNombre`). Una sucursal que no exista se crea
+ *    (`asegurarSucursal`), en el primer hub de la empresa;
+ * 1. por cada sucursal, registra la carga en `importaciones_csv` (`procesando`);
  * 2. "upsert" de `empleados` por `(sucursal_id, clave_externa)`;
  * 3. upsert de `horarios` por `(empleado_id, fecha, hora_inicio)` — re-importar
  *    la misma semana actualiza en vez de fallar;
@@ -16,19 +20,42 @@ import { lunesIso, type ErrorFila, type FilaTurno } from "./parse";
 
 export const TAMANO_LOTE = 500;
 
+/** Nombre del hub que se crea si la empresa no tiene ninguno (el mismo que da de alta el registro). */
+export const HUB_POR_DEFECTO = "Principal";
+
 export type ClienteSupabase = SupabaseClient<Database>;
 
-export type ParametrosImportacion = {
+/**
+ * Sucursal destino para las filas que no traen `sucursal` en el CSV: una
+ * existente por id, o un nombre (se busca sin distinguir mayúsculas y, si no
+ * existe, se crea). Puede omitirse cuando todas las filas traen sucursal.
+ */
+export type DestinoImportacion =
+  | { sucursalId: string; sucursalNombre?: undefined }
+  | { sucursalNombre: string; sucursalId?: undefined }
+  | { sucursalId?: undefined; sucursalNombre?: undefined };
+
+export type ParametrosImportacion = DestinoImportacion & {
   supabase: ClienteSupabase;
-  sucursalId: string;
   nombreArchivo: string;
   filas: readonly FilaTurno[];
   totales: number;
   errores: readonly ErrorFila[];
+  /** Ciudad para las sucursales (y el hub) que haya que crear. */
+  ciudad?: string | null;
 };
 
+export type SucursalImportacion = {
+  id: string;
+  nombre: string;
+  /** `true` si se creó en esta importación. */
+  creada: boolean;
+};
+
+/** Resultado de una carga: una sucursal, una fila en `importaciones_csv`. */
 export type ResultadoImportacion = {
   importacionId: string;
+  sucursal: SucursalImportacion;
   /** Colaboradores creados o actualizados. */
   empleados: number;
   /** Turnos insertados o actualizados. */
@@ -53,17 +80,188 @@ function fallo(contexto: string, error: { message: string; code?: string } | nul
   return new Error(`${contexto}${detalle}`);
 }
 
+/** Llave de comparación de nombres de sucursal: sin espacios sobrantes ni mayúsculas. */
+export function llaveSucursal(nombre: string): string {
+  return nombre.trim().toLocaleLowerCase("es-MX");
+}
+
+/* ---------- Sucursales ---------- */
+
+/**
+ * Devuelve la sucursal de la empresa llamada `nombre` (sin distinguir
+ * mayúsculas) y, si no existe, la crea en el primer hub de la empresa (por
+ * `created_at`); si la empresa no tiene hubs, crea uno llamado "Principal".
+ *
+ * Crear hubs/sucursales exige rol owner/admin (RLS); un gerente recibe un
+ * error explicativo.
+ */
+export async function asegurarSucursal(
+  supabase: ClienteSupabase,
+  nombre: string,
+  ciudad?: string | null,
+): Promise<SucursalImportacion> {
+  const limpio = nombre.trim();
+  if (!limpio) throw new Error("El nombre de la sucursal no puede ir vacío.");
+
+  // RLS acota `sucursales` a la empresa del usuario; comparamos en memoria
+  // para no depender del escapado de patrones `ilike`.
+  const { data: existentes, error: errorLectura } = await supabase
+    .from("sucursales")
+    .select("id, nombre")
+    .order("created_at", { ascending: true });
+  if (errorLectura) throw fallo("No se pudieron leer las sucursales de tu empresa.", errorLectura);
+
+  const llave = llaveSucursal(limpio);
+  const existente = (existentes ?? []).find((s) => llaveSucursal(s.nombre) === llave);
+  if (existente) return { id: existente.id, nombre: existente.nombre, creada: false };
+
+  const { data: hubs, error: errorHubs } = await supabase
+    .from("hubs")
+    .select("id")
+    .order("created_at", { ascending: true })
+    .limit(1);
+  if (errorHubs) throw fallo("No se pudieron leer los hubs de tu empresa.", errorHubs);
+
+  let hubId = hubs?.[0]?.id;
+  if (!hubId) {
+    const { data: empresaId, error: errorEmpresa } = await supabase.rpc("empresa_actual");
+    if (errorEmpresa || !empresaId) {
+      throw fallo(
+        "Tu cuenta no está ligada a una empresa; pide a un administrador que te agregue.",
+        errorEmpresa,
+      );
+    }
+    const { data: hub, error: errorHub } = await supabase
+      .from("hubs")
+      .insert({ empresa_id: empresaId, nombre: HUB_POR_DEFECTO, ciudad: ciudad ?? null })
+      .select("id")
+      .single();
+    if (errorHub || !hub) {
+      throw fallo(
+        "No se pudo crear el hub de la empresa. Sólo un owner o admin puede crear sucursales.",
+        errorHub,
+      );
+    }
+    hubId = hub.id;
+  }
+
+  const { data: sucursal, error: errorSucursal } = await supabase
+    .from("sucursales")
+    .insert({ hub_id: hubId, nombre: limpio, ciudad: ciudad ?? null })
+    .select("id, nombre")
+    .single();
+  if (errorSucursal || !sucursal) {
+    throw fallo(
+      `No se pudo crear la sucursal "${limpio}". Sólo un owner o admin puede crear sucursales.`,
+      errorSucursal,
+    );
+  }
+  return { id: sucursal.id, nombre: sucursal.nombre, creada: true };
+}
+
+async function sucursalPorId(supabase: ClienteSupabase, id: string): Promise<SucursalImportacion> {
+  const { data, error } = await supabase.from("sucursales").select("id, nombre").eq("id", id).maybeSingle();
+  if (error || !data) {
+    throw fallo("La sucursal elegida no existe o no tienes acceso a ella.", error);
+  }
+  return { id: data.id, nombre: data.nombre, creada: false };
+}
+
+/* ---------- Importación ---------- */
+
+/**
+ * Importa el CSV. Las filas se agrupan por su columna `sucursal` (una carga y
+ * una fila de `importaciones_csv` por sucursal, en orden de aparición); las
+ * que no la traen van a `sucursalId`/`sucursalNombre`. Devuelve un resultado
+ * por sucursal; con una sola sucursal el arreglo tiene un elemento.
+ *
+ * Los errores de parseo del archivo (`errores`, `totales`) se registran en la
+ * bitácora de la primera carga para no contarlos dos veces.
+ */
 export async function importarTurnos({
   supabase,
   sucursalId,
+  sucursalNombre,
+  ciudad,
   nombreArchivo,
   filas,
   totales,
   errores,
-}: ParametrosImportacion): Promise<ResultadoImportacion> {
+}: ParametrosImportacion): Promise<ResultadoImportacion[]> {
   if (filas.length === 0) {
     throw new Error("No hay filas válidas para importar.");
   }
+
+  // Grupos por sucursal del CSV (llave sin mayúsculas; se conserva la primera grafía).
+  const grupos = new Map<string, { nombre: string; filas: FilaTurno[] }>();
+  const sinSucursal: FilaTurno[] = [];
+  for (const f of filas) {
+    if (!f.sucursal) {
+      sinSucursal.push(f);
+      continue;
+    }
+    const llave = llaveSucursal(f.sucursal);
+    const g = grupos.get(llave);
+    if (g) g.filas.push(f);
+    else grupos.set(llave, { nombre: f.sucursal.trim(), filas: [f] });
+  }
+
+  // 0. Resolver destinos antes de escribir nada.
+  const cargas: Array<{ sucursal: SucursalImportacion; filas: FilaTurno[] }> = [];
+  for (const g of grupos.values()) {
+    cargas.push({ sucursal: await asegurarSucursal(supabase, g.nombre, ciudad), filas: g.filas });
+  }
+  if (sinSucursal.length > 0) {
+    let destino: SucursalImportacion;
+    if (sucursalId) destino = await sucursalPorId(supabase, sucursalId);
+    else if (sucursalNombre) destino = await asegurarSucursal(supabase, sucursalNombre, ciudad);
+    else {
+      throw new Error(
+        grupos.size > 0
+          ? `${sinSucursal.length} filas no traen sucursal: elige a cuál sucursal van.`
+          : "Elige o escribe la sucursal a la que pertenecen los turnos.",
+      );
+    }
+    // Si el destino coincide con una sucursal del CSV, se unen en una sola carga.
+    const misma = cargas.find((c) => c.sucursal.id === destino.id);
+    if (misma) misma.filas.push(...sinSucursal);
+    else cargas.push({ sucursal: destino, filas: sinSucursal });
+  }
+
+  const resultados: ResultadoImportacion[] = [];
+  for (const [i, carga] of cargas.entries()) {
+    const primera = i === 0;
+    resultados.push(
+      await importarEnSucursal({
+        supabase,
+        sucursal: carga.sucursal,
+        nombreArchivo,
+        filas: carga.filas,
+        // Las filas con error del archivo sólo se cuentan en la primera carga.
+        totales: primera ? totales - (filas.length - carga.filas.length) : carga.filas.length,
+        errores: primera ? errores : [],
+      }),
+    );
+  }
+  return resultados;
+}
+
+async function importarEnSucursal({
+  supabase,
+  sucursal,
+  nombreArchivo,
+  filas,
+  totales,
+  errores,
+}: {
+  supabase: ClienteSupabase;
+  sucursal: SucursalImportacion;
+  nombreArchivo: string;
+  filas: readonly FilaTurno[];
+  totales: number;
+  errores: readonly ErrorFila[];
+}): Promise<ResultadoImportacion> {
+  const sucursalId = sucursal.id;
 
   // 1. Bitácora de la carga.
   const { data: importacion, error: errorImportacion } = await supabase
@@ -79,7 +277,7 @@ export async function importarTurnos({
 
   if (errorImportacion || !importacion) {
     throw fallo(
-      "No se pudo registrar la importación. Verifica que tengas permiso de edición en esta sucursal.",
+      `No se pudo registrar la importación en ${sucursal.nombre}. Verifica que tengas permiso de edición en esta sucursal.`,
       errorImportacion,
     );
   }
@@ -191,6 +389,7 @@ export async function importarTurnos({
 
     return {
       importacionId,
+      sucursal,
       empleados: porClave.size,
       horarios: horarios.length,
       semanas,

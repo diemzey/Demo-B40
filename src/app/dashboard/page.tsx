@@ -33,6 +33,9 @@ const fmtH = new Intl.NumberFormat("es-MX", {
 
 export default async function DashboardPage() {
   const datos = await obtenerDatosPanel();
+  // Cuenta real sin datos: el layout muestra el onboarding en vez del shell,
+  // así que no hay nada que pintar aquí.
+  if (datos.sinDatos) return null;
   const { personas, tope, antes, despues, antes2030, semana, semanas } = datos;
 
   // Horas al doble por semana para la gráfica de costo; la tarjeta compara
@@ -52,19 +55,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
-      {datos.aviso === "sin-datos" && (
-        <p
-          role="status"
-          className="mb-4 rounded-lg border border-amber-400/30 bg-amber-400/10 px-3 py-2 text-[13px] text-amber-400"
-        >
-          Estás viendo datos de muestra: importa tu primer CSV en la pestaña{" "}
-          <Link href="#semanas" className="font-semibold underline underline-offset-2">
-            Semanas
-          </Link>
-          .
-        </p>
-      )}
-
       <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[11px] font-semibold uppercase tracking-wider text-amber-400">
