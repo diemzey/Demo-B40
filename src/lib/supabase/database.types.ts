@@ -892,24 +892,30 @@ export type Database = {
       }
       empresas: {
         Row: {
+          costo_hora_default: number
           created_at: string
           id: string
           nombre: string
           rfc: string | null
+          tope_objetivo: number
           updated_at: string
         }
         Insert: {
+          costo_hora_default?: number
           created_at?: string
           id?: string
           nombre: string
           rfc?: string | null
+          tope_objetivo?: number
           updated_at?: string
         }
         Update: {
+          costo_hora_default?: number
           created_at?: string
           id?: string
           nombre?: string
           rfc?: string | null
+          tope_objetivo?: number
           updated_at?: string
         }
         Relationships: []
