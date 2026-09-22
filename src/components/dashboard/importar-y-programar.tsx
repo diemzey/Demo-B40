@@ -59,6 +59,10 @@ const MAX_ERRORES_VISIBLES = 8;
 const ESPERA_DESTINO_MS = 2000;
 /** Puntos que el avance suave puede adelantarse al último avance real. */
 const ADELANTO_MAX = 3;
+/** Tope si la empresa no tiene uno guardado (meta de la reforma, 2030). */
+const TOPE_POR_DEFECTO = 40;
+/** Topes de la transición de la reforma (LFT): 2026 → 2030. */
+const TOPES_REFORMA = [48, 46, 44, 42, 40] as const;
 
 const fmtN = new Intl.NumberFormat("es-MX");
 const fmtMXN = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
@@ -115,6 +119,23 @@ export function ImportarYProgramar({
   const conectado = hasSupabaseEnv();
   const [estado, setEstado] = useState<Estado>({ fase: "vacio" });
   const [chip, setChip] = useState<Chip | null>(null);
+  // Tope de horas con el que se programa: se elige antes de soltar el archivo
+  // y queda guardado en la empresa (Configuración lo muestra igual).
+  const [tope, setTope] = useState<number>(() => datos.empresa?.topeObjetivo ?? TOPE_POR_DEFECTO);
+  const [avisoTope, setAvisoTope] = useState<string | null>(null);
+  const elegirTope = (v: number) => {
+    setTope(v);
+    setAvisoTope(null);
+    const empresaId = datos.empresa?.id;
+    if (!conectado || !empresaId) return;
+    void createClient()
+      .from("empresas")
+      .update({ tope_objetivo: v })
+      .eq("id", empresaId)
+      .then(({ error }) => {
+        if (error && vivo.current) setAvisoTope("No se pudo guardar el tope en tu empresa; se usará sólo en esta carga.");
+      });
+  };
   const vivo = useRef(true);
   const espera = useRef<{ resolver: (d: DestinoResuelto) => void; timer: ReturnType<typeof setTimeout> } | null>(null);
 
@@ -339,7 +360,7 @@ export function ImportarYProgramar({
         parseo: archivo.parseo,
         resumen: archivo.resumen,
         destino,
-        empresa: contexto.empresa,
+        empresa: contexto.empresa ? { ...contexto.empresa, topeObjetivo: tope } : null,
         resultados: previo.resultados,
         programaciones: previo.programaciones,
         // Sólo la primera semana ahora; el resto lo programa la cola del panel.
@@ -351,7 +372,7 @@ export function ImportarYProgramar({
       if (resultado.semanaIso) {
         document.cookie = `${COOKIE_SEMANA}=${encodeURIComponent(resultado.semanaIso)}; path=/; max-age=31536000; samesite=lax`;
       }
-      if (resultado.pendientes.length > 0) iniciarCola(supabase, resultado.pendientes);
+      if (resultado.pendientes.length > 0) iniciarCola(supabase, resultado.pendientes, { tope });
       if (!vivo.current) return;
       setEstado({ fase: "listo", archivo, resultado });
       onListo?.();
@@ -408,7 +429,10 @@ export function ImportarYProgramar({
             </Aviso>
           )
         ) : (
-          <ZonaCsv compacto={compacto} onArchivo={(f) => void cargarArchivo(f)} />
+          <div className="flex flex-col gap-3">
+            <SelectorTope valor={tope} onChange={elegirTope} compacto={compacto} aviso={avisoTope} />
+            <ZonaCsv compacto={compacto} onArchivo={(f) => void cargarArchivo(f)} />
+          </div>
         ))}
 
       {estado.fase !== "vacio" && (
@@ -479,6 +503,57 @@ export function ImportarYProgramar({
         </div>
       )}
     </section>
+  );
+}
+
+/* ---------- Tope de horas ---------- */
+
+/**
+ * Chips con los topes de la transición de la reforma. Se elige antes de
+ * soltar el archivo; la propuesta se calcula con ese tope.
+ */
+function SelectorTope({
+  valor,
+  onChange,
+  compacto,
+  aviso,
+}: {
+  valor: number;
+  onChange: (v: number) => void;
+  compacto: boolean;
+  aviso: string | null;
+}) {
+  const opciones: number[] = TOPES_REFORMA.includes(valor as (typeof TOPES_REFORMA)[number]) ? [...TOPES_REFORMA] : [...TOPES_REFORMA, valor];
+  return (
+    <div className={cn("flex flex-col gap-1.5", compacto ? "" : "sm:flex-row sm:items-center sm:justify-between")}>
+      <div>
+        <p className={cn("font-medium", compacto ? "text-[13px]" : "text-sm")}>Tope de horas por semana</p>
+        {!compacto && <p className="j40-muted">La propuesta reparte las horas sin que nadie pase de este tope.</p>}
+      </div>
+      <div role="radiogroup" aria-label="Tope de horas por semana" className="flex flex-wrap items-center gap-1.5">
+        {opciones.map((v) => {
+          const activo = v === valor;
+          return (
+            <button
+              key={v}
+              type="button"
+              role="radio"
+              aria-checked={activo}
+              onClick={() => onChange(v)}
+              className={cn(
+                "rounded-full border px-3 py-1 text-[13px] font-medium tabular-nums transition-colors",
+                activo
+                  ? "border-amber-400 bg-amber-400/15 text-foreground"
+                  : "border-border text-muted-foreground hover:border-amber-400/60 hover:text-foreground",
+              )}
+            >
+              {fmtN.format(v)} h
+            </button>
+          );
+        })}
+      </div>
+      {aviso && <p className="text-xs text-rose-300 sm:basis-full">{aviso}</p>}
+    </div>
   );
 }
 
@@ -811,7 +886,7 @@ function ResumenListo({ resultado }: { resultado: ResultadoFlujo }) {
       {resultado.pendientes.length > 0 && (
         <>
           {" "}
-          · {fmtN.format(resultado.pendientes.length)} {resultado.pendientes.length === 1 ? "semana más se programa" : "semanas más se programan"} mientras navegas
+          · {fmtN.format(resultado.pendientes.length)} {resultado.pendientes.length === 1 ? "semana se programa" : "semanas se programan"} mientras navegas
         </>
       )}
       {resultado.programaciones.length > 0 && (
@@ -824,7 +899,7 @@ function ResumenListo({ resultado }: { resultado: ResultadoFlujo }) {
           <span className="tabular-nums">({fmtPct.format(pct)} %)</span>
         </>
       )}
-      . Abriendo tu antes y después…
+      . {resultado.pendientes.length > 0 ? "Abriendo tu panel…" : "Abriendo tu antes y después…"}
     </p>
   );
 }

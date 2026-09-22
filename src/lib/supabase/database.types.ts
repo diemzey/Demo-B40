@@ -2097,6 +2097,23 @@ export type Database = {
           tiendas_con_subdotacion_pico: number
         }[]
       }
+      importar_turnos_sucursal: {
+        Args: {
+          p_cerrar?: boolean
+          p_errores?: Json
+          p_filas: Json
+          p_filas_totales: number
+          p_huella: string
+          p_importacion?: string | null
+          p_nombre_archivo: string
+          p_sucursal: string
+        }
+        Returns: {
+          empleados: number
+          horarios: number
+          importacion_id: string
+        }[]
+      }
       semanas_sin_propuesta: {
         Args: Record<PropertyKey, never>
         Returns: {

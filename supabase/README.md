@@ -337,6 +337,12 @@ Reglas:
   `filas_error`, `errores` como `[{"fila": n, "columna": "...", "mensaje": "..."}]`).
 - Re-importar la misma fila (`empleado`, `fecha`, `hora_inicio`) hace *upsert*
   de `horarios`: actualiza el turno en vez de duplicarlo o fallar.
+- Los turnos de cada sucursal se guardan con `importar_turnos_sucursal(p_importacion, p_filas jsonb)`
+  (0013): la app manda las filas en JSON (trozos de 6,000) y Postgres hace el
+  *upsert* de empleados y horarios en conjunto, con la misma RLS del usuario.
+- El tope de horas con el que se programa se elige en la pantalla de carga
+  (chips 48/46/44/42/40, la transición de la reforma) y queda guardado en
+  `empresas.tope_objetivo`; Configuración muestra y permite afinar el mismo valor.
 - Cada carga guarda una `huella` (0009: SHA-256 de las filas normalizadas de la
   sucursal, sin importar el orden del archivo). Si la sucursal ya tiene una
   carga `completada` con la misma huella y todos sus turnos siguen ligados a
@@ -345,9 +351,8 @@ Reglas:
   tampoco vuelve a programar las semanas de esas sucursales que ya tienen
   propuesta publicada. Las cargas que quedaron en `procesando` se cierran como
   `con_errores` ("Carga interrumpida") al retomar.
-- Tras guardar, la app programa sólo la primera semana de la primera sucursal
-  y abre el panel (≈ 85 s para 50 tiendas × 4 semanas); las demás
-  sucursal-semanas las programa una cola en segundo plano
+- Tras guardar, la app abre el panel de inmediato y una cola en segundo plano
+  programa todas las sucursal-semanas, empezando por la que el panel muestra
   (`src/lib/programacion/cola.ts`, píldora flotante del panel) hasta 2
   sucursales a la vez (las semanas de una misma sucursal, en serie). Si la
   pestaña se cierra a medias, `semanas_sin_propuesta()` (0012) lista las

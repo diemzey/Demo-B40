@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json, TablesInsert } from "@/lib/supabase/database.types";
+import type { Database, Json } from "@/lib/supabase/database.types";
 import { lunesIso, type ErrorFila, type FilaTurno } from "./parse";
 
 /**
@@ -9,11 +9,14 @@ import { lunesIso, type ErrorFila, type FilaTurno } from "./parse";
  *    CSV manda; las filas sin ella van a la sucursal elegida (`sucursalId`) o
  *    escrita (`sucursalNombre`). Una sucursal que no exista se crea
  *    (`asegurarSucursal`), en el primer hub de la empresa;
- * 1. por cada sucursal, registra la carga en `importaciones_csv` (`procesando`);
+ * 1. por cada sucursal, `importar_turnos_sucursal` (0014) registra la carga en
+ *    `importaciones_csv`, hace en una transacción:
  * 2. "upsert" de `empleados` por `(sucursal_id, clave_externa)`;
  * 3. upsert de `horarios` por `(empleado_id, fecha, hora_inicio)` — re-importar
  *    la misma semana actualiza en vez de fallar;
- * 4. cierra la carga con `completada` o `con_errores` y el detalle de errores.
+ * 4. y cierra la carga con `completada` o `con_errores` y el detalle de errores.
+ *    Un viaje por sucursal (o por cada FILAS_POR_LLAMADA filas) en vez de uno
+ *    por cada 500 turnos: para 85 mil turnos eran 170 viajes.
  *
  * Cada carga guarda una `huella` (SHA-256 de las filas de la sucursal). Si la
  * sucursal ya tiene una carga `completada` con la misma huella y sus turnos
@@ -26,8 +29,14 @@ import { lunesIso, type ErrorFila, type FilaTurno } from "./parse";
  */
 
 export const TAMANO_LOTE = 500;
-/** Lotes de turnos que se escriben a la vez por sucursal (ver nota en importarEnSucursal). */
-export const LOTES_EN_PARALELO = 1;
+/** Filas por llamada a `importar_turnos_sucursal` (≈ 1 MB de JSON). */
+export const FILAS_POR_LLAMADA = 6000;
+/**
+ * Sucursales que se cargan a la vez. Una: con dos llamadas concurrentes cada
+ * `importar_turnos_sucursal` pasaba de ~0.5 s a 5–12 s y alguna llegó al
+ * statement timeout; en serie, 50 sucursales tardan ~30 s.
+ */
+export const SUCURSALES_EN_PARALELO = 1;
 
 /** Nombre del hub que se crea si la empresa no tiene ninguno (el mismo que da de alta el registro). */
 export const HUB_POR_DEFECTO = "Principal";
@@ -93,8 +102,6 @@ export type ResultadoImportacion = {
   omitida: boolean;
 };
 
-type EmpleadoInsert = TablesInsert<"empleados">;
-type HorarioInsert = TablesInsert<"horarios">;
 
 function lotes<T>(items: readonly T[], tamano = TAMANO_LOTE): T[][] {
   const out: T[][] = [];
@@ -232,6 +239,78 @@ async function sucursalPorId(supabase: ClienteSupabase, id: string): Promise<Suc
 /* ---------- Importación ---------- */
 
 /**
+ * Resuelve de una vez todas las sucursales del archivo: una lectura, y un
+ * solo insert con las que falten (en el primer hub de la empresa; si no hay,
+ * se crea "Principal"). Devuelve un mapa llave → sucursal.
+ */
+async function asegurarSucursales(
+  supabase: ClienteSupabase,
+  nombres: string[],
+  ciudad?: string | null,
+): Promise<Map<string, SucursalImportacion>> {
+  const out = new Map<string, SucursalImportacion>();
+  if (nombres.length === 0) return out;
+  const { data: existentes, error: errorLectura } = await supabase
+    .from("sucursales")
+    .select("id, nombre")
+    .order("created_at", { ascending: true });
+  if (errorLectura) throw fallo("No se pudieron leer las sucursales de tu empresa.", errorLectura);
+  const porLlave = new Map((existentes ?? []).map((s) => [llaveSucursal(s.nombre), s]));
+  const faltan: string[] = [];
+  for (const n of nombres) {
+    const limpio = n.trim();
+    if (!limpio) throw new Error("El nombre de la sucursal no puede ir vacío.");
+    const llave = llaveSucursal(limpio);
+    if (out.has(llave)) continue;
+    const e = porLlave.get(llave);
+    if (e) out.set(llave, { id: e.id, nombre: e.nombre, creada: false });
+    else faltan.push(limpio);
+  }
+  if (faltan.length === 0) return out;
+
+  const { data: hubs, error: errorHubs } = await supabase
+    .from("hubs")
+    .select("id")
+    .order("created_at", { ascending: true })
+    .limit(1);
+  if (errorHubs) throw fallo("No se pudieron leer los hubs de tu empresa.", errorHubs);
+  let hubId = hubs?.[0]?.id;
+  if (!hubId) {
+    const { data: empresaId, error: errorEmpresa } = await supabase.rpc("empresa_actual");
+    if (errorEmpresa || !empresaId) {
+      throw fallo("Tu cuenta no está ligada a una empresa; pide a un administrador que te agregue.", errorEmpresa);
+    }
+    const { data: hub, error: errorHub } = await supabase
+      .from("hubs")
+      .insert({ empresa_id: empresaId, nombre: HUB_POR_DEFECTO, ciudad: ciudad ?? null })
+      .select("id")
+      .single();
+    if (errorHub || !hub) throw fallo("No se pudo crear el hub de tu empresa.", errorHub);
+    hubId = hub.id;
+  }
+  const { data: creadas, error: errorCrear } = await supabase
+    .from("sucursales")
+    .insert(faltan.map((nombre) => ({ hub_id: hubId, nombre, ciudad: ciudad ?? null })))
+    .select("id, nombre");
+  if (errorCrear || !creadas) {
+    throw fallo(
+      `No se pudieron crear ${faltan.length === 1 ? `la sucursal "${faltan[0]}"` : `${faltan.length} sucursales`}. Sólo un owner o admin puede crear sucursales.`,
+      errorCrear,
+    );
+  }
+  for (const c of creadas) out.set(llaveSucursal(c.nombre), { id: c.id, nombre: c.nombre, creada: true });
+  return out;
+}
+
+type Carga = {
+  sucursal: SucursalImportacion;
+  filas: FilaTurno[];
+  huella: string;
+  /** Id de la carga completada idéntica que permite omitir esta sucursal. */
+  omitirPor: string | null;
+};
+
+/**
  * Importa el CSV. Las filas se agrupan por su columna `sucursal` (una carga y
  * una fila de `importaciones_csv` por sucursal, en orden de aparición); las
  * que no la traen van a `sucursalId`/`sucursalNombre`. Devuelve un resultado
@@ -269,11 +348,10 @@ export async function importarTurnos({
     else grupos.set(llave, { nombre: f.sucursal.trim(), filas: [f] });
   }
 
-  // 0. Resolver destinos antes de escribir nada.
+  // 0. Resolver destinos antes de escribir nada (todas las sucursales de una vez).
+  const mapa = await asegurarSucursales(supabase, [...grupos.values()].map((g) => g.nombre), ciudad);
   const cargas: Array<{ sucursal: SucursalImportacion; filas: FilaTurno[] }> = [];
-  for (const g of grupos.values()) {
-    cargas.push({ sucursal: await asegurarSucursal(supabase, g.nombre, ciudad), filas: g.filas });
-  }
+  for (const [llave, g] of grupos) cargas.push({ sucursal: mapa.get(llave)!, filas: g.filas });
   if (sinSucursal.length > 0) {
     let destino: SucursalImportacion;
     if (sucursalId) destino = await sucursalPorId(supabase, sucursalId);
@@ -291,254 +369,159 @@ export async function importarTurnos({
     else cargas.push({ sucursal: destino, filas: sinSucursal });
   }
 
-  const resultados: ResultadoImportacion[] = [];
-  const turnosTotal = cargas.reduce((n, c) => n + c.filas.length, 0);
-  let acumulado = 0;
-  for (const [i, carga] of cargas.entries()) {
-    const primera = i === 0;
-    const progreso = (hechos: number, omitida?: boolean) =>
-      onProgreso?.({
-        sucursal: i + 1,
-        sucursales: cargas.length,
-        nombre: carga.sucursal.nombre,
-        turnos: acumulado + hechos,
-        turnosTotal,
-        omitida,
-      });
-    resultados.push(
-      await importarEnSucursal({
-        supabase,
-        sucursal: carga.sucursal,
-        nombreArchivo,
-        filas: carga.filas,
-        // Las filas con error del archivo sólo se cuentan en la primera carga.
-        totales: primera ? totales - (filas.length - carga.filas.length) : carga.filas.length,
-        errores: primera ? errores : [],
-        progreso,
-      }),
-    );
-    acumulado += carga.filas.length;
+  // 1. Huellas y cargas ya hechas (misma huella completada con todos sus turnos ligados).
+  const huellas = await Promise.all(cargas.map((c) => huellaFilas(c.filas)));
+  const listas: Carga[] = cargas.map((c, i) => ({ ...c, huella: huellas[i], omitirPor: null }));
+  const existentes = listas.filter((c) => !c.sucursal.creada);
+  if (existentes.length > 0) {
+    const { data: previas } = await supabase
+      .from("importaciones_csv")
+      .select("id, sucursal_id, huella, created_at")
+      .in("sucursal_id", existentes.map((c) => c.sucursal.id))
+      .eq("estado", "completada")
+      .in("huella", existentes.map((c) => c.huella))
+      .order("created_at", { ascending: false });
+    for (const c of existentes) {
+      const previa = (previas ?? []).find((p) => p.sucursal_id === c.sucursal.id && p.huella === c.huella);
+      if (!previa) continue;
+      const { count } = await supabase.from("horarios").select("id", { count: "exact", head: true }).eq("importacion_id", previa.id);
+      if (count === c.filas.length) c.omitirPor = previa.id;
+    }
+    // Cargas que quedaron a medias (pestaña cerrada, red caída): se cierran para no confundir.
+    const aRetomar = existentes.filter((c) => !c.omitirPor).map((c) => c.sucursal.id);
+    if (aRetomar.length > 0) {
+      await supabase
+        .from("importaciones_csv")
+        .update({
+          estado: "con_errores",
+          errores: [{ fila: 0, columna: "importacion", mensaje: "Carga interrumpida; se volvió a cargar el archivo." }] as unknown as Json,
+        })
+        .in("sucursal_id", aRetomar)
+        .eq("estado", "procesando");
+    }
   }
+
+  // 2. Cargar cada sucursal (varias a la vez), reportando el avance en turnos.
+  const turnosTotal = listas.reduce((n, c) => n + c.filas.length, 0);
+  const hechosPorCarga = listas.map(() => 0);
+  const avisar = (i: number, omitida?: boolean) =>
+    onProgreso?.({
+      sucursal: i + 1,
+      sucursales: listas.length,
+      nombre: listas[i].sucursal.nombre,
+      turnos: hechosPorCarga.reduce((a, b) => a + b, 0),
+      turnosTotal,
+      omitida,
+    });
+  const resultados: ResultadoImportacion[] = new Array(listas.length);
+  let siguiente = 0;
+  const trabajador = async () => {
+    while (siguiente < listas.length) {
+      const i = siguiente++;
+      const primera = i === 0;
+      resultados[i] = await importarEnSucursal({
+        supabase,
+        carga: listas[i],
+        nombreArchivo,
+        // Las filas con error del archivo sólo se cuentan en la primera carga.
+        totales: primera ? totales - (filas.length - listas[i].filas.length) : listas[i].filas.length,
+        errores: primera ? errores : [],
+        progreso: (hechos, omitida) => {
+          hechosPorCarga[i] = hechos;
+          avisar(i, omitida);
+        },
+      });
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(SUCURSALES_EN_PARALELO, listas.length) }, trabajador));
   return resultados;
+}
+
+/** Fila tal como la recibe `importar_turnos_sucursal`. */
+function filaRpc(f: FilaTurno, n: number) {
+  return {
+    clave: f.clave,
+    nombre: f.nombre,
+    apellido: f.apellido,
+    puesto: f.puesto,
+    jornada: f.jornadaContratada,
+    fecha: f.fecha,
+    inicio: f.horaInicio,
+    fin: f.horaFin,
+    cruza: f.cruzaMedianoche,
+    descanso: f.minutosDescanso,
+    n,
+  };
 }
 
 async function importarEnSucursal({
   supabase,
-  sucursal,
+  carga,
   nombreArchivo,
-  filas,
   totales,
   errores,
   progreso,
 }: {
   supabase: ClienteSupabase;
-  sucursal: SucursalImportacion;
+  carga: Carga;
   nombreArchivo: string;
-  filas: readonly FilaTurno[];
   totales: number;
   errores: readonly ErrorFila[];
   progreso: (turnosHechos: number, omitida?: boolean) => void;
 }): Promise<ResultadoImportacion> {
-  const sucursalId = sucursal.id;
+  const { sucursal, filas, huella } = carga;
+  const semanas = [...new Set(filas.map((f) => lunesIso(f.fecha)))].sort();
+  const claves = new Set(filas.map((f) => f.clave));
   progreso(0);
 
-  // 0. ¿Ya está cargada igual? Misma huella completada y con todos sus turnos aún ligados.
-  const huella = await huellaFilas(filas);
-  const semanas = [...new Set(filas.map((f) => lunesIso(f.fecha)))].sort();
-  const porClave = new Map<string, FilaTurno>();
-  for (const f of filas) porClave.set(f.clave, f);
-  if (!sucursal.creada) {
-    const { data: previas } = await supabase
-      .from("importaciones_csv")
-      .select("id")
-      .eq("sucursal_id", sucursalId)
-      .eq("estado", "completada")
-      .eq("huella", huella)
-      .order("created_at", { ascending: false })
-      .limit(1);
-    const previa = previas?.[0];
-    if (previa) {
-      const { count } = await supabase
-        .from("horarios")
-        .select("id", { count: "exact", head: true })
-        .eq("importacion_id", previa.id);
-      if (count === filas.length) {
-        progreso(filas.length, true);
-        return {
-          importacionId: previa.id,
-          sucursal,
-          empleados: porClave.size,
-          horarios: filas.length,
-          semanas,
-          filasOk: filas.length,
-          filasError: 0,
-          huella,
-          omitida: true,
-        };
-      }
-    }
-    // Cargas que quedaron a medias (pestaña cerrada, red caída): se cierran para no confundir.
-    await supabase
-      .from("importaciones_csv")
-      .update({
-        estado: "con_errores",
-        errores: [{ fila: 0, columna: "importacion", mensaje: "Carga interrumpida; se volvió a cargar el archivo." }] as unknown as Json,
-      })
-      .eq("sucursal_id", sucursalId)
-      .eq("estado", "procesando");
-  }
-
-  // 1. Bitácora de la carga.
-  const { data: importacion, error: errorImportacion } = await supabase
-    .from("importaciones_csv")
-    .insert({
-      sucursal_id: sucursalId,
-      nombre_archivo: nombreArchivo,
-      estado: "procesando",
-      filas_totales: totales,
-      huella,
-    })
-    .select("id")
-    .single();
-
-  if (errorImportacion || !importacion) {
-    throw fallo(
-      `No se pudo registrar la importación en ${sucursal.nombre}. Verifica que tengas permiso de edición en esta sucursal.`,
-      errorImportacion,
-    );
-  }
-  const importacionId = importacion.id;
-
-  const marcarFallo = async (mensaje: string) => {
-    await supabase
-      .from("importaciones_csv")
-      .update({
-        estado: "con_errores",
-        filas_ok: 0,
-        filas_error: totales,
-        errores: [...errores, { fila: 0, columna: "importacion", mensaje }] as unknown as Json,
-      })
-      .eq("id", importacionId);
-  };
-
-  try {
-    // 2. Empleados: la última fila de cada clave manda en nombre/puesto/jornada.
-    const claves = [...porClave.keys()];
-
-    const idPorClave = new Map<string, string>();
-    for (const lote of lotes(claves, 200)) {
-      const { data, error } = await supabase
-        .from("empleados")
-        .select("id, clave_externa")
-        .eq("sucursal_id", sucursalId)
-        .in("clave_externa", lote);
-      if (error) throw fallo("No se pudieron leer los colaboradores de la sucursal.", error);
-      for (const e of data ?? []) {
-        if (e.clave_externa) idPorClave.set(e.clave_externa, e.id);
-      }
-    }
-
-    const nuevos: EmpleadoInsert[] = [];
-    const existentes: EmpleadoInsert[] = [];
-    for (const [clave, f] of porClave) {
-      const base: EmpleadoInsert = {
-        sucursal_id: sucursalId,
-        clave_externa: clave,
-        nombre: f.nombre,
-        apellido: f.apellido,
-        puesto: f.puesto,
-        jornada_contratada_horas: f.jornadaContratada,
-      };
-      const id = idPorClave.get(clave);
-      if (id) existentes.push({ ...base, id });
-      else nuevos.push(base);
-    }
-
-    for (const lote of lotes(nuevos)) {
-      const { data, error } = await supabase
-        .from("empleados")
-        .insert(lote)
-        .select("id, clave_externa");
-      if (error) throw fallo("No se pudieron crear los colaboradores.", error);
-      for (const e of data ?? []) {
-        if (e.clave_externa) idPorClave.set(e.clave_externa, e.id);
-      }
-    }
-
-    for (const lote of lotes(existentes)) {
-      // Upsert por llave primaria: actualiza nombre, apellido, puesto y jornada.
-      const { error } = await supabase.from("empleados").upsert(lote, { onConflict: "id" });
-      if (error) throw fallo("No se pudieron actualizar los colaboradores.", error);
-    }
-
-    // 3. Horarios.
-    const horarios: HorarioInsert[] = [];
-    for (const f of filas) {
-      const empleadoId = idPorClave.get(f.clave);
-      if (!empleadoId) {
-        throw new Error(`No se encontró el colaborador con clave ${f.clave} después de crearlo.`);
-      }
-      horarios.push({
-        empleado_id: empleadoId,
-        fecha: f.fecha,
-        hora_inicio: f.horaInicio,
-        hora_fin: f.horaFin,
-        cruza_medianoche: f.cruzaMedianoche,
-        minutos_descanso: f.minutosDescanso,
-        origen: "csv",
-        importacion_id: importacionId,
-      });
-    }
-
-    // Un lote a la vez: se probó con 3 en paralelo y cada upsert pasaba de
-    // ~0.3 s a 7–17 s (contención en el índice único de `horarios`), así que
-    // el guardado terminaba más tarde, no antes.
-    let escritos = 0;
-    const cola = lotes(horarios);
-    let siguiente = 0;
-    const trabajador = async () => {
-      while (siguiente < cola.length) {
-        const lote = cola[siguiente++];
-        const { error } = await supabase
-          .from("horarios")
-          .upsert(lote, { onConflict: "empleado_id,fecha,hora_inicio" });
-        if (error) throw fallo("No se pudieron guardar los turnos.", error);
-        escritos += lote.length;
-        progreso(escritos);
-      }
-    };
-    await Promise.all(Array.from({ length: Math.min(LOTES_EN_PARALELO, cola.length) }, trabajador));
-
-    // 4. Cierre de la bitácora.
-    const { error: errorCierre } = await supabase
-      .from("importaciones_csv")
-      .update({
-        estado: errores.length > 0 ? "con_errores" : "completada",
-        filas_ok: filas.length,
-        filas_error: errores.length,
-        errores: errores as unknown as Json,
-      })
-      .eq("id", importacionId);
-    if (errorCierre) throw fallo("Los turnos se guardaron pero no se pudo cerrar la bitácora.", errorCierre);
-
+  if (carga.omitirPor) {
+    progreso(filas.length, true);
     return {
-      importacionId,
+      importacionId: carga.omitirPor,
       sucursal,
-      empleados: porClave.size,
-      horarios: horarios.length,
+      empleados: claves.size,
+      horarios: filas.length,
       semanas,
       filasOk: filas.length,
-      filasError: errores.length,
+      filasError: 0,
       huella,
-      omitida: false,
+      omitida: true,
     };
-  } catch (e) {
-    const mensaje = e instanceof Error ? e.message : "Error desconocido al importar.";
-    try {
-      await marcarFallo(mensaje);
-    } catch {
-      // La bitácora no se pudo actualizar; el error original es el importante.
-    }
-    throw e instanceof Error ? e : new Error(mensaje);
   }
+
+  // Una llamada por sucursal (o por trozo de FILAS_POR_LLAMADA filas): la
+  // función abre la bitácora, hace los upserts y la cierra en una transacción.
+  const trozos = lotes(filas.map(filaRpc), FILAS_POR_LLAMADA);
+  let importacionId: string | null = null;
+  let escritos = 0;
+  for (const [k, trozo] of trozos.entries()) {
+    const cerrar = k === trozos.length - 1;
+    const { data, error }: { data: { importacion_id: string }[] | null; error: { message: string; code?: string } | null } = await supabase.rpc("importar_turnos_sucursal", {
+      p_sucursal: sucursal.id,
+      p_nombre_archivo: nombreArchivo,
+      p_huella: huella,
+      p_filas_totales: totales,
+      p_filas: trozo as unknown as Json,
+      p_errores: (cerrar ? errores : []) as unknown as Json,
+      p_importacion: importacionId,
+      p_cerrar: cerrar,
+    });
+    if (error) throw fallo(`No se pudieron guardar los turnos de ${sucursal.nombre}.`, error);
+    importacionId = data?.[0]?.importacion_id ?? importacionId;
+    escritos += trozo.length;
+    progreso(escritos);
+  }
+  if (!importacionId) throw new Error(`No se registró la carga de ${sucursal.nombre}.`);
+
+  return {
+    importacionId,
+    sucursal,
+    empleados: claves.size,
+    horarios: filas.length,
+    semanas,
+    filasOk: filas.length,
+    filasError: errores.length,
+    huella,
+    omitida: false,
+  };
 }

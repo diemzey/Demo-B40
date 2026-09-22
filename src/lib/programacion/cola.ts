@@ -49,6 +49,8 @@ const INICIAL: EstadoCola = {
 let estado: EstadoCola = INICIAL;
 const oyentes = new Set<() => void>();
 let supabaseActual: ClienteSupabase | null = null;
+/** Tope (h/semana) con el que corre la cola; si falta, `programarSemana` lee el de la empresa. */
+let topeActual: number | undefined;
 let cancelar = false;
 /** Semanas de la corrida actual que aún no terminan (llave → par). */
 const enCurso = new Map<string, Par>();
@@ -72,8 +74,9 @@ function semanaIsoNumero(lunes: string): number {
 }
 
 /** Arranca la cola con estas semanas (se suman a las que ya falten). */
-export function iniciarCola(supabase: ClienteSupabase, pares: Par[]): void {
+export function iniciarCola(supabase: ClienteSupabase, pares: Par[], opts: { tope?: number } = {}): void {
   supabaseActual = supabase;
+  if (opts.tope !== undefined) topeActual = opts.tope;
   const vistas = new Set(estado.pendientes.map(llave));
   const nuevas = pares.filter((p) => {
     const k = llave(p);
@@ -125,6 +128,7 @@ async function correr(pares: Par[], hechasPrevias: number): Promise<void> {
     await programarPares({
       supabase,
       pares,
+      tope: topeActual,
       cancelada: () => cancelar,
       onProgreso: ({ hechas, total, fraccion, par }) => {
         fijar({

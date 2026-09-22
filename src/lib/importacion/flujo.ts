@@ -24,11 +24,12 @@ import { numeroSemanaIso, type ResultadoParseo, type ResumenTurnos } from "./par
  * empleados. La primera semana corre sola para dejar listo el catálogo de la
  * empresa (habilidades, puestos, tabuladores, plantillas, reglas).
  *
- * Con `enSegundoPlano`, el flujo sólo programa la primera semana de la
- * primera sucursal (lo que el panel va a abrir) y devuelve las demás en
- * `pendientes` para que la cola del panel (`lib/programacion/cola.ts`) las
- * programe mientras la persona navega: con 50 tiendas × 4 semanas el panel
- * abre en poco más de un minuto en vez de esperar 200 propuestas.
+ * Con `enSegundoPlano`, el flujo no programa nada: devuelve todas las
+ * sucursal-semanas en `pendientes` para que la cola del panel
+ * (`lib/programacion/cola.ts`) las programe mientras la persona navega, en
+ * el orden del archivo (la primera semana de la primera sucursal, que es la
+ * que el panel abre, sale primero). Así el panel abre en cuanto los turnos
+ * están guardados.
  */
 
 export type EtapaFlujo = "leyendo" | "destino" | "importando" | "programando" | "listo";
@@ -159,7 +160,7 @@ export type OpcionesFlujo = {
   programaciones?: ProgramacionFlujo[];
   /** Sucursales programadas a la vez (por defecto `CONCURRENCIA_PROGRAMACION`). */
   concurrencia?: number;
-  /** Programar sólo la primera semana y devolver el resto en `pendientes`. */
+  /** No programar aquí: devolver todas las semanas en `pendientes` para la cola del panel. */
   enSegundoPlano?: boolean;
   onProgreso?: (p: ProgresoFlujo) => void;
 };
@@ -243,9 +244,9 @@ export async function importarYProgramarTurnos(opts: OpcionesFlujo): Promise<Res
   const omitidas = pares.length - pendientes.length - programaciones.length;
   const varias = pares.length > 1;
 
-  // En segundo plano: sólo la primera semana ahora; el resto lo programa la cola del panel.
-  const ahora = opts.enSegundoPlano ? pendientes.slice(0, 1) : pendientes;
-  const despues = opts.enSegundoPlano ? pendientes.slice(1) : [];
+  // En segundo plano: nada ahora; todo lo programa la cola del panel.
+  const ahora = opts.enSegundoPlano ? [] : pendientes;
+  const despues = opts.enSegundoPlano ? pendientes : [];
 
   try {
     await programarPares({
@@ -269,8 +270,8 @@ export async function importarYProgramarTurnos(opts: OpcionesFlujo): Promise<Res
     throw new ErrorFlujo("programando", e, resultados, programaciones);
   }
 
-  progreso({ etapa: "listo", pct: 100, etiqueta: "Listo: tu antes y después" });
-  const primera = programaciones[0] ?? null;
+  progreso({ etapa: "listo", pct: 100, etiqueta: despues.length > 0 ? "Guardado: abriendo tu panel" : "Listo: tu antes y después" });
+  const primera = programaciones[0] ?? despues[0] ?? null;
   return {
     resultados,
     programaciones,

@@ -299,16 +299,22 @@ async function cargarDesdeSupabase(
   const vacio = () => panelVacio(empresa, catalogo);
   if (!filasSucursales?.length) return vacio();
 
-  // Un solo viaje para el resumen de todas las sucursales: alimenta la lista,
-  // la elección de sucursal por defecto y el historial de la elegida.
-  const { data: filasResumen } = await supabase
-    .from("v_resumen_sucursal_semana")
-    .select("*")
-    .in(
-      "sucursal_id",
-      filasSucursales.map((s) => s.id),
-    )
-    .order("semana_iso", { ascending: false });
+  // Resumen por semana: alimenta la elección de sucursal por defecto y el
+  // historial de la elegida. La vista recorre todos los turnos de la empresa,
+  // así que con sucursal pedida sólo se piden sus semanas (con 50 tiendas y la
+  // base cargada, pedirlas todas rozaba el statement timeout); si no tiene
+  // semanas, se piden todas para elegir otra.
+  const consultaResumen = (ids: string[]) =>
+    supabase.from("v_resumen_sucursal_semana").select("*").in("sucursal_id", ids).order("semana_iso", { ascending: false });
+  const todas = filasSucursales.map((s) => s.id);
+  const soloPedida = sucursalPedida && todas.includes(sucursalPedida) ? [sucursalPedida] : null;
+  let { data: filasResumen, error: errorResumen } = await consultaResumen(soloPedida ?? todas);
+  if (!errorResumen && soloPedida && !filasResumen?.length) {
+    ({ data: filasResumen, error: errorResumen } = await consultaResumen(todas));
+  }
+  // Un error (p. ej. consulta cancelada por tiempo) no es "sin datos": el
+  // límite de error del panel ofrece reintentar en vez de mostrar el onboarding.
+  if (errorResumen) throw new Error(`No pudimos leer el resumen de semanas (${errorResumen.message}).`);
   const resumen = (filasResumen ?? []).filter(
     (r): r is ResumenFila & { sucursal_id: string; semana_iso: string } =>
       typeof r.sucursal_id === "string" && typeof r.semana_iso === "string",
