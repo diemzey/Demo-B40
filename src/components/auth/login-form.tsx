@@ -1,14 +1,18 @@
 "use client";
 
-import { Eye, EyeOff, Loader2 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import { useReportBusy } from "@/components/auth/auth-busy";
+import {
+  BotonEnviar,
+  CampoContrasena,
+  CampoTexto,
+  EnlaceInactivable,
+  ErrorCampo,
+  EstadoEnvio,
+} from "@/components/auth/form-partes";
 import { DEMO_USER, useSession } from "@/components/auth/session";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { mensajeDeErrorAuth, rutaSegura } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +28,12 @@ const REDIRECT_DELAY_MS = 600;
 
 // Se decide una sola vez: las variables públicas se inyectan en build.
 const SUPABASE = hasSupabaseEnv();
+const MENSAJE_EXITO = SUPABASE ? "Sesión iniciada. Abriendo tu panel…" : "Sesión iniciada (demo).";
+
+const LINK_CLASS =
+  "text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:underline focus-visible:outline-none";
+const LINK_DESTACADO_CLASS =
+  "font-medium text-amber-400 underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none";
 
 type Errors = Partial<Record<"email" | "password", string>>;
 type Status = "idle" | "pending" | "success";
@@ -35,6 +45,18 @@ const AVISOS_ERROR: Record<string, string> = {
 };
 const AVISO_ERROR_GENERICO = "Ocurrió un problema. Inténtalo de nuevo.";
 const AVISO_CONFIRMADO = "Correo confirmado. Ya puedes entrar.";
+
+type Aviso = { tipo: "error" | "ok"; texto: string };
+
+/** Aviso inicial según la query string: `?error=` tiene prioridad sobre `?confirmado=1`. */
+function avisoDeQuery(searchParams: URLSearchParams): Aviso | null {
+  const errorParam = searchParams.get("error");
+  if (errorParam) {
+    return { tipo: "error", texto: AVISOS_ERROR[errorParam] ?? AVISO_ERROR_GENERICO };
+  }
+  if (searchParams.get("confirmado") === "1") return { tipo: "ok", texto: AVISO_CONFIRMADO };
+  return null;
+}
 
 function validate(email: string, password: string): Errors {
   const errors: Errors = {};
@@ -49,6 +71,24 @@ function validate(email: string, password: string): Errors {
     errors.password = `La contraseña debe tener al menos ${MIN_PASSWORD} caracteres.`;
   }
   return errors;
+}
+
+/** Aviso (amarillo o verde) que llega por query string, encima del formulario. */
+function AvisoQuery({ aviso }: { aviso: Aviso }) {
+  return (
+    <p
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "rounded-md border px-3 py-2 text-sm",
+        aviso.tipo === "ok"
+          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+          : "border-amber-500/30 bg-amber-500/10 text-amber-300",
+      )}
+    >
+      {aviso.texto}
+    </p>
+  );
 }
 
 export function LoginForm() {
@@ -69,18 +109,10 @@ export function LoginForm() {
   const searchParams = useSearchParams();
   const { signIn } = useSession();
 
-  // Destino tras entrar: `?next=` (validado) o el panel.
+  // Destino tras entrar: `?next=` validado como ruta interna (`rutaSegura`
+  // rechaza otros orígenes, `//host`, barras invertidas...) o el panel.
   const next = rutaSegura(searchParams.get("next"), "/dashboard");
-  const errorParam = searchParams.get("error");
-  const confirmado = searchParams.get("confirmado") === "1";
-  const aviso = errorParam
-    ? {
-        tipo: "error" as const,
-        texto: AVISOS_ERROR[errorParam] ?? AVISO_ERROR_GENERICO,
-      }
-    : confirmado
-      ? { tipo: "ok" as const, texto: AVISO_CONFIRMADO }
-      : null;
+  const aviso = avisoDeQuery(searchParams);
 
   const emailRef = useRef<HTMLInputElement>(null);
   const passwordRef = useRef<HTMLInputElement>(null);
@@ -100,6 +132,16 @@ export function LoginForm() {
   // en modo carga; también se lo contamos al marco para su barra de progreso.
   const pending = status !== "idle";
   useReportBusy(pending);
+
+  function cambiarEmail(valor: string) {
+    setEmail(valor);
+    if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+  }
+
+  function cambiarPassword(valor: string) {
+    setPassword(valor);
+    if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
+  }
 
   async function signInWithSupabase(correo: string, contrasena: string) {
     const supabase = createClient();
@@ -159,26 +201,12 @@ export function LoginForm() {
     }
   }
 
-  const linkClass =
-    "text-muted-foreground underline-offset-4 hover:text-foreground hover:underline focus-visible:underline focus-visible:outline-none";
-  const linkDisabled = pending ? "pointer-events-none" : undefined;
+  // El aviso de la query sólo se ve antes de intentar entrar.
+  const avisoVisible = !formError && status === "idle" ? aviso : null;
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-busy={pending}>
-      {aviso && !formError && status === "idle" && (
-        <p
-          role="status"
-          aria-live="polite"
-          className={cn(
-            "rounded-md border px-3 py-2 text-sm",
-            aviso.tipo === "ok"
-              ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
-              : "border-amber-500/30 bg-amber-500/10 text-amber-300",
-          )}
-        >
-          {aviso.texto}
-        </p>
-      )}
+      {avisoVisible && <AvisoQuery aviso={avisoVisible} />}
 
       {/* Un solo `fieldset disabled` apaga todos los controles a la vez y
           atenúa el bloque mientras se espera respuesta. */}
@@ -189,74 +217,34 @@ export function LoginForm() {
           pending && "pointer-events-none opacity-60",
         )}
       >
-        <div className="space-y-2">
-          <Label htmlFor={emailId}>Correo de trabajo</Label>
-          <Input
-            ref={emailRef}
-            id={emailId}
-            name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            placeholder="tu@empresa.mx"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
-            }}
-            aria-invalid={errors.email ? true : undefined}
-            aria-describedby={errors.email ? `${emailId}-error` : undefined}
-            className={cn(errors.email && "border-destructive focus-visible:ring-destructive")}
-          />
-          {errors.email && (
-            <p id={`${emailId}-error`} role="alert" className="text-destructive text-sm">
-              {errors.email}
-            </p>
-          )}
-        </div>
+        <CampoTexto
+          ref={emailRef}
+          id={emailId}
+          etiqueta="Correo de trabajo"
+          name="email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="tu@empresa.mx"
+          value={email}
+          onChange={(e) => cambiarEmail(e.target.value)}
+          error={errors.email}
+        />
 
         <div className="space-y-2">
           <Label htmlFor={passwordId}>Contraseña</Label>
-          <div className="relative">
-            <Input
-              ref={passwordRef}
-              id={passwordId}
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }));
-              }}
-              aria-invalid={errors.password ? true : undefined}
-              aria-describedby={errors.password ? `${passwordId}-error` : undefined}
-              className={cn(
-                "pr-11",
-                errors.password && "border-destructive focus-visible:ring-destructive",
-              )}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              aria-pressed={showPassword}
-              className="absolute top-1/2 right-1 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              )}
-            </Button>
-          </div>
-          {errors.password && (
-            <p id={`${passwordId}-error`} role="alert" className="text-destructive text-sm">
-              {errors.password}
-            </p>
-          )}
+          <CampoContrasena
+            ref={passwordRef}
+            id={passwordId}
+            name="password"
+            autoComplete="current-password"
+            value={password}
+            onChange={(e) => cambiarPassword(e.target.value)}
+            error={errors.password}
+            visible={showPassword}
+            onAlternar={() => setShowPassword((v) => !v)}
+          />
+          <ErrorCampo campoId={passwordId} mensaje={errors.password} />
         </div>
 
         <div className="flex items-center justify-between gap-4 text-sm">
@@ -274,73 +262,21 @@ export function LoginForm() {
             />
             Recordarme
           </label>
-          <Link
-            href="/recuperar"
-            className={cn(linkClass, linkDisabled)}
-            aria-disabled={pending || undefined}
-            tabIndex={pending ? -1 : undefined}
-          >
+          <EnlaceInactivable href="/recuperar" inactivo={pending} className={LINK_CLASS}>
             ¿Olvidaste tu contraseña?
-          </Link>
+          </EnlaceInactivable>
         </div>
       </fieldset>
 
-      <Button
-        type="submit"
-        className={cn(
-          "w-full bg-yellow-400 font-semibold text-neutral-950 transition-opacity duration-200 hover:bg-yellow-300 motion-reduce:transition-none",
-          // Mientras carga el botón sigue bien visible: es el indicador principal.
-          pending && "disabled:opacity-90",
-        )}
-        disabled={pending}
-        aria-busy={pending}
-      >
-        {pending ? (
-          <>
-            <Loader2
-              className="mr-2 h-4 w-4 animate-spin motion-reduce:[animation-duration:2s]"
-              aria-hidden="true"
-            />
-            Entrando…
-          </>
-        ) : (
-          "Entrar"
-        )}
-      </Button>
+      <BotonEnviar pending={pending} etiqueta="Entrar" etiquetaPendiente="Entrando…" />
 
-      {/* Región viva única para errores/éxito del envío. */}
-      <div aria-live="polite" aria-atomic="true">
-        {formError && (
-          <p
-            role="alert"
-            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          >
-            {formError}
-          </p>
-        )}
-        {status === "success" && (
-          <p
-            role="status"
-            className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400"
-          >
-            {SUPABASE ? "Sesión iniciada. Abriendo tu panel…" : "Sesión iniciada (demo)."}
-          </p>
-        )}
-      </div>
+      <EstadoEnvio error={formError} exito={status === "success" ? MENSAJE_EXITO : null} />
 
       <p className="text-center text-sm text-muted-foreground">
         ¿No tienes cuenta?{" "}
-        <Link
-          href="/registro"
-          className={cn(
-            "font-medium text-amber-400 underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none",
-            linkDisabled,
-          )}
-          aria-disabled={pending || undefined}
-          tabIndex={pending ? -1 : undefined}
-        >
+        <EnlaceInactivable href="/registro" inactivo={pending} className={LINK_DESTACADO_CLASS}>
           Crear cuenta
-        </Link>
+        </EnlaceInactivable>
       </p>
     </form>
   );

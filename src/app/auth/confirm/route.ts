@@ -27,9 +27,34 @@ const TIPOS_VALIDOS: ReadonlySet<string> = new Set([
   "email",
 ]);
 
+const DESTINO_DEFAULT = "/dashboard";
+
+/**
+ * Destino final tras confirmar: `next` viene de la URL (lo controla quien
+ * arma el enlace), así que sólo se acepta una ruta interna relativa: empieza
+ * con "/" y no con "//", ni contiene "://" ni "\\". Se resuelve contra el
+ * origen de la petición y se exige que siga en ese mismo origen; cualquier
+ * otra cosa cae a `/dashboard`.
+ */
+function destinoInterno(request: NextRequest): URL {
+  // Se resuelve contra `request.url` (igual que antes) y se compara el origen.
+  const origen = new URL(request.url).origin;
+  const porDefecto = new URL(DESTINO_DEFAULT, request.url);
+  const next = rutaSegura(request.nextUrl.searchParams.get("next"), DESTINO_DEFAULT);
+  if (!next.startsWith("/") || next.startsWith("//") || next.includes("://") || next.includes("\\")) {
+    return porDefecto;
+  }
+  try {
+    const url = new URL(next, request.url);
+    return url.origin === origen ? url : porDefecto;
+  } catch {
+    return porDefecto;
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const next = rutaSegura(searchParams.get("next"), "/dashboard");
+  const next = destinoInterno(request);
 
   const irA = (pathname: string, params?: Record<string, string>) => {
     const url = request.nextUrl.clone();
@@ -57,10 +82,10 @@ export async function GET(request: NextRequest) {
         type: type as EmailOtpType,
         token_hash: tokenHash,
       });
-      if (!error) return NextResponse.redirect(new URL(next, request.url));
+      if (!error) return NextResponse.redirect(next);
     } else if (code) {
       const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error) return NextResponse.redirect(new URL(next, request.url));
+      if (!error) return NextResponse.redirect(next);
     }
   } catch {
     // Cae al redirect de error de abajo.

@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
 import { Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BarridoInicial, Comparacion, type FilaComparacion } from "@/components/dashboard/comparacion";
+import {
+  BarridoInicial,
+  Comparacion,
+  type FilaComparacion,
+  type NotaComparacion,
+} from "@/components/dashboard/comparacion";
 import { mxnCompacto } from "@/lib/formato";
 import { CoberturaSemana } from "@/components/dashboard/cobertura-semana";
 import { DeltasPersona } from "@/components/dashboard/deltas-persona";
@@ -111,23 +116,15 @@ export default async function DashboardPage() {
   );
 }
 
-/** Semana con propuesta publicada: héroe + comparación, cobertura, deltas y el detalle. */
-function Programado({
-  datos,
-  vacantes,
-  sinCubrir,
-}: {
-  datos: Awaited<ReturnType<typeof obtenerDatosPanel>>;
-  vacantes: number;
-  sinCubrir: number;
-}) {
-  const { personas, tope, antes, despues, programacion } = datos;
-  if (!programacion) return null;
-  const prog = programacion;
+type DatosPanel = Awaited<ReturnType<typeof obtenerDatosPanel>>;
+type Programacion = NonNullable<DatosPanel["programacion"]>;
+
+/** Filas Hoy → Propuesta de la comparación (costo, dobles, fuera de norma, cobertura pico). */
+function filasPropuesta(prog: Programacion, datos: DatosPanel): FilaComparacion[] {
+  const { personas, antes, despues } = datos;
   const cobBase = prog.coberturaPicoBaselinePct;
   const cobProp = prog.coberturaPicoPropuestaPct;
-
-  const filas: FilaComparacion[] = [
+  return [
     {
       etiqueta: "Costo laboral semanal",
       hoy: fmtMXN.format(prog.costoBaseline),
@@ -162,18 +159,44 @@ function Programado({
               : "duele",
     },
   ];
+}
 
-  const notas: React.ReactNode[] = [];
+/** Notas bajo la comparación: vacantes o déficit en picos, y semana sin picos. */
+function notasPropuesta(prog: Programacion, tope: number, vacantes: number, sinCubrir: number): NotaComparacion[] {
+  const notas: NotaComparacion[] = [];
   if (vacantes > 0) {
-    notas.push(
-      <>
-        {plural(vacantes, "vacante sugerida", "vacantes sugeridas")} de {tope} h · {horas(sinCubrir)} que no caben en la plantilla
-      </>,
-    );
+    notas.push({
+      clave: "vacantes",
+      texto: (
+        <>
+          {plural(vacantes, "vacante sugerida", "vacantes sugeridas")} de {tope} h · {horas(sinCubrir)} que no caben en la plantilla
+        </>
+      ),
+    });
   } else if (prog.deficitPicoHoras > 0) {
-    notas.push(<>Faltan {horas(prog.deficitPicoHoras)} en horas pico con la propuesta</>);
+    notas.push({ clave: "deficit-pico", texto: <>Faltan {horas(prog.deficitPicoHoras)} en horas pico con la propuesta</> });
   }
-  if (cobBase === null) notas.push(<>La semana no tiene intervalos pico en el pronóstico</>);
+  if (prog.coberturaPicoBaselinePct === null) {
+    notas.push({ clave: "sin-picos", texto: <>La semana no tiene intervalos pico en el pronóstico</> });
+  }
+  return notas;
+}
+
+/** Semana con propuesta publicada: héroe + comparación, cobertura, deltas y el detalle. */
+function Programado({
+  datos,
+  vacantes,
+  sinCubrir,
+}: {
+  datos: DatosPanel;
+  vacantes: number;
+  sinCubrir: number;
+}) {
+  const { personas, tope, programacion } = datos;
+  if (!programacion) return null;
+  const prog = programacion;
+  const filas = filasPropuesta(prog, datos);
+  const notas = notasPropuesta(prog, tope, vacantes, sinCubrir);
 
   return (
     <BarridoInicial publicadoEn={prog.publicadoEn} className="flex flex-col gap-4">
@@ -190,26 +213,40 @@ function Programado({
           filas={filas}
           notas={notas}
         />
-        {prog.cobertura.length > 0 ? (
-          <section
-            aria-label="Cobertura de la semana"
-            className="min-w-0 rounded-lg border border-border bg-card p-4 shadow-lg shadow-black/5 xl:col-span-3"
-          >
-            <div className="mb-2 flex flex-col gap-0.5">
-              <h2 className="j40-body font-semibold">Cobertura de la semana</h2>
-              <p className="j40-muted">
-                Personas requeridas por la demanda contra las que hay hoy y con la propuesta, cada 30 minutos.
-              </p>
-            </div>
-            <CoberturaSemana cobertura={prog.cobertura} deficitPicoHoras={prog.deficitPicoHoras} />
-          </section>
-        ) : (
-          // Sin cobertura por intervalo (escenario sin materializar): la lista de deltas ocupa su lugar.
-          <DeltasPersona personas={personas} tope={tope} className="min-w-0 xl:col-span-3" />
-        )}
+        <CoberturaODeltas prog={prog} personas={personas} tope={tope} />
       </div>
       {prog.cobertura.length > 0 && <DeltasPersona personas={personas} tope={tope} />}
       <DiagnosticoTabla personas={personas} tope={tope} />
     </BarridoInicial>
+  );
+}
+
+/** Junto al héroe: la cobertura por intervalo o, si el escenario no la trae, la lista de deltas. */
+function CoberturaODeltas({
+  prog,
+  personas,
+  tope,
+}: {
+  prog: Programacion;
+  personas: DatosPanel["personas"];
+  tope: number;
+}) {
+  if (prog.cobertura.length === 0) {
+    // Sin cobertura por intervalo (escenario sin materializar): la lista de deltas ocupa su lugar.
+    return <DeltasPersona personas={personas} tope={tope} className="min-w-0 xl:col-span-3" />;
+  }
+  return (
+    <section
+      aria-label="Cobertura de la semana"
+      className="min-w-0 rounded-lg border border-border bg-card p-4 shadow-lg shadow-black/5 xl:col-span-3"
+    >
+      <div className="mb-2 flex flex-col gap-0.5">
+        <h2 className="j40-body font-semibold">Cobertura de la semana</h2>
+        <p className="j40-muted">
+          Personas requeridas por la demanda contra las que hay hoy y con la propuesta, cada 30 minutos.
+        </p>
+      </div>
+      <CoberturaSemana cobertura={prog.cobertura} deficitPicoHoras={prog.deficitPicoHoras} />
+    </section>
   );
 }

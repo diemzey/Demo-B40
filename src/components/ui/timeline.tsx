@@ -1,78 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  timelineConnectorVariants,
+  timelineIconVariants,
+  timelineItemVariants,
+  timelineVariants,
+} from "@/components/ui/timeline-variants";
 import { Check, Clock, X } from "lucide-react";
 
-const timelineVariants = cva("relative flex flex-col", {
-  variants: {
-    variant: {
-      default: "gap-4",
-      compact: "gap-2",
-      spacious: "gap-8",
-    },
-    orientation: {
-      vertical: "flex-col",
-      horizontal: "flex-row",
-    },
-  },
-  defaultVariants: {
-    variant: "default",
-    orientation: "vertical",
-  },
-});
-
-const timelineItemVariants = cva("relative flex gap-3 pb-2", {
-  variants: {
-    orientation: {
-      vertical: "flex-row",
-      horizontal: "flex-col min-w-64 shrink-0",
-    },
-  },
-  defaultVariants: {
-    orientation: "vertical",
-  },
-});
-
-const timelineConnectorVariants = cva("bg-border", {
-  variants: {
-    orientation: {
-      vertical: "absolute left-3 top-9 h-full w-px",
-      horizontal: "absolute top-3 left-8 w-full h-px",
-    },
-    status: {
-      default: "bg-border",
-      completed: "bg-primary",
-      active: "bg-primary",
-      pending: "bg-muted-foreground/30",
-      error: "bg-destructive",
-    },
-  },
-  defaultVariants: {
-    orientation: "vertical",
-    status: "default",
-  },
-});
-
-const timelineIconVariants = cva(
-  "flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 bg-background text-xs font-medium",
-  {
-    variants: {
-      status: {
-        default: "border-border text-muted-foreground",
-        completed: "border-primary bg-primary text-primary-foreground",
-        active: "border-primary bg-background text-primary animate-pulse",
-        pending: "border-muted-foreground/30 text-muted-foreground",
-        error: "border-destructive bg-destructive text-destructive-foreground",
-      },
-    },
-    defaultVariants: {
-      status: "default",
-    },
-  },
-);
+// Las variantes (`timelineVariants`, etc.) viven en `timeline-variants.ts`:
+// este archivo sólo exporta componentes para que Fast Refresh conserve el estado.
 
 export interface TimelineItem {
   id: string;
@@ -93,6 +34,11 @@ export interface TimelineProps extends VariantProps<typeof timelineVariants> {
   timestampPosition?: "top" | "bottom" | "inline";
   /** Locale usado para formatear las fechas. */
   locale?: string;
+  /**
+   * Zona horaria explícita para las fechas. Sin ella, el servidor y el
+   * navegador podrían formatear distinto y provocar un desajuste de hidratación.
+   */
+  timeZone?: string;
 }
 
 function getStatusIcon(status: TimelineItem["status"]) {
@@ -110,10 +56,16 @@ function getStatusIcon(status: TimelineItem["status"]) {
   }
 }
 
-function formatTimestamp(timestamp: string | Date, locale: string): string {
+function formatTimestamp(
+  timestamp: string | Date,
+  locale: string,
+  timeZone: string,
+): string {
   if (!timestamp) return "";
   const date = typeof timestamp === "string" ? new Date(timestamp) : timestamp;
+  // Locale y zona horaria explícitos: el texto es el mismo en servidor y navegador.
   return date.toLocaleDateString(locale, {
+    timeZone,
     month: "short",
     day: "numeric",
     year: "numeric",
@@ -131,6 +83,7 @@ export function Timeline({
   showTimestamps = true,
   timestampPosition = "top",
   locale = "es-MX",
+  timeZone = "America/Mexico_City",
   ...props
 }: TimelineProps) {
   const timelineContent = (
@@ -170,7 +123,7 @@ export function Timeline({
               timestampPosition === "top" &&
               item.timestamp && (
                 <time className="text-xs text-muted-foreground">
-                  {formatTimestamp(item.timestamp, locale)}
+                  {formatTimestamp(item.timestamp, locale, timeZone)}
                 </time>
               )}
 
@@ -180,7 +133,7 @@ export function Timeline({
                 timestampPosition === "inline" &&
                 item.timestamp && (
                   <time className="shrink-0 text-xs text-muted-foreground">
-                    {formatTimestamp(item.timestamp, locale)}
+                    {formatTimestamp(item.timestamp, locale, timeZone)}
                   </time>
                 )}
             </div>
@@ -197,7 +150,7 @@ export function Timeline({
               timestampPosition === "bottom" &&
               item.timestamp && (
                 <time className="text-xs text-muted-foreground">
-                  {formatTimestamp(item.timestamp, locale)}
+                  {formatTimestamp(item.timestamp, locale, timeZone)}
                 </time>
               )}
           </div>
@@ -224,10 +177,3 @@ export function Timeline({
     </div>
   );
 }
-
-export {
-  timelineVariants,
-  timelineItemVariants,
-  timelineConnectorVariants,
-  timelineIconVariants,
-};

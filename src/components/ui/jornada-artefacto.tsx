@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useContador } from "@/lib/use-contador";
+import { estadoDe, type JornadaEstado } from "@/components/ui/jornada-artefacto-util";
 import {
   Table,
   TableBody,
@@ -60,17 +61,13 @@ export type JornadaArtefactoProps = React.ComponentProps<"div"> & {
 export type { Fase as JornadaFase };
 
 type Fase = "antes" | "despues";
-type Estado = "excede" | "limite" | "cumple";
+// `estadoDe` y el tipo `JornadaEstado` viven en `jornada-artefacto-util.ts`
+// (este archivo sólo exporta componentes y hooks para Fast Refresh).
+type Estado = JornadaEstado;
 
 const SHIMMER_MS = 1200;
 
-export type { Estado as JornadaEstado };
-
-export function estadoDe(horas: number, tope: number): Estado {
-  if (horas > tope) return "excede";
-  if (horas === tope) return "limite";
-  return "cumple";
-}
+export type { JornadaEstado };
 
 const badgeStyles: Record<Estado, string> = {
   excede: "border-transparent bg-destructive/15 text-destructive",
@@ -357,17 +354,151 @@ export function JornadaTabla({
   );
 }
 
-/**
- * Pie de totales de la tabla: horas al doble y fuera de norma. La tercera
- * cifra es la proyección de 2030 en "Antes" y, en "Después", lo que el
- * reacomodo no pudo cubrir con la plantilla actual (vacantes sugeridas).
- */
 const mxnEntero = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
   maximumFractionDigits: 0,
 });
 
+const CIFRA_CLASS =
+  "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl";
+
+/** Etiqueta pequeña en mayúsculas sobre cada cifra del pie. */
+function EtiquetaCifra({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="text-muted-foreground text-xs uppercase tracking-wider">{children}</p>
+  );
+}
+
+/** Tercera cifra: ahorro semanal ("Después") o costo de las horas al doble ("Antes"). */
+function CifraDinero({
+  conAhorro,
+  dinero,
+  ahorroPct,
+}: {
+  conAhorro: boolean;
+  dinero: number;
+  ahorroPct: number;
+}) {
+  return (
+    <div>
+      <EtiquetaCifra>{conAhorro ? "Ahorro · semana" : "Al doble · semana"}</EtiquetaCifra>
+      <p
+        className={cn(
+          CIFRA_CLASS,
+          conAhorro ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
+        )}
+      >
+        {mxnEntero.format(dinero)}
+      </p>
+      <p className="mt-0.5 text-muted-foreground text-xs">
+        {conAhorro ? `${fmtEntero.format(ahorroPct)} % menos que hoy · misma plantilla` : "pagadas al doble"}
+      </p>
+    </div>
+  );
+}
+
+/** Tercera cifra: horas que el reacomodo no pudo cubrir y vacantes sugeridas. */
+function CifraSinCubrir({
+  horasSinCubrir,
+  sinCubrir,
+  vacantes,
+  tope,
+}: {
+  horasSinCubrir: number;
+  /** Valor animado de `horasSinCubrir`. */
+  sinCubrir: number;
+  vacantes: number;
+  tope?: number;
+}) {
+  const suficiente = horasSinCubrir === 0;
+  return (
+    <div>
+      <EtiquetaCifra>Sin cubrir · vacantes</EtiquetaCifra>
+      <p className={cn(CIFRA_CLASS, horasSinCubrir > 0 && "text-amber-600 dark:text-amber-400")}>
+        {fmt(sinCubrir)}
+      </p>
+      <p
+        className={cn(
+          "mt-0.5 text-xs",
+          suficiente ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground",
+        )}
+      >
+        {suficiente
+          ? "plantilla suficiente"
+          : `${vacantes} ${vacantes === 1 ? "vacante" : "vacantes"}${tope ? ` de ${tope} h` : ""}`}
+      </p>
+    </div>
+  );
+}
+
+/** Tercera cifra: los mismos turnos con el tope de 2030 (40 h). */
+function Cifra2030({ horas2030 }: { horas2030: number }) {
+  return (
+    <div>
+      <EtiquetaCifra>2030 · tope 40 h</EtiquetaCifra>
+      <p className="mt-1 font-semibold text-2xl text-rose-300 tabular-nums md:text-3xl">
+        {fmt(horas2030)}
+      </p>
+    </div>
+  );
+}
+
+type TipoTercera = "dinero" | "sinCubrir" | "2030";
+
+/** Qué muestra la tercera cifra del pie según los datos que trae el resumen. */
+function tipoDeTercera(
+  resumen: JornadaResumen,
+  proyeccion2030: JornadaResumen | null | undefined,
+): TipoTercera | null {
+  if (resumen.ahorroMxn !== undefined || resumen.costoExtraMxn !== undefined) return "dinero";
+  if (resumen.horasSinCubrir !== undefined) return "sinCubrir";
+  return proyeccion2030 ? "2030" : null;
+}
+
+/** Tercera cifra del pie; recibe los valores ya animados por el padre. */
+function TerceraCifra({
+  tipo,
+  resumen,
+  tope,
+  dinero,
+  sinCubrir,
+  horas2030,
+}: {
+  tipo: TipoTercera;
+  resumen: JornadaResumen;
+  tope?: number;
+  dinero: number;
+  sinCubrir: number;
+  horas2030: number;
+}) {
+  if (tipo === "dinero") {
+    return (
+      <CifraDinero
+        conAhorro={resumen.ahorroMxn !== undefined}
+        dinero={dinero}
+        ahorroPct={resumen.ahorroPct ?? 0}
+      />
+    );
+  }
+  if (tipo === "sinCubrir") {
+    return (
+      <CifraSinCubrir
+        horasSinCubrir={resumen.horasSinCubrir ?? 0}
+        sinCubrir={sinCubrir}
+        vacantes={resumen.vacantes ?? 0}
+        tope={tope}
+      />
+    );
+  }
+  return <Cifra2030 horas2030={horas2030} />;
+}
+
+/**
+ * Pie de totales de la tabla: horas al doble y fuera de norma. La tercera
+ * cifra es la proyección de 2030 en "Antes" y, en "Después", lo que el
+ * reacomodo no pudo cubrir con la plantilla actual (vacantes sugeridas).
+ */
 export function JornadaTotales({
   resumen,
   colaboradores,
@@ -382,15 +513,15 @@ export function JornadaTotales({
   proyeccion2030?: JornadaResumen | null;
 }) {
   const alerta = resumen.horasAlDoble > 0 || resumen.fueraDeNorma > 0;
-  const conAhorro = resumen.ahorroMxn !== undefined;
-  const conCosto = !conAhorro && resumen.costoExtraMxn !== undefined;
-  const conSinCubrir = !conAhorro && !conCosto && resumen.horasSinCubrir !== undefined;
-  const vacantes = resumen.vacantes ?? 0;
+  const tercera = tipoDeTercera(resumen, proyeccion2030);
+  // Los contadores viven aquí (no en cada cifra) para que la animación
+  // continúe desde el valor anterior al alternar entre "Antes" y "Después".
   const horas = useContador(resumen.horasAlDoble, 900);
   const fuera = useContador(resumen.fueraDeNorma, 900);
   const horas2030 = useContador(proyeccion2030?.horasAlDoble ?? 0, 900);
   const sinCubrir = useContador(resumen.horasSinCubrir ?? 0, 900);
   const dinero = useContador(resumen.ahorroMxn ?? resumen.costoExtraMxn ?? 0, 900);
+
   return (
     <Table>
       <TableFooter>
@@ -400,96 +531,33 @@ export function JornadaTotales({
             <div
               className={cn(
                 "grid gap-x-4 gap-y-3 sm:gap-4 [&>div]:min-w-0",
-                proyeccion2030 || conSinCubrir || conAhorro || conCosto
+                tercera
                   ? "grid-cols-2 sm:grid-cols-3 [&>div:last-child]:col-span-2 sm:[&>div:last-child]:col-span-1"
                   : "grid-cols-2",
               )}
             >
               <div>
-                <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                  {tope ? `Al doble · tope ${tope} h` : "Horas al doble"}
-                </p>
-                <p
-                  className={cn(
-                    "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                    alerta && "text-destructive",
-                  )}
-                >
-                  {fmt(horas)}
-                </p>
+                <EtiquetaCifra>{tope ? `Al doble · tope ${tope} h` : "Horas al doble"}</EtiquetaCifra>
+                <p className={cn(CIFRA_CLASS, alerta && "text-destructive")}>{fmt(horas)}</p>
               </div>
               <div>
-                <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                  Fuera de norma
-                </p>
-                <p
-                  className={cn(
-                    "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                    alerta && "text-destructive",
-                  )}
-                >
+                <EtiquetaCifra>Fuera de norma</EtiquetaCifra>
+                <p className={cn(CIFRA_CLASS, alerta && "text-destructive")}>
                   {Math.round(fuera)}
                   <span className="ml-1 font-normal text-muted-foreground text-base">
                     de {colaboradores}
                   </span>
                 </p>
               </div>
-              {conAhorro || conCosto ? (
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                    {conAhorro ? "Ahorro · semana" : "Al doble · semana"}
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                      conAhorro ? "text-emerald-600 dark:text-emerald-400" : "text-destructive",
-                    )}
-                  >
-                    {mxnEntero.format(dinero)}
-                  </p>
-                  <p className="mt-0.5 text-muted-foreground text-xs">
-                    {conAhorro
-                      ? `${fmtEntero.format(resumen.ahorroPct ?? 0)} % menos que hoy · misma plantilla`
-                      : "pagadas al doble"}
-                  </p>
-                </div>
-              ) : conSinCubrir ? (
-                <div>
-                  <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                    Sin cubrir · vacantes
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-1 font-semibold text-2xl tabular-nums transition-colors duration-500 md:text-3xl",
-                      (resumen.horasSinCubrir ?? 0) > 0 && "text-amber-600 dark:text-amber-400",
-                    )}
-                  >
-                    {fmt(sinCubrir)}
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-0.5 text-xs",
-                      resumen.horasSinCubrir === 0
-                        ? "text-emerald-600 dark:text-emerald-400"
-                        : "text-muted-foreground",
-                    )}
-                  >
-                    {resumen.horasSinCubrir === 0
-                      ? "plantilla suficiente"
-                      : `${vacantes} ${vacantes === 1 ? "vacante" : "vacantes"}${tope ? ` de ${tope} h` : ""}`}
-                  </p>
-                </div>
-              ) : (
-                proyeccion2030 && (
-                  <div>
-                    <p className="text-muted-foreground text-xs uppercase tracking-wider">
-                      2030 · tope 40 h
-                    </p>
-                    <p className="mt-1 font-semibold text-2xl text-rose-300 tabular-nums md:text-3xl">
-                      {fmt(horas2030)}
-                    </p>
-                  </div>
-                )
+              {tercera && (
+                <TerceraCifra
+                  tipo={tercera}
+                  resumen={resumen}
+                  tope={tope}
+                  dinero={dinero}
+                  sinCubrir={sinCubrir}
+                  horas2030={horas2030}
+                />
               )}
             </div>
           </TableCell>

@@ -6,6 +6,7 @@ import { RotateCcw, Sparkles, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProgresoNarrativo } from "@/components/dashboard/importar-y-programar";
 import { usePanel } from "@/lib/datos/panel-context";
+import { fechaPublicacion } from "@/lib/formato-fecha";
 import { etiquetaPasoMotor } from "@/lib/importacion";
 import { createClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
@@ -29,19 +30,6 @@ type Estado =
 
 const fmtMXN = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
 const fmtPct = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
-const fmtFecha = new Intl.DateTimeFormat("es-MX", {
-  day: "numeric",
-  month: "short",
-  hour: "numeric",
-  minute: "2-digit",
-  timeZone: "America/Mexico_City",
-});
-
-/** "21 sep, 2:05 p.m." o null si la fecha no es válida. */
-export function fechaPublicacion(iso: string): string | null {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : fmtFecha.format(d);
-}
 
 function sinCodigos(m: string): string {
   return m.replace(/\s*\[[0-9A-Z]{5}\]/g, "").trim();

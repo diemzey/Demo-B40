@@ -46,8 +46,9 @@ export function ContactCard({
 						{description}
 					</p>
 					<div className="grid gap-4 md:grid md:grid-cols-2 lg:grid-cols-3">
-						{contactInfo?.map((info, index) => (
-							<ContactInfo key={index} {...info} />
+						{contactInfo?.map((info) => (
+							// Clave estable por contenido, no por posición.
+							<ContactInfo key={`${info.label}-${info.value}`} {...info} />
 						))}
 					</div>
 				</div>

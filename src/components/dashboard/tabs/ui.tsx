@@ -1,7 +1,7 @@
 "use client";
 
 import type { ComponentProps, ReactNode } from "react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
@@ -9,22 +9,21 @@ import { cn } from "@/lib/utils";
  *
  * Reglas:
  *  - Un solo botón primario (amarillo) y un solo outline: `BotonPrimario` /
- *    `BotonOutline` (o las cadenas `botonPrimario` / `botonOutline` para un
- *    `<a download>`). Son el mismo `Button` de `src/components/ui/button.tsx`.
+ *    `BotonOutline` (o las cadenas `botonPrimario` / `botonOutline` de
+ *    `estilos.ts` para un `<a download>`). Son el mismo `Button` de
+ *    `src/components/ui/button.tsx`.
  *  - Una sola cápsula: `Pill`.
  *  - Escala tipográfica: `j40-body` (13 px), `j40-muted` (12 px), `j40-eyebrow`
  *    (10 px mono). Definidas en `globals.css`.
  *  - Números y fechas: `fmtMXN`, `fmtHoras`, `fmtPct`, `fmtEntero`, `fmtFecha`,
- *    `fmtFechaHora`, `fmtSemana`, `fmtSemanaLarga` (todo `es-MX`).
+ *    `fmtFechaHora`, `fmtSemana`, `fmtSemanaLarga` (todo `es-MX`), en `formato.ts`.
+ *
+ * Este archivo sólo exporta componentes (más el tipo `PillTone` y la cadena
+ * literal `inputClass`) para que Fast Refresh conserve el estado; lo demás
+ * vive en `estilos.ts` y `formato.ts`.
  */
 
 /* ---------- Botones ---------- */
-
-/** Clases del botón primario del panel (36 px; 40 px en táctil). Para `<a download>`. */
-export const botonPrimario = cn(buttonVariants({ variant: "primary", size: "sm" }), "gap-2");
-
-/** Clases del botón outline del panel. Para `<a download>`. */
-export const botonOutline = cn(buttonVariants({ variant: "outline", size: "sm" }), "gap-2");
 
 type BotonProps = Omit<ComponentProps<typeof Button>, "variant" | "size"> & {
   size?: "sm" | "default";
@@ -120,13 +119,6 @@ const PILL: Record<PillTone, string> = {
   neutral: "bg-muted text-muted-foreground",
 };
 
-/** Tono de `Pill` para el estado de una persona frente al tope (`estadoDe` en jornada-artefacto). */
-export const TONO_ESTADO: Record<"excede" | "limite" | "cumple", PillTone> = {
-  excede: "bad",
-  limite: "warn",
-  cumple: "good",
-};
-
 export function Pill({
   tone = "neutral",
   className,
@@ -195,112 +187,4 @@ export function Iniciales({ nombre, className }: { nombre: string; className?: s
       {ini || "?"}
     </span>
   );
-}
-
-/* ---------- Números y fechas (es-MX) ---------- */
-
-const MENOS = "−";
-
-/** Sustituye el guion ASCII inicial por el signo menos tipográfico. */
-function signo(texto: string): string {
-  return texto.replace(/^-/, MENOS);
-}
-
-const nfMXN = new Intl.NumberFormat("es-MX", {
-  style: "currency",
-  currency: "MXN",
-  maximumFractionDigits: 0,
-});
-const nfHoras = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
-const nfPct = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
-const nfEntero = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 0 });
-
-/** "$205,680" · "−$2,610". Sin sufijo "MXN": el símbolo ya lo dice. */
-export function fmtMXN(mxn: number): string {
-  return signo(nfMXN.format(mxn));
-}
-
-/** "400 h" · "2,928.5 h" · "−400 h". */
-export function fmtHoras(h: number): string {
-  return `${signo(nfHoras.format(h))} h`;
-}
-
-/** "13.5 %" (espacio fino antes del signo, como en el hero). Recibe 0–100. */
-export function fmtPct(pct: number): string {
-  return `${signo(nfPct.format(pct))} %`;
-}
-
-/** "72" · "1,250". */
-export function fmtEntero(n: number): string {
-  return signo(nfEntero.format(n));
-}
-
-/** Antepone "+" a los positivos; los negativos ya traen "−". */
-export function conSigno(texto: string, valor: number): string {
-  return valor > 0 ? `+${texto}` : texto;
-}
-
-function aDate(fecha: string | Date): Date {
-  if (fecha instanceof Date) return fecha;
-  // `YYYY-MM-DD` es medianoche UTC; un ISO 8601 completo se interpreta tal cual.
-  return fecha.length === 10 ? new Date(`${fecha}T00:00:00Z`) : new Date(fecha);
-}
-
-/** Quita el punto de las abreviaturas ("sep." → "sep") que algunos navegadores añaden. */
-function sinPuntos(texto: string): string {
-  return texto.replace(/\./g, "");
-}
-
-const dfCorto = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short", timeZone: "UTC" });
-const dfCortoAnio = new Intl.DateTimeFormat("es-MX", {
-  day: "numeric",
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
-const dfLargo = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "long", timeZone: "UTC" });
-const dfDia = new Intl.DateTimeFormat("es-MX", { day: "numeric", timeZone: "UTC" });
-const dfMesCorto = new Intl.DateTimeFormat("es-MX", { month: "short", timeZone: "UTC" });
-const dfMesLargo = new Intl.DateTimeFormat("es-MX", { month: "long", timeZone: "UTC" });
-const dfFechaHora = new Intl.DateTimeFormat("es-MX", {
-  day: "numeric",
-  month: "short",
-  hour: "numeric",
-  minute: "2-digit",
-  hour12: true,
-});
-
-/** "21 sep 2026" (fecha `YYYY-MM-DD` o ISO 8601). */
-export function fmtFecha(fecha: string | Date): string {
-  return sinPuntos(dfCortoAnio.format(aDate(fecha)));
-}
-
-/** "21 sep, 8:01 pm" en la zona del navegador (sin puntos); para "publicado el". */
-export function fmtFechaHora(fecha: string | Date): string {
-  return sinPuntos(dfFechaHora.format(aDate(fecha)))
-    .replace(/\s*([ap])\s?m$/i, " $1m")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-}
-
-type Semana = { inicio: string; fin: string };
-
-function mismoMes(a: Date, b: Date): boolean {
-  return a.getUTCFullYear() === b.getUTCFullYear() && a.getUTCMonth() === b.getUTCMonth();
-}
-
-/** Forma corta: "20 – 26 jul" · "27 jul – 2 ago". Para tablas y cápsulas. */
-export function fmtSemana(semana: Semana): string {
-  const a = aDate(semana.inicio);
-  const b = aDate(semana.fin);
-  if (mismoMes(a, b)) return `${dfDia.format(a)} – ${dfDia.format(b)} ${sinPuntos(dfMesCorto.format(b))}`;
-  return `${sinPuntos(dfCorto.format(a))} – ${sinPuntos(dfCorto.format(b))}`;
-}
-
-/** Forma larga: "semana del 20 al 26 de julio" · "semana del 27 de julio al 2 de agosto". Para títulos. */
-export function fmtSemanaLarga(semana: Semana): string {
-  const a = aDate(semana.inicio);
-  const b = aDate(semana.fin);
-  if (mismoMes(a, b)) return `semana del ${dfDia.format(a)} al ${dfDia.format(b)} de ${dfMesLargo.format(b)}`;
-  return `semana del ${dfLargo.format(a)} al ${dfLargo.format(b)}`;
 }

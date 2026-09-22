@@ -41,6 +41,9 @@ const TONO_PROPUESTA: Record<TonoPropuesta, string> = {
   duele: "text-destructive",
 };
 
+/** Línea terciaria bajo la comparación; `clave` es estable para React (no el índice). */
+export type NotaComparacion = { clave: string; texto: ReactNode };
+
 export type ComparacionProps = {
   /** Cifra héroe (MXN). Negativa = la propuesta cuesta más. */
   ahorroMxn: number;
@@ -52,7 +55,7 @@ export type ComparacionProps = {
   sufijo?: string;
   filas: FilaComparacion[];
   /** Líneas terciarias bajo la comparación (vacantes, déficit en picos…). */
-  notas?: ReactNode[];
+  notas?: NotaComparacion[];
   /** Nombre de la columna derecha; por defecto "Propuesta". */
   etiquetaPropuesta?: string;
   className?: string;
@@ -133,8 +136,8 @@ export function Comparacion({
       </dl>
       {notas.length > 0 && (
         <ul className="j40-body mt-3 flex flex-col gap-0.5 text-muted-foreground">
-          {notas.map((n, i) => (
-            <li key={i}>{n}</li>
+          {notas.map((n) => (
+            <li key={n.clave}>{n.texto}</li>
           ))}
         </ul>
       )}

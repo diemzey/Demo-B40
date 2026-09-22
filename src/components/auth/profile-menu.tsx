@@ -83,6 +83,9 @@ export function ProfileMenu({
               <span>Diagnóstico</span>
             </Link>
           </DropdownMenuItem>
+          {/* Enlaces planos a propósito (no `next/link`): el shell del panel lee
+              el `#hash` al montar y `Link` no dispara `hashchange` en la misma
+              ruta, así que con `Link` las pestañas no cambiaban. */}
           <DropdownMenuItem asChild>
             <a href="/dashboard#semanas">
               <CalendarDays {...ICON} />

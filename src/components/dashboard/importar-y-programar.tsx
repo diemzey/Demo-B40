@@ -6,15 +6,19 @@ import {
   useId,
   useRef,
   useState,
+  type Dispatch,
   type ReactNode,
+  type RefObject,
+  type SetStateAction,
 } from "react";
 import { useRouter } from "next/navigation";
 import { CircleCheck, FileText, RotateCcw, TriangleAlert, Upload } from "lucide-react";
 import { LogoCargando } from "@/components/ui/logo-cargando";
 import { Button } from "@/components/ui/button";
-import { COOKIE_SEMANA, COOKIE_SUCURSAL } from "@/lib/datos/tipos";
+import { guardarSemana, guardarSucursal } from "@/lib/datos/cookies-panel";
 import { iniciarCola } from "@/lib/programacion/cola";
 import { usePanel } from "@/lib/datos/panel-context";
+import type { EmpresaPanel } from "@/lib/datos/tipos";
 import {
   ErrorFlujo,
   TRAMOS,
@@ -40,6 +44,7 @@ import {
 } from "@/lib/importacion";
 import { createClient } from "@/lib/supabase/client";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
+import { useAvisoAntesDeSalir } from "@/lib/use-aviso-antes-de-salir";
 import { cn } from "@/lib/utils";
 
 /**
@@ -63,6 +68,9 @@ const ADELANTO_MAX = 3;
 const TOPE_POR_DEFECTO = 40;
 /** Topes de la transición de la reforma (LFT): 2026 → 2030. */
 const TOPES_REFORMA = [48, 46, 44, 42, 40] as const;
+/** Veces que se vuelve a consultar la empresa de una cuenta recién creada, y cada cuánto. */
+const INTENTOS_EMPRESA = 5;
+const ESPERA_EMPRESA_MS = 1500;
 
 const fmtN = new Intl.NumberFormat("es-MX");
 const fmtMXN = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
@@ -77,6 +85,8 @@ type Reanudar = {
   resultados: ResultadoImportacion[] | null;
   programaciones: ProgramacionFlujo[];
 };
+
+const DESDE_CERO: Reanudar = { contexto: null, destino: null, resultados: null, programaciones: [] };
 
 type Estado =
   | { fase: "vacio" }
@@ -105,28 +115,36 @@ function mensajeSimple(e: unknown, porDefecto: string): string {
   return m || porDefecto;
 }
 
-export function ImportarYProgramar({
-  compacto = false,
-  onListo,
-  className,
-}: {
-  compacto?: boolean;
-  onListo?: () => void;
-  className?: string;
-}) {
-  const router = useRouter();
-  const datos = usePanel();
-  const conectado = hasSupabaseEnv();
-  const [estado, setEstado] = useState<Estado>({ fase: "vacio" });
-  const [chip, setChip] = useState<Chip | null>(null);
-  // Tope de horas con el que se programa: se elige antes de soltar el archivo
-  // y queda guardado en la empresa (Configuración lo muestra igual).
-  const [tope, setTope] = useState<number>(() => datos.empresa?.topeObjetivo ?? TOPE_POR_DEFECTO);
+/** Archivo que no se pudo ni leer: sin filas, sólo para mostrar el nombre. */
+function archivoVacio(nombre: string): Archivo {
+  return { nombre, parseo: { filas: [], errores: [], totales: 0, columnaSucursal: false }, resumen: resumirTurnos([]) };
+}
+
+/* ---------- Hooks del flujo ---------- */
+
+/** `true` mientras el componente sigue montado (para no tocar estado tras desmontar). */
+function useVivo(): RefObject<boolean> {
+  const vivo = useRef(true);
+  useEffect(() => {
+    vivo.current = true;
+    return () => {
+      vivo.current = false;
+    };
+  }, []);
+  return vivo;
+}
+
+/**
+ * Tope de horas con el que se programa: se elige antes de soltar el archivo
+ * y queda guardado en la empresa (Configuración lo muestra igual).
+ */
+function useTopeEmpresa(empresa: EmpresaPanel | null, conectado: boolean, vivo: RefObject<boolean>) {
+  const [tope, setTope] = useState<number>(() => empresa?.topeObjetivo ?? TOPE_POR_DEFECTO);
   const [avisoTope, setAvisoTope] = useState<string | null>(null);
   const elegirTope = (v: number) => {
     setTope(v);
     setAvisoTope(null);
-    const empresaId = datos.empresa?.id;
+    const empresaId = empresa?.id;
     if (!conectado || !empresaId) return;
     void createClient()
       .from("empresas")
@@ -136,57 +154,66 @@ export function ImportarYProgramar({
         if (error && vivo.current) setAvisoTope("No se pudo guardar el tope en tu empresa; se usará sólo en esta carga.");
       });
   };
-  const vivo = useRef(true);
-  const espera = useRef<{ resolver: (d: DestinoResuelto) => void; timer: ReturnType<typeof setTimeout> } | null>(null);
+  return { tope, avisoTope, elegirTope };
+}
 
+/**
+ * Cuenta recién creada: el servidor pudo renderizar antes de que la sesión o
+ * la empresa del registro estuvieran disponibles. En vez de avisar de
+ * inmediato, se vuelve a consultar unas veces y se recarga el panel en
+ * cuanto aparece la empresa; sólo si no aparece se muestra el aviso.
+ * Devuelve `true` mientras sigue buscando.
+ */
+function useBuscarEmpresa(conectado: boolean, tieneEmpresa: boolean, router: ReturnType<typeof useRouter>): boolean {
+  const [buscando, setBuscando] = useState(conectado && !tieneEmpresa);
   useEffect(() => {
-    vivo.current = true;
-    return () => {
-      vivo.current = false;
-      if (espera.current) clearTimeout(espera.current.timer);
-    };
-  }, []);
-
-  // Cuenta recién creada: el servidor pudo renderizar antes de que la sesión o
-  // la empresa del registro estuvieran disponibles. En vez de avisar de
-  // inmediato, se vuelve a consultar unas veces y se recarga el panel en
-  // cuanto aparece la empresa; sólo si no aparece se muestra el aviso.
-  const [buscandoEmpresa, setBuscandoEmpresa] = useState(conectado && !datos.empresa);
-  useEffect(() => {
-    if (!conectado || datos.empresa) return;
+    if (!conectado || tieneEmpresa) return;
     let cancelado = false;
+    let consultando = false;
     let intentos = 0;
-    const intentar = async () => {
+    // Un tic cada tanto; si la consulta anterior sigue en el aire, el tic se salta.
+    const id = setInterval(() => void intentar(), ESPERA_EMPRESA_MS);
+    void intentar();
+    async function intentar() {
+      if (consultando) return;
+      consultando = true;
+      intentos += 1;
       try {
         const ctx = await leerContextoImportacion(createClient());
         if (cancelado) return;
         if (ctx.empresa) {
+          clearInterval(id);
           router.refresh();
           return;
         }
       } catch {
-        // se reintenta abajo
+        // se reintenta en el siguiente tic
+      } finally {
+        consultando = false;
       }
       if (cancelado) return;
-      intentos += 1;
-      if (intentos < 5) {
-        setTimeout(() => void intentar(), 1500);
-      } else {
-        setBuscandoEmpresa(false);
+      if (intentos >= INTENTOS_EMPRESA) {
+        clearInterval(id);
+        setBuscando(false);
       }
-    };
-    void intentar();
+    }
     return () => {
       cancelado = true;
+      clearInterval(id);
     };
-  }, [conectado, datos.empresa, router]);
+  }, [conectado, tieneEmpresa, router]);
+  return buscando;
+}
 
-  // La barra avanza suavemente mientras un paso largo no reporta progreso,
-  // pero nunca más de unos puntos por delante del último avance real: con
-  // 200 semanas por programar, el avance real es lento y la barra no debe
-  // llegar al final antes que el trabajo.
+/**
+ * La barra avanza suavemente mientras un paso largo no reporta progreso,
+ * pero nunca más de unos puntos por delante del último avance real: con
+ * 200 semanas por programar, el avance real es lento y la barra no debe
+ * llegar al final antes que el trabajo.
+ */
+function useAvanceSuave(corriendo: boolean, setEstado: Dispatch<SetStateAction<Estado>>) {
   useEffect(() => {
-    if (estado.fase !== "corriendo") return;
+    if (!corriendo) return;
     const id = setInterval(() => {
       setEstado((s) => {
         if (s.fase !== "corriendo" || s.progreso.etapa === "listo") return s;
@@ -196,81 +223,30 @@ export function ImportarYProgramar({
       });
     }, 700);
     return () => clearInterval(id);
-  }, [estado.fase]);
+  }, [corriendo, setEstado]);
+}
 
-  // Mientras corre, salir de la página cortaría la carga a la mitad: el
-  // navegador pregunta antes (una carga cortada se retoma soltando el mismo
-  // archivo, pero mejor no cortarla).
+/**
+ * Chip de destino ("Se creará la sucursal X · cambiar"): la propuesta se
+ * confirma sola al cerrar la ventana de espera, salvo que la persona pida
+ * cambiarla; entonces se espera a que confirme.
+ */
+function useChipDestino() {
+  const [chip, setChip] = useState<Chip | null>(null);
+  const espera = useRef<{ resolver: (d: DestinoResuelto) => void; timer: ReturnType<typeof setTimeout> } | null>(null);
+
   useEffect(() => {
-    if (estado.fase !== "corriendo") return;
-    const avisar = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-      // Chrome y Safari todavía exigen `returnValue` para mostrar el aviso.
-      e.returnValue = "";
+    return () => {
+      if (espera.current) clearTimeout(espera.current.timer);
     };
-    window.addEventListener("beforeunload", avisar);
-    return () => window.removeEventListener("beforeunload", avisar);
-  }, [estado.fase]);
+  }, []);
 
-  const avanzar = (progreso: ProgresoFlujo) => {
-    if (!vivo.current) return;
-    setEstado((s) => {
-      if (s.fase !== "corriendo") return s;
-      // La barra nunca retrocede dentro de una misma etapa (el avance suave pudo adelantarse).
-      const pct = s.progreso.etapa === progreso.etapa ? Math.max(s.progreso.pct, progreso.pct) : progreso.pct;
-      return { ...s, progreso: { ...progreso, pct }, real: progreso.pct };
-    });
-  };
-
-  /* ---------- 1. Leer el archivo ---------- */
-
-  async function cargarArchivo(file: File | undefined) {
-    if (!file) return;
-    if (!esCsv(file)) {
-      setEstado({
-        fase: "error",
-        archivo: { nombre: file.name, parseo: { filas: [], errores: [], totales: 0, columnaSucursal: false }, resumen: resumirTurnos([]) },
-        etapa: "leyendo",
-        mensaje: "Ese archivo no es un CSV. Guarda tu hoja como .csv y vuelve a intentarlo.",
-        reanudar: { contexto: null, destino: null, resultados: null, programaciones: [] },
-      });
-      return;
-    }
-    let archivo: Archivo;
-    try {
-      const texto = await file.text();
-      const parseo = parsearTurnos(texto);
-      archivo = { nombre: file.name, parseo, resumen: resumirTurnos(parseo.filas) };
-    } catch {
-      setEstado({
-        fase: "error",
-        archivo: { nombre: file.name, parseo: { filas: [], errores: [], totales: 0, columnaSucursal: false }, resumen: resumirTurnos([]) },
-        etapa: "leyendo",
-        mensaje: "No pudimos leer el archivo. Revisa que sea un CSV en UTF-8.",
-        reanudar: { contexto: null, destino: null, resultados: null, programaciones: [] },
-      });
-      return;
-    }
-    if (!vivo.current) return;
-    if (archivo.parseo.errores.length > 0 || archivo.parseo.filas.length === 0) {
-      setEstado({ fase: "revisar", archivo });
-      return;
-    }
-    if (!conectado) {
-      setEstado({ fase: "demo", archivo });
-      return;
-    }
-    void correr(archivo, { contexto: null, destino: null, resultados: null, programaciones: [] });
-  }
-
-  function reiniciar() {
+  /** Cancela la espera y quita el chip (al subir otro archivo). */
+  const limpiar = () => {
     if (espera.current) clearTimeout(espera.current.timer);
     espera.current = null;
     setChip(null);
-    setEstado({ fase: "vacio" });
-  }
-
-  /* ---------- 2. Destino (chip no bloqueante) ---------- */
+  };
 
   function confirmarDestino(propuesta: Exclude<DestinoResuelto, { tipo: "csv" }>, sucursales: SucursalBreve[]): Promise<DestinoResuelto> {
     return new Promise((resolver) => {
@@ -290,13 +266,13 @@ export function ImportarYProgramar({
     });
   }
 
-  function chipCambiar() {
+  function cambiar() {
     if (!espera.current) return;
     clearTimeout(espera.current.timer);
     setChip((c) => (c ? { ...c, editando: true } : c));
   }
 
-  function chipConfirmar() {
+  function confirmar() {
     const e = espera.current;
     if (!e || !chip) return;
     let destino: DestinoResuelto;
@@ -311,7 +287,101 @@ export function ImportarYProgramar({
     e.resolver(destino);
   }
 
-  /* ---------- 3–5. Importar, programar, abrir el panel ---------- */
+  const escribir = (v: string) => setChip((c) => (c ? { ...c, valor: v } : c));
+
+  return { chip, limpiar, confirmarDestino, cambiar, confirmar, escribir };
+}
+
+export function ImportarYProgramar({
+  compacto = false,
+  onListo,
+  className,
+}: {
+  compacto?: boolean;
+  onListo?: () => void;
+  className?: string;
+}) {
+  const router = useRouter();
+  const datos = usePanel();
+  const conectado = hasSupabaseEnv();
+  const [estado, setEstado] = useState<Estado>({ fase: "vacio" });
+  const vivo = useVivo();
+  const { tope, avisoTope, elegirTope } = useTopeEmpresa(datos.empresa, conectado, vivo);
+  const buscandoEmpresa = useBuscarEmpresa(conectado, Boolean(datos.empresa), router);
+  const chipDestino = useChipDestino();
+
+  const ocupado = estado.fase === "corriendo";
+  useAvanceSuave(ocupado, setEstado);
+  // Mientras corre, salir de la página cortaría la carga a la mitad (una carga
+  // cortada se retoma soltando el mismo archivo, pero mejor no cortarla).
+  useAvisoAntesDeSalir(ocupado);
+
+  const avanzar = (progreso: ProgresoFlujo) => {
+    if (!vivo.current) return;
+    setEstado((s) => {
+      if (s.fase !== "corriendo") return s;
+      // La barra nunca retrocede dentro de una misma etapa (el avance suave pudo adelantarse).
+      const pct = s.progreso.etapa === progreso.etapa ? Math.max(s.progreso.pct, progreso.pct) : progreso.pct;
+      return { ...s, progreso: { ...progreso, pct }, real: progreso.pct };
+    });
+  };
+
+  /* ---------- 1. Leer el archivo ---------- */
+
+  async function cargarArchivo(file: File | undefined) {
+    if (!file) return;
+    if (!esCsv(file)) {
+      setEstado({
+        fase: "error",
+        archivo: archivoVacio(file.name),
+        etapa: "leyendo",
+        mensaje: "Ese archivo no es un CSV. Guarda tu hoja como .csv y vuelve a intentarlo.",
+        reanudar: DESDE_CERO,
+      });
+      return;
+    }
+    let archivo: Archivo;
+    try {
+      const texto = await file.text();
+      const parseo = parsearTurnos(texto);
+      archivo = { nombre: file.name, parseo, resumen: resumirTurnos(parseo.filas) };
+    } catch {
+      setEstado({
+        fase: "error",
+        archivo: archivoVacio(file.name),
+        etapa: "leyendo",
+        mensaje: "No pudimos leer el archivo. Revisa que sea un CSV en UTF-8.",
+        reanudar: DESDE_CERO,
+      });
+      return;
+    }
+    if (!vivo.current) return;
+    if (archivo.parseo.errores.length > 0 || archivo.parseo.filas.length === 0) {
+      setEstado({ fase: "revisar", archivo });
+      return;
+    }
+    if (!conectado) {
+      setEstado({ fase: "demo", archivo });
+      return;
+    }
+    void correr(archivo, DESDE_CERO);
+  }
+
+  function reiniciar() {
+    chipDestino.limpiar();
+    setEstado({ fase: "vacio" });
+  }
+
+  /** Continuar con las filas válidas tras revisar los errores. */
+  function continuarRevision(archivo: Archivo) {
+    if (!conectado) {
+      setEstado({ fase: "demo", archivo });
+      return;
+    }
+    void correr(archivo, DESDE_CERO);
+  }
+
+  /* ---------- 2–5. Destino, importar, programar, abrir el panel ---------- */
 
   async function correr(archivo: Archivo, previo: Reanudar) {
     const supabase = createClient();
@@ -339,15 +409,15 @@ export function ImportarYProgramar({
             pct: TRAMOS.destino[1] - 1,
             etiqueta: propuesta.tipo === "crear" ? `Creando la sucursal ${propuesta.nombre}` : `Guardando en ${propuesta.sucursal.nombre}`,
           });
-          destino = await confirmarDestino(propuesta, contexto.sucursales);
+          destino = await chipDestino.confirmarDestino(propuesta, contexto.sucursales);
         }
       } catch (e) {
-        fallar("destino", e, "No pudimos preparar la importación.", { contexto: null, destino: null, resultados: null, programaciones: [] });
+        fallar("destino", e, "No pudimos preparar la importación.", DESDE_CERO);
         return;
       }
     } else {
       // Reintento: la sucursal ya quedó decidida (y, si hubo importación, creada).
-      if (previo.resultados) setChip(null);
+      if (previo.resultados) chipDestino.limpiar();
       const etapa: EtapaFlujo = previo.resultados ? "programando" : "importando";
       setEstado({ fase: "corriendo", archivo, progreso: { etapa, pct: TRAMOS[etapa][0], etiqueta: "Retomando" } });
     }
@@ -368,10 +438,8 @@ export function ImportarYProgramar({
         onProgreso: avanzar,
       });
       // El panel abre en la sucursal y semana programadas (mismas cookies que los selectores del shell).
-      document.cookie = `${COOKIE_SUCURSAL}=${encodeURIComponent(resultado.sucursalId)}; path=/; max-age=31536000; samesite=lax`;
-      if (resultado.semanaIso) {
-        document.cookie = `${COOKIE_SEMANA}=${encodeURIComponent(resultado.semanaIso)}; path=/; max-age=31536000; samesite=lax`;
-      }
+      guardarSucursal(resultado.sucursalId);
+      if (resultado.semanaIso) guardarSemana(resultado.semanaIso);
       if (resultado.pendientes.length > 0) iniciarCola(supabase, resultado.pendientes, { tope });
       if (!vivo.current) return;
       setEstado({ fase: "listo", archivo, resultado });
@@ -379,9 +447,7 @@ export function ImportarYProgramar({
       startTransition(() => router.refresh());
     } catch (e) {
       if (e instanceof ErrorFlujo) {
-        if (e.resultados) {
-          document.cookie = `${COOKIE_SUCURSAL}=${encodeURIComponent(e.resultados[0].sucursal.id)}; path=/; max-age=31536000; samesite=lax`;
-        }
+        if (e.resultados) guardarSucursal(e.resultados[0].sucursal.id);
         fallar(
           e.etapa,
           e,
@@ -405,8 +471,6 @@ export function ImportarYProgramar({
 
   /* ---------- Render ---------- */
 
-  const ocupado = estado.fase === "corriendo";
-
   return (
     <section
       className={cn("rounded-xl border border-border bg-card shadow-lg shadow-black/5", compacto ? "p-3" : "p-4 md:p-5", className)}
@@ -414,20 +478,7 @@ export function ImportarYProgramar({
     >
       {estado.fase === "vacio" &&
         (conectado && !datos.empresa ? (
-          buscandoEmpresa ? (
-            <p className="flex items-center gap-2 py-6 text-[13px] text-muted-foreground" role="status" aria-live="polite">
-              <LogoCargando size={18} label="" className="text-foreground" />
-              Preparando tu cuenta…
-            </p>
-          ) : (
-            <Aviso tono="rosa">
-              Tu cuenta aún no está ligada a una empresa, así que no podemos guardar tu semana.{" "}
-              <button type="button" onClick={() => router.refresh()} className="underline underline-offset-2">
-                Volver a intentar
-              </button>{" "}
-              o pide a quien administra la cuenta que te agregue.
-            </Aviso>
-          )
+          <SinEmpresa buscando={buscandoEmpresa} onReintentar={() => router.refresh()} />
         ) : (
           <div className="flex flex-col gap-3">
             <SelectorTope valor={tope} onChange={elegirTope} compacto={compacto} aviso={avisoTope} />
@@ -440,18 +491,7 @@ export function ImportarYProgramar({
           <Encabezado archivo={estado.archivo} />
 
           {estado.fase === "revisar" && (
-            <Revisar
-              archivo={estado.archivo}
-              conectado={conectado}
-              onContinuar={() => {
-                if (!conectado) {
-                  setEstado({ fase: "demo", archivo: estado.archivo });
-                  return;
-                }
-                void correr(estado.archivo, { contexto: null, destino: null, resultados: null, programaciones: [] });
-              }}
-              onOtro={reiniciar}
-            />
+            <Revisar archivo={estado.archivo} conectado={conectado} onContinuar={() => continuarRevision(estado.archivo)} onOtro={reiniciar} />
           )}
 
           {estado.fase === "demo" && (
@@ -467,32 +507,13 @@ export function ImportarYProgramar({
           {estado.fase === "corriendo" && (
             <>
               <ProgresoNarrativo pct={estado.progreso.pct} etiqueta={estado.progreso.etiqueta} />
-              {chip && <ChipDestino chip={chip} onCambiar={chipCambiar} onValor={(v) => setChip((c) => (c ? { ...c, valor: v } : c))} onConfirmar={chipConfirmar} />}
+              {chipDestino.chip && (
+                <ChipDestino chip={chipDestino.chip} onCambiar={chipDestino.cambiar} onValor={chipDestino.escribir} onConfirmar={chipDestino.confirmar} />
+              )}
             </>
           )}
 
-          {estado.fase === "error" && (
-            <>
-              <Aviso tono="rosa" icono>
-                <span className="font-medium">
-                  {estado.etapa === "programando"
-                    ? "Tus turnos ya quedaron guardados, pero no pudimos generar la propuesta."
-                    : estado.etapa === "importando"
-                      ? "No pudimos guardar los turnos."
-                      : estado.etapa === "destino"
-                        ? "No pudimos preparar la importación."
-                        : "No pudimos leer el archivo."}
-                </span>{" "}
-                <span className="text-rose-200/80">{estado.mensaje}</span>
-              </Aviso>
-              <Acciones onOtro={reiniciar}>
-                <Button type="button" size="sm" variant="outline" onClick={reintentar} className="text-[13px] font-medium">
-                  <RotateCcw className="mr-2 size-4" aria-hidden="true" />
-                  Reintentar
-                </Button>
-              </Acciones>
-            </>
-          )}
+          {estado.fase === "error" && <Fallo etapa={estado.etapa} mensaje={estado.mensaje} onReintentar={reintentar} onOtro={reiniciar} />}
 
           {estado.fase === "listo" && (
             <>
@@ -503,6 +524,54 @@ export function ImportarYProgramar({
         </div>
       )}
     </section>
+  );
+}
+
+/* ---------- Cuenta sin empresa ---------- */
+
+function SinEmpresa({ buscando, onReintentar }: { buscando: boolean; onReintentar: () => void }) {
+  if (buscando) {
+    return (
+      <p className="flex items-center gap-2 py-6 text-[13px] text-muted-foreground" role="status" aria-live="polite">
+        <LogoCargando size={18} label="" className="text-foreground" />
+        Preparando tu cuenta…
+      </p>
+    );
+  }
+  return (
+    <Aviso tono="rosa">
+      Tu cuenta aún no está ligada a una empresa, así que no podemos guardar tu semana.{" "}
+      <button type="button" onClick={onReintentar} className="underline underline-offset-2">
+        Volver a intentar
+      </button>{" "}
+      o pide a quien administra la cuenta que te agregue.
+    </Aviso>
+  );
+}
+
+/* ---------- Fallo con reintento ---------- */
+
+const TITULO_FALLO: Record<EtapaFlujo, string> = {
+  leyendo: "No pudimos leer el archivo.",
+  destino: "No pudimos preparar la importación.",
+  importando: "No pudimos guardar los turnos.",
+  programando: "Tus turnos ya quedaron guardados, pero no pudimos generar la propuesta.",
+  listo: "No pudimos leer el archivo.",
+};
+
+function Fallo({ etapa, mensaje, onReintentar, onOtro }: { etapa: EtapaFlujo; mensaje: string; onReintentar: () => void; onOtro: () => void }) {
+  return (
+    <>
+      <Aviso tono="rosa" icono>
+        <span className="font-medium">{TITULO_FALLO[etapa]}</span> <span className="text-rose-200/80">{mensaje}</span>
+      </Aviso>
+      <Acciones onOtro={onOtro}>
+        <Button type="button" size="sm" variant="outline" onClick={onReintentar} className="text-[13px] font-medium">
+          <RotateCcw className="mr-2 size-4" aria-hidden="true" />
+          Reintentar
+        </Button>
+      </Acciones>
+    </>
   );
 }
 
@@ -772,8 +841,8 @@ function ListaErrores({ errores }: { errores: ErrorFila[] }) {
   return (
     <>
       <ul className="divide-y divide-border/60 px-3 py-1 text-xs">
-        {visibles.map((e, i) => (
-          <li key={`${e.fila}-${e.columna}-${i}`} className="flex gap-2 py-1.5">
+        {visibles.map((e) => (
+          <li key={`${e.fila}:${e.columna}:${e.mensaje}`} className="flex gap-2 py-1.5">
             <span className="shrink-0 tabular-nums text-muted-foreground">Fila {e.fila}</span>
             <span className="shrink-0 font-mono text-[11px] text-amber-400">{e.columna}</span>
             <span className="min-w-0 text-foreground/90">{e.mensaje}</span>

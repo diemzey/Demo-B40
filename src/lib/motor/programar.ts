@@ -326,10 +326,12 @@ async function leerEmpleados(ctx: Contexto): Promise<EmpleadoDb[]> {
  * recorriera la tabla y rozara el *statement timeout*.
  */
 async function leerHorarios(ctx: Contexto, empleados: EmpleadoDb[]): Promise<HorarioDb[]> {
-  const filas: (HorarioDb & { empleados?: unknown })[] = [];
-  for (const ids of lotes(empleados.map((e) => e.id), 150)) {
-    filas.push(
-      ...(await paginar<HorarioDb>("horarios", (a, b) =>
+  // Cada lote de ids es una lectura independiente: se lanzan en paralelo y
+  // `Promise.all` conserva el orden de los lotes (la paginación dentro de
+  // cada lote sigue en serie porque depende de la página anterior).
+  const porLote = await Promise.all(
+    lotes(empleados.map((e) => e.id), 150).map((ids) =>
+      paginar<HorarioDb>("horarios", (a, b) =>
         ctx.sb
           .from("horarios")
           .select("id, empleado_id, fecha, hora_inicio, hora_fin, cruza_medianoche, minutos_descanso")
@@ -340,9 +342,10 @@ async function leerHorarios(ctx: Contexto, empleados: EmpleadoDb[]): Promise<Hor
           .order("fecha")
           .order("hora_inicio")
           .range(a, b),
-      )),
-    );
-  }
+      ),
+    ),
+  );
+  const filas: (HorarioDb & { empleados?: unknown })[] = porLote.flat();
   return filas.map((h) => ({
     id: h.id,
     empleado_id: h.empleado_id,
@@ -398,6 +401,8 @@ async function asegurarPuestos(
     }
   }
   // Puestos existentes sin habilidad: se completa por palabra clave.
+  // Escrituras en serie a propósito (caso raro, pocas filas): así el primer
+  // error se reporta con el puesto exacto y no se lanzan updates concurrentes.
   for (const p of puestos) {
     if (p.habilidad_id) continue;
     const habilidad_id = habilidades.get(habilidadDePuesto(p.nombre))!;
@@ -445,6 +450,8 @@ async function asegurarPuestoEmpleados(ctx: Contexto, empleados: EmpleadoDb[], p
     porPuesto.set(p.id, [...(porPuesto.get(p.id) ?? []), e.id]);
     e.puesto_id = p.id;
   }
+  // Escrituras en serie a propósito: son updates masivos sobre `empleados` y
+  // lanzarlos concurrentes satura la base sin cambiar el resultado.
   for (const [puesto_id, ids] of porPuesto) {
     for (const lote of lotes(ids, 200)) {
       const { error } = await ctx.sb.from("empleados").update({ puesto_id }).in("id", lote);
@@ -462,20 +469,22 @@ async function asegurarHabilidadesEmpleados(
 ): Promise<Map<string, Set<string>>> {
   const puestoPorId = new Map(puestos.map((p) => [p.id, p]));
   const ids = empleados.map((e) => e.id);
-  const existentes: { empleado_id: string; habilidad_id: string; certificado_hasta: string | null }[] = [];
-  for (const lote of lotes(ids, 200)) {
-    existentes.push(
-      ...(await paginar<{ empleado_id: string; habilidad_id: string; certificado_hasta: string | null }>("empleado_habilidades", (a, b) =>
-        ctx.sb
-          .from("empleado_habilidades")
-          .select("empleado_id, habilidad_id, certificado_hasta")
-          .in("empleado_id", lote)
-          .order("empleado_id")
-          .order("habilidad_id")
-          .range(a, b),
-      )),
-    );
-  }
+  // Lecturas independientes por lote de ids → en paralelo (orden conservado).
+  const existentes: { empleado_id: string; habilidad_id: string; certificado_hasta: string | null }[] = (
+    await Promise.all(
+      lotes(ids, 200).map((lote) =>
+        paginar<{ empleado_id: string; habilidad_id: string; certificado_hasta: string | null }>("empleado_habilidades", (a, b) =>
+          ctx.sb
+            .from("empleado_habilidades")
+            .select("empleado_id, habilidad_id, certificado_hasta")
+            .in("empleado_id", lote)
+            .order("empleado_id")
+            .order("habilidad_id")
+            .range(a, b),
+        ),
+      ),
+    )
+  ).flat();
   const tiene = new Set(existentes.map((r) => `${r.empleado_id}|${r.habilidad_id}`));
   const nuevos: { empleado_id: string; habilidad_id: string }[] = [];
   const piso = habilidades.get("piso")!;
@@ -609,6 +618,9 @@ async function asegurarCatalogo(ctx: Contexto): Promise<Catalogo_> {
   const { puestos, puestoPorTexto } = await asegurarPuestos(ctx, empleados, habilidades);
   ctx.progreso({ paso: "catalogo", pct: 10, detalle: "Tabuladores y habilidades por colaborador" });
   const [tabuladores] = await Promise.all([asegurarTabuladores(ctx, puestos), asegurarPuestoEmpleados(ctx, empleados, puestoPorTexto)]);
+  // Después (no en el Promise.all anterior): usa `empleados[].puesto_id`, que
+  // asegurarPuestoEmpleados completa en memoria, e inserta en
+  // `empleado_habilidades`; no conviene mezclar esas escrituras con los updates de `empleados`.
   const habilidadesEmpleado = await asegurarHabilidadesEmpleados(ctx, empleados, puestos, habilidades, habilidadClavePorId);
   ctx.progreso({ paso: "catalogo", pct: 15, detalle: "Plantillas de turno y reglas" });
   const [plantillas, reglas] = await Promise.all([asegurarPlantillas(ctx, horarios), asegurarReglas(ctx)]);
@@ -770,6 +782,7 @@ async function generarDemanda(
     requerido_caja: d.requerido_caja,
     es_pico: d.es_pico,
   }));
+  // Inserciones en serie a propósito (escrituras por lotes; ver guardarPropuesta).
   for (const lote of lotes(filas)) {
     const { error } = await ctx.sb.from("demanda_intervalo").insert(lote);
     if (error) throw fallo("guardar demanda_intervalo", error);
@@ -857,23 +870,28 @@ function construirEntrada(
  */
 async function leerDisponibilidad(ctx: Contexto, empleados: EmpleadoDb[]): Promise<Map<string, Empleado["disponibilidad"]>> {
   const out = new Map<string, Empleado["disponibilidad"]>();
-  for (const lote of lotes(empleados.map((e) => e.id), 200)) {
-    const filas = await paginar<{ empleado_id: string; dia_semana: number; hora_inicio: string; hora_fin: string; vigente_desde: string | null; vigente_hasta: string | null }>(
-      "disponibilidad",
-      (a, b) =>
-        ctx.sb
-          .from("disponibilidad")
-          .select("empleado_id, dia_semana, hora_inicio, hora_fin, vigente_desde, vigente_hasta")
-          .in("empleado_id", lote)
-          .order("id")
-          .range(a, b),
-    );
-    for (const f of filas) {
-      if (f.vigente_desde && f.vigente_desde > ctx.domingo) continue;
-      if (f.vigente_hasta && f.vigente_hasta < ctx.semana) continue;
-      if (!out.has(f.empleado_id)) out.set(f.empleado_id, []);
-      out.get(f.empleado_id)!.push({ dia_semana: f.dia_semana, hora_inicio: hhmm(f.hora_inicio), hora_fin: hhmm(f.hora_fin) });
-    }
+  // Lecturas independientes por lote de ids → en paralelo; `Promise.all`
+  // conserva el orden de los lotes, así que las ventanas de cada colaborador
+  // quedan en el mismo orden que antes.
+  const porLote = await Promise.all(
+    lotes(empleados.map((e) => e.id), 200).map((lote) =>
+      paginar<{ empleado_id: string; dia_semana: number; hora_inicio: string; hora_fin: string; vigente_desde: string | null; vigente_hasta: string | null }>(
+        "disponibilidad",
+        (a, b) =>
+          ctx.sb
+            .from("disponibilidad")
+            .select("empleado_id, dia_semana, hora_inicio, hora_fin, vigente_desde, vigente_hasta")
+            .in("empleado_id", lote)
+            .order("id")
+            .range(a, b),
+      ),
+    ),
+  );
+  for (const f of porLote.flat()) {
+    if (f.vigente_desde && f.vigente_desde > ctx.domingo) continue;
+    if (f.vigente_hasta && f.vigente_hasta < ctx.semana) continue;
+    if (!out.has(f.empleado_id)) out.set(f.empleado_id, []);
+    out.get(f.empleado_id)!.push({ dia_semana: f.dia_semana, hora_inicio: hhmm(f.hora_inicio), hora_fin: hhmm(f.hora_fin) });
   }
   return out;
 }
@@ -992,6 +1010,10 @@ async function guardarPropuesta(
       };
     });
     const partes = lotes(filas);
+    // Lotes en serie a propósito: `trg_asignaciones_validar` (constraint
+    // trigger diferido) valida las sumas por semana de cada colaborador y las
+    // inserciones concurrentes saturan la base; además el progreso y el
+    // mensaje de error dependen del número de lote.
     for (let i = 0; i < partes.length; i++) {
       ctx.progreso({ paso: "guardando", pct: 70 + Math.round((15 * i) / Math.max(partes.length, 1)), detalle: `Turnos ${i * LOTE + 1}–${Math.min((i + 1) * LOTE, filas.length)} de ${filas.length}` });
       const { error } = await ctx.sb.from("asignaciones").insert(partes[i]);

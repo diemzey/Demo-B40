@@ -1,14 +1,20 @@
 "use client";
 
-import { Eye, EyeOff, Loader2, MailCheck } from "lucide-react";
+import { MailCheck } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent, type Ref } from "react";
 
 import { useReportBusy } from "@/components/auth/auth-busy";
+import {
+  BotonEnviar,
+  CampoContrasena,
+  CampoTexto,
+  EnlaceInactivable,
+  ErrorCampo,
+  EstadoEnvio,
+} from "@/components/auth/form-partes";
 import { DEMO_USER, useSession } from "@/components/auth/session";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { esUsuarioYaRegistrado, mensajeDeErrorAuth } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -24,6 +30,10 @@ const REDIRECT_DELAY_MS = 600;
 
 // Se decide una sola vez: las variables públicas se inyectan en build.
 const SUPABASE = hasSupabaseEnv();
+const MENSAJE_EXITO = SUPABASE ? "Cuenta creada. Abriendo tu panel…" : "Cuenta creada (demo).";
+
+const LINK_CLASS =
+  "font-medium text-amber-400 underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none";
 
 type Field =
   | "nombre"
@@ -36,6 +46,7 @@ type Field =
 type Errors = Partial<Record<Field, string>>;
 // `verificar`: la cuenta se creó pero falta confirmar el correo.
 type Status = "idle" | "pending" | "success" | "verificar";
+type Reenvio = "idle" | "pending" | "ok" | "error";
 
 type Values = {
   nombre: string;
@@ -68,6 +79,19 @@ const FIELD_ORDER: Field[] = [
   "privacy",
 ];
 
+/** `id` de cada campo a partir del prefijo de `useId`. */
+function idsDe(prefijo: string): Record<Field, string> {
+  return {
+    nombre: `${prefijo}-nombre`,
+    apellido: `${prefijo}-apellido`,
+    empresa: `${prefijo}-empresa`,
+    email: `${prefijo}-email`,
+    password: `${prefijo}-password`,
+    confirm: `${prefijo}-confirm`,
+    privacy: `${prefijo}-privacy`,
+  };
+}
+
 function validate(v: Values): Errors {
   const errors: Errors = {};
   if (!v.nombre.trim()) errors.nombre = "Escribe tu nombre.";
@@ -92,17 +116,125 @@ function validate(v: Values): Errors {
   return errors;
 }
 
+/** Enlace "Reenviar" y su resultado (sólo con Supabase). */
+function ReenviarEnlace({ reenvio, onReenviar }: { reenvio: Reenvio; onReenviar: () => void }) {
+  if (reenvio === "ok") return <span className="text-emerald-400">Enlace reenviado.</span>;
+  if (reenvio === "error") {
+    return <span className="text-destructive">No se pudo reenviar; inténtalo en un minuto.</span>;
+  }
+  return (
+    <>
+      ¿No llegó?{" "}
+      <button
+        type="button"
+        onClick={onReenviar}
+        disabled={reenvio === "pending"}
+        className={LINK_CLASS}
+      >
+        {reenvio === "pending" ? "Reenviando…" : "Reenviar enlace"}
+      </button>
+    </>
+  );
+}
+
+/**
+ * Estado final cuando Supabase exige confirmar el correo: sustituye al
+ * formulario para que el siguiente paso quede claro.
+ */
+function RevisaTuCorreo({
+  ref,
+  email,
+  reenvio,
+  onVolver,
+  onReenviar,
+}: {
+  /** Recibe el foco al aparecer (lo gestiona el formulario). */
+  ref: Ref<HTMLDivElement>;
+  email: string;
+  reenvio: Reenvio;
+  onVolver: () => void;
+  onReenviar: () => void;
+}) {
+  return (
+    <div ref={ref} tabIndex={-1} role="status" aria-live="polite" className="space-y-5 outline-none">
+      <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm">
+        <div className="flex items-start gap-3">
+          <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" aria-hidden="true" />
+          <div className="space-y-1">
+            <p className="font-semibold text-emerald-400">Revisa tu correo</p>
+            <p className="text-foreground/90">
+              Enviamos un enlace de confirmación a{" "}
+              <span className="font-medium break-all text-foreground">{email}</span>
+              . Al abrirlo entras directo a tu panel.
+            </p>
+            <p className="text-muted-foreground">
+              Si no lo ves en unos minutos, revisa la carpeta de spam.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <p className="text-center text-sm text-muted-foreground">
+        ¿Te equivocaste de correo?{" "}
+        <button type="button" onClick={onVolver} className={LINK_CLASS}>
+          Volver al formulario
+        </button>
+        {" · "}
+        <Link href="/login" className={LINK_CLASS}>
+          Ya tengo cuenta
+        </Link>
+      </p>
+      {SUPABASE && (
+        <p className="text-center text-sm text-muted-foreground">
+          <ReenviarEnlace reenvio={reenvio} onReenviar={onReenviar} />
+        </p>
+      )}
+    </div>
+  );
+}
+
+/** Casilla "Acepto el aviso de privacidad" con su enlace y su error. */
+function CampoPrivacidad({
+  id,
+  checked,
+  onChange,
+  error,
+  pending,
+}: {
+  id: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  error?: string;
+  pending: boolean;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-start gap-2 text-sm">
+        <input
+          id={id}
+          name="privacy"
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
+          className="mt-0.5 h-4 w-4 shrink-0 rounded accent-yellow-400"
+          required
+        />
+        <label htmlFor={id} className="cursor-pointer leading-snug select-none">
+          Acepto el{" "}
+          <EnlaceInactivable href="/privacidad" inactivo={pending} className={LINK_CLASS}>
+            aviso de privacidad
+          </EnlaceInactivable>
+        </label>
+      </div>
+      <ErrorCampo campoId={id} mensaje={error} />
+    </div>
+  );
+}
+
 export function RegisterForm() {
-  const id = useId();
-  const ids = {
-    nombre: `${id}-nombre`,
-    apellido: `${id}-apellido`,
-    empresa: `${id}-empresa`,
-    email: `${id}-email`,
-    password: `${id}-password`,
-    confirm: `${id}-confirm`,
-    privacy: `${id}-privacy`,
-  } satisfies Record<Field, string>;
+  const ids = idsDe(useId());
 
   const [values, setValues] = useState<Values>(INITIAL);
   const [showPassword, setShowPassword] = useState(false);
@@ -116,7 +248,7 @@ export function RegisterForm() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const verificarRef = useRef<HTMLDivElement>(null);
-  const [reenvio, setReenvio] = useState<"idle" | "pending" | "ok" | "error">("idle");
+  const [reenvio, setReenvio] = useState<Reenvio>("idle");
 
   async function reenviarConfirmacion() {
     if (!SUPABASE || reenvio === "pending") return;
@@ -241,85 +373,15 @@ export function RegisterForm() {
 
   const passwordHintId = `${ids.password}-hint`;
 
-  function describedBy(field: Field, extra?: string) {
-    const parts = [errors[field] ? `${ids[field]}-error` : null, extra ?? null].filter(Boolean);
-    return parts.length ? parts.join(" ") : undefined;
-  }
-
-  function fieldError(field: Field) {
-    if (!errors[field]) return null;
-    return (
-      <p id={`${ids[field]}-error`} role="alert" className="text-destructive text-sm">
-        {errors[field]}
-      </p>
-    );
-  }
-
-  const invalidClass = "border-destructive focus-visible:ring-destructive";
-  const linkClass =
-    "font-medium text-amber-400 underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none";
-  const linkDisabled = pending ? "pointer-events-none" : undefined;
-
-  // Estado final cuando Supabase exige confirmar el correo: sustituye al
-  // formulario para que el siguiente paso quede claro.
   if (status === "verificar") {
     return (
-      <div
+      <RevisaTuCorreo
         ref={verificarRef}
-        tabIndex={-1}
-        role="status"
-        aria-live="polite"
-        className="space-y-5 outline-none"
-      >
-        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 py-4 text-sm">
-          <div className="flex items-start gap-3">
-            <MailCheck className="mt-0.5 h-5 w-5 shrink-0 text-emerald-400" aria-hidden="true" />
-            <div className="space-y-1">
-              <p className="font-semibold text-emerald-400">Revisa tu correo</p>
-              <p className="text-foreground/90">
-                Enviamos un enlace de confirmación a{" "}
-                <span className="font-medium break-all text-foreground">{values.email.trim()}</span>
-                . Al abrirlo entras directo a tu panel.
-              </p>
-              <p className="text-muted-foreground">
-                Si no lo ves en unos minutos, revisa la carpeta de spam.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <p className="text-center text-sm text-muted-foreground">
-          ¿Te equivocaste de correo?{" "}
-          <button type="button" onClick={() => setStatus("idle")} className={linkClass}>
-            Volver al formulario
-          </button>
-          {" · "}
-          <Link href="/login" className={linkClass}>
-            Ya tengo cuenta
-          </Link>
-        </p>
-        {SUPABASE && (
-          <p className="text-center text-sm text-muted-foreground">
-            {reenvio === "ok" ? (
-              <span className="text-emerald-400">Enlace reenviado.</span>
-            ) : reenvio === "error" ? (
-              <span className="text-destructive">No se pudo reenviar; inténtalo en un minuto.</span>
-            ) : (
-              <>
-                ¿No llegó?{" "}
-                <button
-                  type="button"
-                  onClick={reenviarConfirmacion}
-                  disabled={reenvio === "pending"}
-                  className={linkClass}
-                >
-                  {reenvio === "pending" ? "Reenviando…" : "Reenviar enlace"}
-                </button>
-              </>
-            )}
-          </p>
-        )}
-      </div>
+        email={values.email.trim()}
+        reenvio={reenvio}
+        onVolver={() => setStatus("idle")}
+        onReenviar={reenviarConfirmacion}
+      />
     );
   }
 
@@ -335,207 +397,100 @@ export function RegisterForm() {
         )}
       >
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label htmlFor={ids.nombre}>Nombre</Label>
-            <Input
-              id={ids.nombre}
-              name="nombre"
-              type="text"
-              autoComplete="given-name"
-              value={values.nombre}
-              onChange={(e) => setField("nombre", e.target.value)}
-              aria-invalid={errors.nombre ? true : undefined}
-              aria-describedby={describedBy("nombre")}
-              className={cn(errors.nombre && invalidClass)}
-            />
-            {fieldError("nombre")}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor={ids.apellido}>Apellido</Label>
-            <Input
-              id={ids.apellido}
-              name="apellido"
-              type="text"
-              autoComplete="family-name"
-              value={values.apellido}
-              onChange={(e) => setField("apellido", e.target.value)}
-              aria-invalid={errors.apellido ? true : undefined}
-              aria-describedby={describedBy("apellido")}
-              className={cn(errors.apellido && invalidClass)}
-            />
-            {fieldError("apellido")}
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor={ids.empresa}>Empresa</Label>
-          <Input
-            id={ids.empresa}
-            name="empresa"
+          <CampoTexto
+            id={ids.nombre}
+            etiqueta="Nombre"
+            name="nombre"
             type="text"
-            autoComplete="organization"
-            value={values.empresa}
-            onChange={(e) => setField("empresa", e.target.value)}
-            aria-invalid={errors.empresa ? true : undefined}
-            aria-describedby={describedBy("empresa")}
-            className={cn(errors.empresa && invalidClass)}
+            autoComplete="given-name"
+            value={values.nombre}
+            onChange={(e) => setField("nombre", e.target.value)}
+            error={errors.nombre}
           />
-          {fieldError("empresa")}
+          <CampoTexto
+            id={ids.apellido}
+            etiqueta="Apellido"
+            name="apellido"
+            type="text"
+            autoComplete="family-name"
+            value={values.apellido}
+            onChange={(e) => setField("apellido", e.target.value)}
+            error={errors.apellido}
+          />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={ids.email}>Correo de trabajo</Label>
-          <Input
-            id={ids.email}
-            name="email"
-            type="email"
-            autoComplete="email"
-            inputMode="email"
-            placeholder="tu@empresa.mx"
-            value={values.email}
-            onChange={(e) => setField("email", e.target.value)}
-            aria-invalid={errors.email ? true : undefined}
-            aria-describedby={describedBy("email")}
-            className={cn(errors.email && invalidClass)}
-          />
-          {fieldError("email")}
-        </div>
+        <CampoTexto
+          id={ids.empresa}
+          etiqueta="Empresa"
+          name="empresa"
+          type="text"
+          autoComplete="organization"
+          value={values.empresa}
+          onChange={(e) => setField("empresa", e.target.value)}
+          error={errors.empresa}
+        />
+
+        <CampoTexto
+          id={ids.email}
+          etiqueta="Correo de trabajo"
+          name="email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          placeholder="tu@empresa.mx"
+          value={values.email}
+          onChange={(e) => setField("email", e.target.value)}
+          error={errors.email}
+        />
 
         <div className="space-y-2">
           <Label htmlFor={ids.password}>Contraseña</Label>
-          <div className="relative">
-            <Input
-              id={ids.password}
-              name="password"
-              type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
-              value={values.password}
-              onChange={(e) => setField("password", e.target.value)}
-              aria-invalid={errors.password ? true : undefined}
-              aria-describedby={describedBy("password", passwordHintId)}
-              className={cn("pr-11", errors.password && invalidClass)}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowPassword((v) => !v)}
-              aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              aria-pressed={showPassword}
-              className="absolute top-1/2 right-1 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              {showPassword ? (
-                <EyeOff className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Eye className="h-4 w-4" aria-hidden="true" />
-              )}
-            </Button>
-          </div>
+          <CampoContrasena
+            id={ids.password}
+            name="password"
+            autoComplete="new-password"
+            value={values.password}
+            onChange={(e) => setField("password", e.target.value)}
+            error={errors.password}
+            pistaId={passwordHintId}
+            visible={showPassword}
+            onAlternar={() => setShowPassword((v) => !v)}
+          />
           <p id={passwordHintId} className="text-xs text-muted-foreground">
             Mínimo {MIN_PASSWORD} caracteres
           </p>
-          {fieldError("password")}
+          <ErrorCampo campoId={ids.password} mensaje={errors.password} />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={ids.confirm}>Confirmar contraseña</Label>
-          <Input
-            id={ids.confirm}
-            name="confirm"
-            type={showPassword ? "text" : "password"}
-            autoComplete="new-password"
-            value={values.confirm}
-            onChange={(e) => setField("confirm", e.target.value)}
-            aria-invalid={errors.confirm ? true : undefined}
-            aria-describedby={describedBy("confirm")}
-            className={cn(errors.confirm && invalidClass)}
-          />
-          {fieldError("confirm")}
-        </div>
+        <CampoTexto
+          id={ids.confirm}
+          etiqueta="Confirmar contraseña"
+          name="confirm"
+          type={showPassword ? "text" : "password"}
+          autoComplete="new-password"
+          value={values.confirm}
+          onChange={(e) => setField("confirm", e.target.value)}
+          error={errors.confirm}
+        />
 
-        <div className="space-y-2">
-          <div className="flex items-start gap-2 text-sm">
-            <input
-              id={ids.privacy}
-              name="privacy"
-              type="checkbox"
-              checked={values.privacy}
-              onChange={(e) => setField("privacy", e.target.checked)}
-              aria-invalid={errors.privacy ? true : undefined}
-              aria-describedby={describedBy("privacy")}
-              className="mt-0.5 h-4 w-4 shrink-0 rounded accent-yellow-400"
-              required
-            />
-            <label htmlFor={ids.privacy} className="cursor-pointer leading-snug select-none">
-              Acepto el{" "}
-              <Link
-                href="/privacidad"
-                className={cn(linkClass, linkDisabled)}
-                aria-disabled={pending || undefined}
-                tabIndex={pending ? -1 : undefined}
-              >
-                aviso de privacidad
-              </Link>
-            </label>
-          </div>
-          {fieldError("privacy")}
-        </div>
+        <CampoPrivacidad
+          id={ids.privacy}
+          checked={values.privacy}
+          onChange={(checked) => setField("privacy", checked)}
+          error={errors.privacy}
+          pending={pending}
+        />
       </fieldset>
 
-      <Button
-        type="submit"
-        className={cn(
-          "w-full bg-yellow-400 font-semibold text-neutral-950 transition-opacity duration-200 hover:bg-yellow-300 motion-reduce:transition-none",
-          // Mientras carga el botón sigue bien visible: es el indicador principal.
-          pending && "disabled:opacity-90",
-        )}
-        disabled={pending}
-        aria-busy={pending}
-      >
-        {pending ? (
-          <>
-            <Loader2
-              className="mr-2 h-4 w-4 animate-spin motion-reduce:[animation-duration:2s]"
-              aria-hidden="true"
-            />
-            Creando cuenta…
-          </>
-        ) : (
-          "Crear cuenta"
-        )}
-      </Button>
+      <BotonEnviar pending={pending} etiqueta="Crear cuenta" etiquetaPendiente="Creando cuenta…" />
 
-      {/* Región viva única para errores/éxito del envío. */}
-      <div aria-live="polite" aria-atomic="true">
-        {formError && (
-          <p
-            role="alert"
-            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          >
-            {formError}
-          </p>
-        )}
-        {status === "success" && (
-          <p
-            role="status"
-            className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400"
-          >
-            {SUPABASE ? "Cuenta creada. Abriendo tu panel…" : "Cuenta creada (demo)."}
-          </p>
-        )}
-      </div>
+      <EstadoEnvio error={formError} exito={status === "success" ? MENSAJE_EXITO : null} />
 
       <p className="text-center text-sm text-muted-foreground">
         ¿Ya tienes cuenta?{" "}
-        <Link
-          href="/login"
-          className={cn(linkClass, linkDisabled)}
-          aria-disabled={pending || undefined}
-          tabIndex={pending ? -1 : undefined}
-        >
+        <EnlaceInactivable href="/login" inactivo={pending} className={LINK_CLASS}>
           Entrar
-        </Link>
+        </EnlaceInactivable>
       </p>
     </form>
   );

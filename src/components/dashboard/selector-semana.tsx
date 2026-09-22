@@ -4,15 +4,10 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { CalendarDays } from "lucide-react";
 import { LogoCargando } from "@/components/ui/logo-cargando";
+import { guardarSemana } from "@/lib/datos/cookies-panel";
 import { usePanel } from "@/lib/datos/panel-context";
-import { COOKIE_SEMANA } from "@/lib/datos/tipos";
 import { rangoCorto, semanaDesdeLunes } from "@/lib/datos/semana";
 import { cn } from "@/lib/utils";
-
-/** Guarda la semana elegida (lunes `YYYY-MM-DD`) para que el panel la muestre. */
-export function guardarSemana(inicio: string) {
-  document.cookie = `${COOKIE_SEMANA}=${encodeURIComponent(inicio)}; path=/; max-age=31536000; samesite=lax`;
-}
 
 /**
  * Selector de semana del Diagnóstico: lista las semanas de la sucursal (más

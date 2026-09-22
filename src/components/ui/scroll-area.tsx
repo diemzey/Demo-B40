@@ -2,33 +2,15 @@
 
 import * as React from "react";
 import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
-import { cva, type VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import {
+  scrollAreaVariants,
+  scrollBarVariants,
+} from "@/components/ui/scroll-area-variants";
 
-const scrollAreaVariants = cva("relative overflow-hidden", {
-  variants: {
-    orientation: {
-      vertical: "h-full",
-      horizontal: "w-full",
-      both: "h-full w-full",
-    },
-  },
-  defaultVariants: {
-    orientation: "vertical",
-  },
-});
-
-const scrollBarVariants = cva("flex touch-none select-none transition-colors", {
-  variants: {
-    orientation: {
-      vertical: "h-full w-2.5 border-l border-l-transparent p-[1px]",
-      horizontal: "h-2.5 w-full border-t border-t-transparent p-[1px]",
-    },
-  },
-  defaultVariants: {
-    orientation: "vertical",
-  },
-});
+// Las variantes viven en `scroll-area-variants.ts`: este archivo sólo exporta
+// componentes para que Fast Refresh conserve el estado.
 
 export interface ScrollAreaProps
   extends React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root>,
@@ -116,4 +98,4 @@ const ScrollBar = React.forwardRef<
 
 ScrollBar.displayName = ScrollAreaPrimitive.ScrollAreaScrollbar.displayName;
 
-export { ScrollArea, ScrollBar, scrollAreaVariants };
+export { ScrollArea, ScrollBar };

@@ -29,6 +29,15 @@ comment on function public.set_updated_at() is
   'Trigger genérico: fija updated_at = now() en cada UPDATE.';
 
 -- -----------------------------------------------------------------------------
+-- Tablas
+--
+-- Nota RLS: Row Level Security de TODAS las tablas de esta migración
+-- (empresas, hubs, sucursales, perfiles, empleados, importaciones_csv,
+-- horarios, topes_semanales) se habilita en 0003_rls.sql junto con sus
+-- políticas; aquí sólo se define el esquema.
+-- -----------------------------------------------------------------------------
+
+-- -----------------------------------------------------------------------------
 -- empresas
 -- -----------------------------------------------------------------------------
 create table if not exists public.empresas (

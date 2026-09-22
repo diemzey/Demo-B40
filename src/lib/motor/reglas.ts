@@ -130,6 +130,8 @@ export function validarReglasDuras(
       continue;
     }
     const ord = [...lista].sort((a, b) => isoAMs(a.inicio) - isoAMs(b.inicio));
+    // Set para consultar la habilidad en O(1) en cada turno del colaborador.
+    const habilidadesEmp = new Set(emp.habilidades);
     let horasSemana = 0;
     const horasDia = new Map<string, number>();
     const dias = new Set<string>();
@@ -158,7 +160,7 @@ export function validarReglasDuras(
           });
         }
       }
-      if (!emp.habilidades.includes(a.habilidad_clave)) {
+      if (!habilidadesEmp.has(a.habilidad_clave)) {
         v.push({ regla: 'habilidad', clave_externa: clave, detalle: `no tiene ${a.habilidad_clave}` });
       }
       if (emp.disponibilidad.length > 0) {

@@ -1,13 +1,17 @@
 "use client";
 
-import { Eye, EyeOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 
 import { useReportBusy } from "@/components/auth/auth-busy";
+import {
+  BotonEnviar,
+  CampoContrasena,
+  CampoTexto,
+  EstadoEnvio,
+} from "@/components/auth/form-partes";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { mensajeDeErrorAuth } from "@/lib/supabase/auth";
 import { createClient } from "@/lib/supabase/client";
@@ -17,9 +21,24 @@ import { cn } from "@/lib/utils";
 const MIN_PASSWORD = 8;
 const SUPABASE = hasSupabaseEnv();
 const FAKE_LATENCY_MS = 800;
+const MENSAJE_EXITO = "Contraseña guardada. Abriendo tu panel…";
 
 type Status = "idle" | "pending" | "success";
 type Sesion = "comprobando" | "activa" | "ausente";
+
+/** Sin sesión de recuperación: el enlace caducó o ya se usó. */
+function EnlaceCaducado() {
+  return (
+    <div role="status" className="space-y-5">
+      <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
+        El enlace caducó o ya se usó. Pide uno nuevo para elegir tu contraseña.
+      </p>
+      <Button asChild className="w-full bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300">
+        <Link href="/recuperar">Pedir otro enlace</Link>
+      </Button>
+    </div>
+  );
+}
 
 /**
  * Elige una contraseña nueva. Se llega aquí desde el enlace del correo de
@@ -96,118 +115,62 @@ export function RestablecerForm() {
     void guardar();
   }
 
-  if (sesion === "ausente") {
-    return (
-      <div role="status" className="space-y-5">
-        <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-300">
-          El enlace caducó o ya se usó. Pide uno nuevo para elegir tu contraseña.
-        </p>
-        <Button asChild className="w-full bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300">
-          <Link href="/recuperar">Pedir otro enlace</Link>
-        </Button>
-      </div>
-    );
-  }
+  if (sesion === "ausente") return <EnlaceCaducado />;
 
   const comprobando = sesion === "comprobando";
+  const bloqueado = pending || comprobando;
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-busy={pending || comprobando}>
+    <form onSubmit={handleSubmit} noValidate className="space-y-5" aria-busy={bloqueado}>
       <fieldset
-        disabled={pending || comprobando}
+        disabled={bloqueado}
         className={cn(
           "min-w-0 space-y-5 transition-opacity duration-200 ease-out motion-reduce:transition-none",
-          (pending || comprobando) && "pointer-events-none opacity-60",
+          bloqueado && "pointer-events-none opacity-60",
         )}
       >
         <div className="space-y-2">
           <Label htmlFor={passwordId}>Contraseña nueva</Label>
-          <div className="relative">
-            <Input
-              ref={passwordRef}
-              id={passwordId}
-              name="password"
-              type={show ? "text" : "password"}
-              autoComplete="new-password"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                if (error) setError(null);
-              }}
-              aria-invalid={error ? true : undefined}
-              className={cn("pr-11", error && "border-destructive focus-visible:ring-destructive")}
-            />
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={() => setShow((v) => !v)}
-              aria-label={show ? "Ocultar contraseña" : "Mostrar contraseña"}
-              aria-pressed={show}
-              className="absolute top-1/2 right-1 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-            >
-              {show ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
-            </Button>
-          </div>
+          <CampoContrasena
+            ref={passwordRef}
+            id={passwordId}
+            name="password"
+            autoComplete="new-password"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              if (error) setError(null);
+            }}
+            aria-invalid={error ? true : undefined}
+            className={cn(error && "border-destructive focus-visible:ring-destructive")}
+            visible={show}
+            onAlternar={() => setShow((v) => !v)}
+          />
           <p className="text-xs text-muted-foreground">Al menos {MIN_PASSWORD} caracteres.</p>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor={confirmId}>Confirmar contraseña</Label>
-          <Input
-            id={confirmId}
-            name="confirm"
-            type={show ? "text" : "password"}
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => {
-              setConfirm(e.target.value);
-              if (error) setError(null);
-            }}
-          />
-        </div>
+        <CampoTexto
+          id={confirmId}
+          etiqueta="Confirmar contraseña"
+          name="confirm"
+          type={show ? "text" : "password"}
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(e) => {
+            setConfirm(e.target.value);
+            if (error) setError(null);
+          }}
+        />
       </fieldset>
 
-      <Button
-        type="submit"
-        className={cn(
-          "w-full bg-yellow-400 font-semibold text-neutral-950 transition-opacity duration-200 hover:bg-yellow-300 motion-reduce:transition-none",
-          pending && "disabled:opacity-90",
-        )}
-        disabled={pending || comprobando}
-        aria-busy={pending}
-      >
-        {pending ? (
-          <>
-            <Loader2
-              className="mr-2 h-4 w-4 animate-spin motion-reduce:[animation-duration:2s]"
-              aria-hidden="true"
-            />
-            Guardando…
-          </>
-        ) : (
-          "Guardar contraseña"
-        )}
-      </Button>
+      <BotonEnviar
+        pending={pending}
+        disabled={bloqueado}
+        etiqueta="Guardar contraseña"
+        etiquetaPendiente="Guardando…"
+      />
 
-      <div aria-live="polite" aria-atomic="true">
-        {error && (
-          <p
-            role="alert"
-            className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
-          >
-            {error}
-          </p>
-        )}
-        {status === "success" && (
-          <p
-            role="status"
-            className="rounded-md border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-400"
-          >
-            Contraseña guardada. Abriendo tu panel…
-          </p>
-        )}
-      </div>
+      <EstadoEnvio error={error} exito={status === "success" ? MENSAJE_EXITO : null} />
     </form>
   );
 }

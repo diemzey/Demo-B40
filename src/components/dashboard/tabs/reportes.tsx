@@ -1,18 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Upload } from "lucide-react";
 import { AhorroPorSemanaChart, DesgloseAhorroBarra } from "@/components/dashboard/charts-reportes";
-import { Comparacion, type FilaComparacion } from "@/components/dashboard/comparacion";
+import { Comparacion, type FilaComparacion, type NotaComparacion } from "@/components/dashboard/comparacion";
 import { mxnCompacto } from "@/lib/formato";
 import { Panel, PanelHeader, Pill, TabHeader, type PillTone } from "@/components/dashboard/tabs/ui";
 import { Button } from "@/components/ui/button";
 import { usePanel, useReporte } from "@/lib/datos/panel-context";
 import { cargarReporte } from "@/lib/datos/reportes-accion";
 import { LogoCargando } from "@/components/ui/logo-cargando";
-import type { DatosReporte } from "@/lib/datos/tipos";
+import type { DatosReporte, SucursalReporte, TotalReporte } from "@/lib/datos/tipos";
 import { numeroSemanaIso, rangoCorto, semanaDesdeLunes } from "@/lib/datos/semana";
-import type { SucursalReporte } from "@/lib/datos/tipos";
 import { cn } from "@/lib/utils";
 
 /*
@@ -148,6 +147,100 @@ function ListaSucursales({ sucursales }: { sucursales: SucursalReporte[] }) {
   );
 }
 
+/** Marco común de la pestaña (mismo ancho y márgenes en carga, vacío y reporte). */
+function Marco({ children }: { children: ReactNode }) {
+  return <div className="mx-auto w-full max-w-6xl p-4 md:p-6">{children}</div>;
+}
+
+/** Mientras `cargarReporte()` calcula, o si falló. */
+function ReporteCargando({ titulo, error }: { titulo: string; error: string | null }) {
+  return (
+    <Marco>
+      <TabHeader eyebrow="Reportes" title={titulo} subtitle="Ahorro de todas tus sucursales." />
+      <Panel className="flex items-center gap-3 p-6">
+        {error ? (
+          <p className="j40-body text-rose-300">{error}</p>
+        ) : (
+          <>
+            <LogoCargando size={20} label="" className="text-foreground" />
+            <p className="j40-body text-muted-foreground">Calculando el reporte de todas tus sucursales…</p>
+          </>
+        )}
+      </Panel>
+    </Marco>
+  );
+}
+
+/** Cuenta real sin semanas programadas todavía. */
+function ReporteVacio({ titulo }: { titulo: string }) {
+  return (
+    <Marco>
+      <TabHeader eyebrow="Reportes" title={titulo} subtitle="Se llena cuando programas tus semanas." />
+      <Panel className="flex flex-col items-start gap-4 p-6">
+        <div>
+          <p className="j40-body font-semibold">Aquí verás el ahorro de todas tus sucursales.</p>
+          <p className="j40-body mt-1 max-w-xl text-muted-foreground">Empieza por subir y programar una semana.</p>
+        </div>
+        <Button asChild size="sm" variant="outline">
+          <a href="#semanas">
+            <Upload className="mr-2 size-4" strokeWidth={1.5} aria-hidden="true" />
+            Subir semana
+          </a>
+        </Button>
+      </Panel>
+    </Marco>
+  );
+}
+
+/** Filas Hoy → Propuesta de la comparación (costo, horas, cobertura pico). */
+function filasReporte(total: TotalReporte): FilaComparacion[] {
+  return [
+    {
+      etiqueta: "Costo laboral",
+      hoy: mxnCompacto(total.costoBaseline),
+      propuesta: mxnCompacto(total.costoPropuesta),
+      tonoPropuesta: total.ahorroMxn > 0 ? "mejora" : total.ahorroMxn < 0 ? "duele" : "neutral",
+    },
+    {
+      etiqueta: "Horas programadas",
+      hoy: `${fmtInt.format(total.horasBaseline)} h`,
+      propuesta: `${fmtInt.format(total.horasPropuesta)} h`,
+      tonoPropuesta: total.horasPropuesta < total.horasBaseline ? "mejora" : "neutral",
+    },
+    {
+      etiqueta: "Cobertura pico",
+      hoy: pct(total.coberturaPicoBaselinePct),
+      propuesta: pct(total.coberturaPicoPropuestaPct),
+      tonoPropuesta:
+        total.coberturaPicoPropuestaPct > total.coberturaPicoBaselinePct
+          ? "mejora"
+          : total.coberturaPicoPropuestaPct === total.coberturaPicoBaselinePct
+            ? "neutral"
+            : total.coberturaPicoPropuestaPct >= 95
+              ? "atencion"
+              : "duele",
+    },
+  ];
+}
+
+/** Nota bajo la comparación: déficit en picos o todo cubierto. */
+function notasReporte(total: TotalReporte): NotaComparacion[] {
+  if (total.deficitPicoHoras > 0) {
+    return [
+      {
+        clave: "deficit-pico",
+        texto: (
+          <>
+            Faltan {fmtH.format(total.deficitPicoHoras)} h en horas pico ·{" "}
+            {plural(total.tiendasConSubdotacionPico, "sucursal con picos sin cubrir", "sucursales con picos sin cubrir")}
+          </>
+        ),
+      },
+    ];
+  }
+  return [{ clave: "picos-cubiertos", texto: <>Todas las sucursales cubren sus horas pico con la propuesta</> }];
+}
+
 export function ReportesTab() {
   const panel = usePanel();
   const inicial = useReporte();
@@ -168,90 +261,16 @@ export function ReportesTab() {
     };
   }, [reporte]);
 
-  if (!reporte) {
-    return (
-      <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
-        <TabHeader eyebrow="Reportes" title={panel.empresa?.nombre ? `Reporte · ${panel.empresa.nombre}` : "Reporte"} subtitle="Ahorro de todas tus sucursales." />
-        <Panel className="flex items-center gap-3 p-6">
-          {errorCarga ? (
-            <p className="j40-body text-rose-300">{errorCarga}</p>
-          ) : (
-            <>
-              <LogoCargando size={20} label="" className="text-foreground" />
-              <p className="j40-body text-muted-foreground">Calculando el reporte de todas tus sucursales…</p>
-            </>
-          )}
-        </Panel>
-      </div>
-    );
-  }
-  const { total, semanas, porSucursal } = reporte;
-  const demo = reporte.origen === "demo";
-  const empresa = reporte.empresa?.nombre ?? panel.empresa?.nombre ?? null;
+  const empresa = reporte?.empresa?.nombre ?? panel.empresa?.nombre ?? null;
   const titulo = empresa ? `Reporte · ${empresa}` : "Reporte";
 
-  if (!demo && semanas.length === 0) {
-    return (
-      <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
-        <TabHeader eyebrow="Reportes" title={titulo} subtitle="Se llena cuando programas tus semanas." />
-        <Panel className="flex flex-col items-start gap-4 p-6">
-          <div>
-            <p className="j40-body font-semibold">Aquí verás el ahorro de todas tus sucursales.</p>
-            <p className="j40-body mt-1 max-w-xl text-muted-foreground">Empieza por subir y programar una semana.</p>
-          </div>
-          <Button asChild size="sm" variant="outline">
-            <a href="#semanas">
-              <Upload className="mr-2 size-4" strokeWidth={1.5} aria-hidden="true" />
-              Subir semana
-            </a>
-          </Button>
-        </Panel>
-      </div>
-    );
-  }
-
-  const fmtEnteroH = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 0 });
-  const filas: FilaComparacion[] = [
-    {
-      etiqueta: "Costo laboral",
-      hoy: mxnCompacto(total.costoBaseline),
-      propuesta: mxnCompacto(total.costoPropuesta),
-      tonoPropuesta: total.ahorroMxn > 0 ? "mejora" : total.ahorroMxn < 0 ? "duele" : "neutral",
-    },
-    {
-      etiqueta: "Horas programadas",
-      hoy: `${fmtEnteroH.format(total.horasBaseline)} h`,
-      propuesta: `${fmtEnteroH.format(total.horasPropuesta)} h`,
-      tonoPropuesta: total.horasPropuesta < total.horasBaseline ? "mejora" : "neutral",
-    },
-    {
-      etiqueta: "Cobertura pico",
-      hoy: pct(total.coberturaPicoBaselinePct),
-      propuesta: pct(total.coberturaPicoPropuestaPct),
-      tonoPropuesta:
-        total.coberturaPicoPropuestaPct > total.coberturaPicoBaselinePct
-          ? "mejora"
-          : total.coberturaPicoPropuestaPct === total.coberturaPicoBaselinePct
-            ? "neutral"
-            : total.coberturaPicoPropuestaPct >= 95
-              ? "atencion"
-              : "duele",
-    },
-  ];
-  const notas: React.ReactNode[] = [];
-  if (total.deficitPicoHoras > 0) {
-    notas.push(
-      <>
-        Faltan {fmtH.format(total.deficitPicoHoras)} h en horas pico ·{" "}
-        {plural(total.tiendasConSubdotacionPico, "sucursal con picos sin cubrir", "sucursales con picos sin cubrir")}
-      </>,
-    );
-  } else {
-    notas.push(<>Todas las sucursales cubren sus horas pico con la propuesta</>);
-  }
+  if (!reporte) return <ReporteCargando titulo={titulo} error={errorCarga} />;
+  const { total, semanas, porSucursal } = reporte;
+  const demo = reporte.origen === "demo";
+  if (!demo && semanas.length === 0) return <ReporteVacio titulo={titulo} />;
 
   return (
-    <div className="mx-auto w-full max-w-6xl p-4 md:p-6">
+    <Marco>
       <TabHeader
         eyebrow="Reportes"
         title={titulo}
@@ -275,8 +294,8 @@ export function ReportesTab() {
               {total.semanas > 0 && <> · ≈ {mxnCompacto(total.ahorroMxn / total.semanas)} por semana</>}
             </>
           }
-          filas={filas}
-          notas={notas}
+          filas={filasReporte(total)}
+          notas={notasReporte(total)}
         />
         <div className="flex min-w-0 flex-col gap-4 xl:col-span-3">
           <Panel>
@@ -306,6 +325,6 @@ export function ReportesTab() {
           <ListaSucursales sucursales={porSucursal} />
         </div>
       )}
-    </div>
+    </Marco>
   );
 }

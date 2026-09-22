@@ -10,7 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/cnippet-table";
-import { Barra, EstadoBadge, Persona, estadoDe, type JornadaPersona } from "@/components/ui/jornada-artefacto";
+import { Barra, EstadoBadge, Persona, type JornadaPersona } from "@/components/ui/jornada-artefacto";
+import { estadoDe } from "@/components/ui/jornada-artefacto-util";
 import { cn } from "@/lib/utils";
 
 /*

@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { EstadoBadge, Persona, estadoDe, type JornadaPersona } from "@/components/ui/jornada-artefacto";
+import { EstadoBadge, Persona, type JornadaPersona } from "@/components/ui/jornada-artefacto";
+import { estadoDe } from "@/components/ui/jornada-artefacto-util";
 import { cn } from "@/lib/utils";
 
 /*

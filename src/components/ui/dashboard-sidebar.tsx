@@ -223,31 +223,9 @@ export function WorkspaceSwitcher({
   );
 }
 
-export function NavItem({
-  item,
-  activeId,
-  onSelect,
-  level = 0,
-}: {
-  item: NavItemData;
-  activeId: string;
-  onSelect: (id: string) => void;
-  level?: number;
-}) {
-  const isActive = activeId === item.id;
-  const hasChildren = !!item.children;
-  const [isOpen, setIsOpen] = useState(false);
-
-  const rowClassName = cn(
-    "group flex min-h-10 md:min-h-9 items-center justify-between px-2.5 py-1.5 rounded-[6px] cursor-pointer transition-colors duration-200 select-none",
-    isActive
-      ? "bg-black/5 dark:bg-white/10 text-foreground font-medium"
-      : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground",
-    FOCUS_RING,
-  );
-  const rowStyle = { paddingLeft: `${level * 12 + 10}px` };
-
-  const content = (
+/** Icono, título, atajo, contador y flecha de una fila del menú. */
+function NavItemContenido({ item, isActive, isOpen }: { item: NavItemData; isActive: boolean; isOpen: boolean }) {
+  return (
     <>
       <span className="flex min-w-0 items-center gap-2.5">
         <item.icon
@@ -272,7 +250,7 @@ export function NavItem({
             {item.badge}
           </span>
         )}
-        {hasChildren && (
+        {item.children && (
           <ChevronRight
             aria-hidden="true"
             className={cn(
@@ -285,59 +263,109 @@ export function NavItem({
       </span>
     </>
   );
+}
+
+/** Sub-ítems desplegables (animación de altura con grid-rows). */
+function NavItemHijos({
+  hijos,
+  isOpen,
+  activeId,
+  onSelect,
+  level,
+}: {
+  hijos: NavItemData[];
+  isOpen: boolean;
+  activeId: string;
+  onSelect: (id: string) => void;
+  level: number;
+}) {
+  return (
+    <div
+      className={cn(
+        "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",
+        isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+      )}
+    >
+      <div className="relative mt-0.5 flex min-h-0 flex-col gap-0.5 overflow-hidden">
+        <div
+          className="absolute top-0 bottom-0 border-l border-black/5 dark:border-white/5"
+          style={{ left: `${level * 12 + 17.5}px` }}
+        />
+        {hijos.map((child) => (
+          <NavItem key={child.id} item={child} activeId={activeId} onSelect={onSelect} level={level + 1} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function NavItem({
+  item,
+  activeId,
+  onSelect,
+  level = 0,
+}: {
+  item: NavItemData;
+  activeId: string;
+  onSelect: (id: string) => void;
+  level?: number;
+}) {
+  const isActive = activeId === item.id;
+  const [isOpen, setIsOpen] = useState(false);
+
+  const rowClassName = cn(
+    "group flex min-h-10 md:min-h-9 items-center justify-between px-2.5 py-1.5 rounded-[6px] cursor-pointer transition-colors duration-200 select-none",
+    isActive
+      ? "bg-black/5 dark:bg-white/10 text-foreground font-medium"
+      : "text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground",
+    FOCUS_RING,
+  );
+  const rowStyle = { paddingLeft: `${level * 12 + 10}px` };
+  const content = <NavItemContenido item={item} isActive={isActive} isOpen={isOpen} />;
+
+  let fila: React.ReactNode;
+  if (item.children) {
+    fila = (
+      <button
+        type="button"
+        className={cn(rowClassName, "w-full text-left")}
+        style={rowStyle}
+        onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+      >
+        {content}
+      </button>
+    );
+  } else if (item.href) {
+    fila = (
+      <a href={item.href} className={rowClassName} style={rowStyle} aria-current={isActive ? "page" : undefined}>
+        {content}
+      </a>
+    );
+  } else {
+    // Pestaña del panel: enlace plano `#id`; el shell decide qué mostrar
+    // y escribe el hash con replaceState (sin navegación).
+    fila = (
+      <a
+        href={item.id === "diagnostico" ? "#" : `#${item.id}`}
+        className={rowClassName}
+        style={rowStyle}
+        aria-current={isActive ? "page" : undefined}
+        aria-keyshortcuts={item.shortcut}
+        onClick={(e) => {
+          e.preventDefault();
+          onSelect(item.id);
+        }}
+      >
+        {content}
+      </a>
+    );
+  }
 
   return (
     <div className="flex w-full flex-col">
-      {hasChildren ? (
-        <button
-          type="button"
-          className={cn(rowClassName, "w-full text-left")}
-          style={rowStyle}
-          onClick={() => setIsOpen(!isOpen)}
-          aria-expanded={isOpen}
-        >
-          {content}
-        </button>
-      ) : item.href ? (
-        <a href={item.href} className={rowClassName} style={rowStyle} aria-current={isActive ? "page" : undefined}>
-          {content}
-        </a>
-      ) : (
-        // Pestaña del panel: enlace plano `#id`; el shell decide qué mostrar
-        // y escribe el hash con replaceState (sin navegación).
-        <a
-          href={item.id === "diagnostico" ? "#" : `#${item.id}`}
-          className={rowClassName}
-          style={rowStyle}
-          aria-current={isActive ? "page" : undefined}
-          aria-keyshortcuts={item.shortcut}
-          onClick={(e) => {
-            e.preventDefault();
-            onSelect(item.id);
-          }}
-        >
-          {content}
-        </a>
-      )}
-
-      {hasChildren && (
-        <div
-          className={cn(
-            "grid transition-[grid-template-rows,opacity] duration-300 ease-in-out",
-            isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-          )}
-        >
-          <div className="relative mt-0.5 flex min-h-0 flex-col gap-0.5 overflow-hidden">
-            <div
-              className="absolute top-0 bottom-0 border-l border-black/5 dark:border-white/5"
-              style={{ left: `${level * 12 + 17.5}px` }}
-            />
-            {item.children!.map((child) => (
-              <NavItem key={child.id} item={child} activeId={activeId} onSelect={onSelect} level={level + 1} />
-            ))}
-          </div>
-        </div>
-      )}
+      {fila}
+      {item.children && <NavItemHijos hijos={item.children} isOpen={isOpen} activeId={activeId} onSelect={onSelect} level={level} />}
     </div>
   );
 }
@@ -398,8 +426,8 @@ export function SidebarNav({
         aria-label={ariaLabel}
         className="mt-2 flex flex-1 flex-col gap-4 overflow-y-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {groups.map((group, idx) => (
-          <div key={group.heading ?? idx} className="flex flex-col gap-0.5">
+        {groups.map((group) => (
+          <div key={group.heading ?? group.items.map((i) => i.id).join("|")} className="flex flex-col gap-0.5">
             {group.heading && <span className="j40-eyebrow mb-1 px-2.5">{group.heading}</span>}
             {group.items.map((item) => (
               <NavItem key={item.id} item={item} activeId={currentId} onSelect={handleSelect} />
@@ -418,12 +446,4 @@ export function SidebarNav({
       )}
     </div>
   );
-}
-
-export function flattenNavItems(items: NavItemData[]): NavItemData[] {
-  return items.reduce((acc, item) => {
-    acc.push(item);
-    if (item.children) acc.push(...flattenNavItems(item.children));
-    return acc;
-  }, [] as NavItemData[]);
 }
