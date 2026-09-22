@@ -214,7 +214,8 @@ async function resolverIds(sb: Cliente, empresaId: string, catalogo: Catalogo, s
 
 function exigir(ids: Ids, catalogo: Catalogo, sucursalesElegidas: Catalogo["sucursales"]) {
   const faltan: string[] = [];
-  for (const h of catalogo.hubs) if (!ids.hubs.has(h.clave)) faltan.push(`hub ${h.clave}`);
+  const hubsNecesarios = new Set(sucursalesElegidas.map((s) => s.hub_clave));
+  for (const h of catalogo.hubs) if (hubsNecesarios.has(h.clave) && !ids.hubs.has(h.clave)) faltan.push(`hub ${h.clave}`);
   for (const s of sucursalesElegidas) if (!ids.sucursales.has(s.clave)) faltan.push(`sucursal ${s.clave}`);
   for (const h of catalogo.habilidades) if (!ids.habilidades.has(h.clave)) faltan.push(`habilidad ${h.clave}`);
   for (const p of catalogo.puestos) if (!ids.puestos.has(p.clave)) faltan.push(`puesto ${p.clave}`);

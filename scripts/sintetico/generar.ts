@@ -288,6 +288,12 @@ const PLANTILLAS: PlantillaTurno[] = [
   { clave: "cinco_manana", hora_inicio: "09:00", duracion_min: 300, descanso_min: 0 }, // 09:00–14:00 · 5 h
   { clave: "cinco_cierre", hora_inicio: "16:00", duracion_min: 300, descanso_min: 0 }, // 16:00–21:00 · 5 h
   { clave: "siete_cierre", hora_inicio: "13:30", duracion_min: 450, descanso_min: 30 }, // 13:30–21:00 · 7 h
+  // Cubren a la vez el pico de comida (12:00) y el de cierre (20:00) con una
+  // sola persona-día; sin ellas los fines de semana exigen dos empleados
+  // distintos por cada posición de pico.
+  { clave: "cierre_temprano", hora_inicio: "12:00", duracion_min: 510, descanso_min: 30 }, // 12:00–20:30 · 8 h
+  { clave: "medio_cierre", hora_inicio: "14:30", duracion_min: 360, descanso_min: 0 }, // 14:30–20:30 · 6 h
+  { clave: "corto_pico", hora_inicio: "16:30", duracion_min: 240, descanso_min: 0 }, // 16:30–20:30 · 4 h
 ];
 
 const plantilla = (clave: string): PlantillaTurno => {
