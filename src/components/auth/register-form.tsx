@@ -116,6 +116,20 @@ export function RegisterForm() {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const mountedRef = useRef(true);
   const verificarRef = useRef<HTMLDivElement>(null);
+  const [reenvio, setReenvio] = useState<"idle" | "pending" | "ok" | "error">("idle");
+
+  async function reenviarConfirmacion() {
+    if (!SUPABASE || reenvio === "pending") return;
+    setReenvio("pending");
+    const supabase = createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: values.email.trim(),
+      options: { emailRedirectTo: `${window.location.origin}/auth/confirm?next=/dashboard` },
+    });
+    if (!mountedRef.current) return;
+    setReenvio(error ? "error" : "ok");
+  }
 
   // Limpia el temporizador simulado si el componente se desmonta a medias.
   useEffect(() => {
@@ -265,7 +279,7 @@ export function RegisterForm() {
               <p className="text-foreground/90">
                 Enviamos un enlace de confirmación a{" "}
                 <span className="font-medium break-all text-foreground">{values.email.trim()}</span>
-                . Ábrelo para activar tu cuenta y entrar a tu panel.
+                . Al abrirlo entrarás directo a tu panel; no hace falta volver a iniciar sesión.
               </p>
               <p className="text-muted-foreground">
                 Si no lo ves en unos minutos, revisa la carpeta de spam.
@@ -274,19 +288,37 @@ export function RegisterForm() {
           </div>
         </div>
 
-        <Button
-          asChild
-          className="w-full bg-yellow-400 font-semibold text-neutral-950 hover:bg-yellow-300"
-        >
-          <Link href="/login">Ir a entrar</Link>
-        </Button>
-
         <p className="text-center text-sm text-muted-foreground">
           ¿Te equivocaste de correo?{" "}
           <button type="button" onClick={() => setStatus("idle")} className={linkClass}>
             Volver al formulario
           </button>
+          {" · "}
+          <Link href="/login" className={linkClass}>
+            Ya tengo cuenta
+          </Link>
         </p>
+        {SUPABASE && (
+          <p className="text-center text-sm text-muted-foreground">
+            {reenvio === "ok" ? (
+              <span className="text-emerald-400">Enlace reenviado.</span>
+            ) : reenvio === "error" ? (
+              <span className="text-destructive">No se pudo reenviar; inténtalo en un minuto.</span>
+            ) : (
+              <>
+                ¿No llegó?{" "}
+                <button
+                  type="button"
+                  onClick={reenviarConfirmacion}
+                  disabled={reenvio === "pending"}
+                  className={linkClass}
+                >
+                  {reenvio === "pending" ? "Reenviando…" : "Reenviar enlace"}
+                </button>
+              </>
+            )}
+          </p>
+        )}
       </div>
     );
   }

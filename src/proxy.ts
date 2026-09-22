@@ -1,4 +1,4 @@
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/proxy";
 
 /**
@@ -7,6 +7,17 @@ import { updateSession } from "@/lib/supabase/proxy";
  * auth redirects defined in `src/lib/supabase/proxy.ts`. No-op in demo mode.
  */
 export async function proxy(request: NextRequest) {
+  // Si Supabase manda el código de confirmación a la raíz (Site URL sin la
+  // ruta de callback), lo canjeamos igual en /auth/confirm.
+  const { pathname, searchParams } = request.nextUrl;
+  if (pathname === "/" && searchParams.has("code")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/auth/confirm";
+    url.search = "";
+    url.searchParams.set("code", searchParams.get("code") ?? "");
+    url.searchParams.set("next", "/dashboard");
+    return NextResponse.redirect(url);
+  }
   return updateSession(request);
 }
 
