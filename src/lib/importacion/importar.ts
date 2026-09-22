@@ -26,6 +26,8 @@ import { lunesIso, type ErrorFila, type FilaTurno } from "./parse";
  */
 
 export const TAMANO_LOTE = 500;
+/** Lotes de turnos que se escriben a la vez por sucursal (ver nota en importarEnSucursal). */
+export const LOTES_EN_PARALELO = 1;
 
 /** Nombre del hub que se crea si la empresa no tiene ninguno (el mismo que da de alta el registro). */
 export const HUB_POR_DEFECTO = "Principal";
@@ -488,15 +490,24 @@ async function importarEnSucursal({
       });
     }
 
+    // Un lote a la vez: se probó con 3 en paralelo y cada upsert pasaba de
+    // ~0.3 s a 7–17 s (contención en el índice único de `horarios`), así que
+    // el guardado terminaba más tarde, no antes.
     let escritos = 0;
-    for (const lote of lotes(horarios)) {
-      const { error } = await supabase
-        .from("horarios")
-        .upsert(lote, { onConflict: "empleado_id,fecha,hora_inicio" });
-      if (error) throw fallo("No se pudieron guardar los turnos.", error);
-      escritos += lote.length;
-      progreso(escritos);
-    }
+    const cola = lotes(horarios);
+    let siguiente = 0;
+    const trabajador = async () => {
+      while (siguiente < cola.length) {
+        const lote = cola[siguiente++];
+        const { error } = await supabase
+          .from("horarios")
+          .upsert(lote, { onConflict: "empleado_id,fecha,hora_inicio" });
+        if (error) throw fallo("No se pudieron guardar los turnos.", error);
+        escritos += lote.length;
+        progreso(escritos);
+      }
+    };
+    await Promise.all(Array.from({ length: Math.min(LOTES_EN_PARALELO, cola.length) }, trabajador));
 
     // 4. Cierre de la bitácora.
     const { error: errorCierre } = await supabase

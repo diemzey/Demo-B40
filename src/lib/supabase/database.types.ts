@@ -2097,6 +2097,15 @@ export type Database = {
           tiendas_con_subdotacion_pico: number
         }[]
       }
+      semanas_sin_propuesta: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          colaboradores: number
+          semana_iso: string
+          sucursal: string
+          sucursal_id: string
+        }[]
+      }
       resumen_reacomodo: {
         Args: {
           p_margen_contrato?: number

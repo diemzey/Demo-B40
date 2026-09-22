@@ -12,7 +12,8 @@ import { useRouter } from "next/navigation";
 import { CircleCheck, FileText, RotateCcw, TriangleAlert, Upload } from "lucide-react";
 import { LogoCargando } from "@/components/ui/logo-cargando";
 import { Button } from "@/components/ui/button";
-import { COOKIE_SUCURSAL } from "@/lib/datos/tipos";
+import { COOKIE_SEMANA, COOKIE_SUCURSAL } from "@/lib/datos/tipos";
+import { iniciarCola } from "@/lib/programacion/cola";
 import { usePanel } from "@/lib/datos/panel-context";
 import {
   ErrorFlujo,
@@ -341,11 +342,17 @@ export function ImportarYProgramar({
         empresa: contexto.empresa,
         resultados: previo.resultados,
         programaciones: previo.programaciones,
+        // Sólo la primera semana ahora; el resto lo programa la cola del panel.
+        enSegundoPlano: true,
         onProgreso: avanzar,
       });
-      if (!vivo.current) return;
-      // El panel abre en la sucursal importada (misma cookie que el selector del shell).
+      // El panel abre en la sucursal y semana programadas (mismas cookies que los selectores del shell).
       document.cookie = `${COOKIE_SUCURSAL}=${encodeURIComponent(resultado.sucursalId)}; path=/; max-age=31536000; samesite=lax`;
+      if (resultado.semanaIso) {
+        document.cookie = `${COOKIE_SEMANA}=${encodeURIComponent(resultado.semanaIso)}; path=/; max-age=31536000; samesite=lax`;
+      }
+      if (resultado.pendientes.length > 0) iniciarCola(supabase, resultado.pendientes);
+      if (!vivo.current) return;
       setEstado({ fase: "listo", archivo, resultado });
       onListo?.();
       startTransition(() => router.refresh());
@@ -801,6 +808,12 @@ function ResumenListo({ resultado }: { resultado: ResultadoFlujo }) {
         </>
       )}
       {resultado.omitidas > 0 && <> · {fmtN.format(resultado.omitidas)} {resultado.omitidas === 1 ? "semana ya tenía propuesta" : "semanas ya tenían propuesta"}</>}
+      {resultado.pendientes.length > 0 && (
+        <>
+          {" "}
+          · {fmtN.format(resultado.pendientes.length)} {resultado.pendientes.length === 1 ? "semana más se programa" : "semanas más se programan"} mientras navegas
+        </>
+      )}
       {resultado.programaciones.length > 0 && (
         <>
           {" "}

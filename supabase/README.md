@@ -345,9 +345,13 @@ Reglas:
   tampoco vuelve a programar las semanas de esas sucursales que ya tienen
   propuesta publicada. Las cargas que quedaron en `procesando` se cierran como
   `con_errores` ("Carga interrumpida") al retomar.
-- Al programar varias sucursales del mismo archivo, la app corre hasta 2 a la
-  vez (las semanas de una misma sucursal, en serie); la primera semana corre
-  sola para dejar listo el catálogo de la empresa.
+- Tras guardar, la app programa sólo la primera semana de la primera sucursal
+  y abre el panel (≈ 85 s para 50 tiendas × 4 semanas); las demás
+  sucursal-semanas las programa una cola en segundo plano
+  (`src/lib/programacion/cola.ts`, píldora flotante del panel) hasta 2
+  sucursales a la vez (las semanas de una misma sucursal, en serie). Si la
+  pestaña se cierra a medias, `semanas_sin_propuesta()` (0012) lista las
+  semanas cargadas sin propuesta publicada y el panel ofrece terminarlas.
 - 0010 sube el `statement_timeout` del rol `authenticated` de 8 s (valor de
   Supabase) a 15 s: los RPC que resumen escenarios y el panel con decenas de
   tiendas se acercaban al límite bajo carga. Si aun así Postgres cancela una

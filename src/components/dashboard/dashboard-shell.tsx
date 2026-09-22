@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dashboard-sidebar";
 import { JornadaLogo } from "@/components/ui/jornada-logo";
 import { LogoCargando } from "@/components/ui/logo-cargando";
+import { EstadoCola } from "@/components/dashboard/estado-cola";
 import { ProfileMenu } from "@/components/auth/profile-menu";
 import { iniciales, useSession } from "@/components/auth/session";
 import { SemanasTab } from "@/components/dashboard/tabs/semanas";
@@ -317,6 +318,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           {ActiveTab ? <ActiveTab /> : children}
         </main>
       </div>
+      <EstadoCola />
     </div>
   );
 }
