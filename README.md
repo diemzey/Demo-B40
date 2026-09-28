@@ -266,6 +266,140 @@ habilidad del rol en las del empleado; sin traslapes.
 dominical, y sobrestaffing valuado a la tarifa media. Con ese mismo cálculo
 se comparan baseline y propuesta en `v_ahorro_escenario`.
 
+## Arquitectura de la base de datos
+
+PostgreSQL 17 en Supabase, un solo esquema `public`, multi-empresa por RLS.
+El detalle de cada migración, columna y política está en `supabase/README.md`
+y el porqué de las decisiones en `docs/arquitectura.md` §2–3; esto es el mapa.
+
+### Dominios y relaciones
+
+```mermaid
+erDiagram
+  %% Multi-empresa y personas
+  empresas ||--o{ hubs : ""
+  hubs ||--o{ sucursales : ""
+  empresas ||--o{ perfiles : "usuarios (auth.users)"
+  sucursales ||--o{ empleados : ""
+  sucursales ||--o{ importaciones_csv : "bitácora + huella"
+  empleados ||--o{ horarios : "turnos hoy (CSV)"
+  importaciones_csv ||--o{ horarios : ""
+
+  %% Catálogo por empresa
+  empresas ||--o{ habilidades : "caja, piso, almacén, supervisión"
+  empresas ||--o{ puestos : ""
+  puestos ||--o{ tabuladores : "tarifa por vigencia"
+  empresas ||--o{ plantillas_turno : ""
+  empresas ||--o{ reglas_laborales : "null = global por año"
+  puestos ||--o{ empleados : ""
+  empleados ||--o{ empleado_habilidades : ""
+  empleados ||--o{ disponibilidad : ""
+
+  %% Demanda
+  sucursales ||--o{ trafico_observado : "30 min (particionada)"
+  sucursales ||--o{ pronosticos : "versiones"
+  pronosticos ||--o{ demanda_intervalo : "requerido + es_pico (particionada)"
+
+  %% Escenarios
+  sucursales ||--o{ escenarios : "baseline / propuesta, versionados"
+  escenarios ||--o{ escenarios : "padre_id"
+  escenarios ||--o{ asignaciones : "un turno por fila (particionada)"
+  empleados ||--o{ asignaciones : ""
+  habilidades ||--o{ asignaciones : "rol cubierto"
+  escenarios ||--o{ cobertura_intervalo : "materializada"
+  escenarios ||--|| resumen_escenario : "costo y cobertura"
+  escenarios ||--o{ auditoria : "append-only"
+```
+
+| Dominio | Tablas | Para qué |
+|---|---|---|
+| Multi-empresa | `empresas`, `hubs`, `sucursales`, `perfiles` | Raíz del *tenant*. `perfiles.id` = `auth.users.id`; el trigger `handle_new_user` crea empresa, hub "Principal" y perfil `owner` al registrarse. `empresas` guarda `tope_objetivo` y `costo_hora_default`. |
+| Personas y turnos de hoy | `empleados`, `horarios`, `importaciones_csv` | Lo que llega en el CSV. `horarios` es una fila por segmento de turno con `horas` generada; `importaciones_csv` registra cada carga con conteos, errores por fila y una `huella` SHA-256 del contenido por sucursal. |
+| Catálogo | `habilidades`, `puestos`, `tabuladores`, `plantillas_turno`, `reglas_laborales`, `empleado_habilidades`, `disponibilidad` | Parámetros del motor. Las reglas laborales tienen una fila global por año de la reforma (48 → 40) y opcionalmente una por empresa. `topes_semanales` es el catálogo legal por año. |
+| Demanda | `trafico_observado`, `pronosticos`, `demanda_intervalo` | Requerimiento de personas por intervalo de 30 min y habilidad, con la marca `es_pico`. Sin tráfico, el motor escribe una demanda "cobertura actual". |
+| Escenarios | `escenarios`, `asignaciones`, `cobertura_intervalo`, `resumen_escenario`, `auditoria` | Una programación completa de una sucursal-semana. El baseline se materializa desde `horarios`; la propuesta la escribe el motor. Los resúmenes son lo único que lee la interfaz. |
+
+### Principios
+
+- **Un solo eje de aislamiento.** Toda fila cuelga de `hubs.empresa_id`, y
+  cada política RLS lo comprueba por la cadena hub → sucursal → empleado o
+  escenario contra `empresa_actual()` (función `security definer` que lee el
+  perfil del usuario). `anon` no tiene privilegios sobre nada; `authenticated`
+  tiene `select/insert/update/delete` filtrados. Roles: `owner`, `admin`
+  (catálogos y sucursales), `gerente` (turnos y escenarios), lectura.
+- **Las reglas laborales viven en la base.** `asignaciones` tiene una
+  restricción `EXCLUDE` con `tstzrange` (dos turnos del mismo empleado no se
+  traslapan, por construcción) y un *constraint trigger* diferido,
+  `trg_asignaciones_validar`, que al `COMMIT` valida la semana completa:
+  jornada diaria, tope semanal, días trabajados, descanso entre turnos,
+  disponibilidad y habilidad. Por eso el motor inserta la semana de un
+  empleado en una sola transacción.
+- **Escenarios inmutables.** `publicado` sólo puede pasar a `archivado`
+  (`trg_escenarios_proteger`); sus asignaciones no admiten `update` ni
+  `delete` (`trg_asignaciones_proteger`). Una corrección es un escenario
+  nuevo con `padre_id`. `auditoria` es append-only y guarda antes/después en
+  JSONB de `escenarios` y de toda actualización o baja de `asignaciones`.
+- **Particionado por semana.** `trafico_observado`, `demanda_intervalo` y
+  `asignaciones` se particionan por rango de `semana_iso` (trimestres
+  `_2026q1`…`_2026q4` y `_default`); índices, triggers y RLS se heredan. Un
+  trimestre nuevo es un `create table … partition of …`.
+- **La interfaz lee resúmenes, no detalle.** `resumir_escenario` materializa
+  `cobertura_intervalo` y `resumen_escenario`; el panel consulta
+  `v_ahorro_escenario` y `reporte_ejecutivo`, nunca agrega `asignaciones` en
+  interactivo. Con 50 tiendas, el resumen de semanas se pide sólo para la
+  sucursal activa.
+- **Cálculo junto a los datos, con la misma fórmula en dos lugares.** El costo
+  (regulares, dobles, triples, prima, sobrestaffing) lo calcula Postgres en
+  `v_costo_empleado_semana`; el motor lo replica en TypeScript y los scripts
+  verifican que coinciden al centavo.
+
+### Puntos de entrada
+
+| Objeto | Tipo | Qué hace |
+|---|---|---|
+| `importar_turnos_sucursal(sucursal, archivo, huella, totales, filas jsonb, errores, importacion?, cerrar?)` | función | Una llamada por sucursal: abre la bitácora, hace *upsert* de empleados por `(sucursal, clave_externa)` y de horarios por `(empleado, fecha, hora_inicio)`, y cierra la carga, en una transacción y con la RLS del usuario. |
+| `materializar_baseline(sucursal, semana, reglas?)` | función | Crea y publica el escenario `baseline` a partir de `horarios`. |
+| `resumir_escenario(escenario)` | función | Regenera cobertura por intervalo y el resumen de costo y cobertura pico. Se llama al publicar. |
+| `v_costo_empleado_semana`, `v_asignacion_horas_semana` | vistas | Horas y costo por escenario-empleado con las reglas del escenario. |
+| `v_ahorro_escenario` | vista | Último baseline vs última propuesta publicados por sucursal-semana: costos, ahorro, desglose, cobertura pico, déficit. |
+| `reporte_ejecutivo(semana?)` | función | Agregado por semana de toda la empresa. |
+| `v_horas_semana`, `v_resumen_sucursal_semana`, `resumen_sucursal` | vistas y función | Diagnóstico de "hoy": horas por persona y semana, horas al doble y fuera de norma contra el tope legal del año. |
+| `reacomodar_semana`, `resumen_reacomodo` | funciones | El reparto equitativo de horas de la sección anterior, en PL/pgSQL (la app usa la versión TypeScript, idéntica). |
+| `semanas_sin_propuesta()` | función | Sucursal-semanas con turnos cargados y sin propuesta publicada, para retomar la programación en segundo plano. |
+| `empresa_actual()`, `rol_actual()`, `es_admin()`, `puede_editar()` | funciones | Base de todas las políticas RLS. |
+
+Todo lo que expone la API es `security invoker`: aplica las políticas del
+usuario que llama. Las particiones no son accesibles directamente por la API.
+
+### Flujo de escritura de una semana
+
+```
+CSV → importar_turnos_sucursal (empleados + horarios + bitácora, 1 transacción por sucursal)
+    → materializar_baseline                       escenario baseline publicado
+    → motor: insert escenarios (propuesta, borrador) + asignaciones en lotes de 500
+        └ EXCLUDE + trg_asignaciones_validar al COMMIT de cada lote
+    → update escenarios set estado = 'publicado'  (inmutable desde aquí)
+    → resumir_escenario                           cobertura_intervalo + resumen_escenario
+    → v_ahorro_escenario / reporte_ejecutivo      lo que lee el panel
+```
+
+### Migraciones
+
+| Migración | Contenido |
+|---|---|
+| `0002_esquema_base` | Multi-empresa, perfiles, empleados, horarios, importaciones, topes legales; `handle_new_user`. |
+| `0003_rls` | Políticas RLS y funciones auxiliares de rol. |
+| `0004_vistas_y_semilla_topes` | `v_horas_semana`, `v_resumen_sucursal_semana`, `tope_semanal`, `resumen_sucursal`; topes 2025–2030. |
+| `0005_reacomodo` | `reacomodar_semana`, `resumen_reacomodo`. |
+| `0006_programacion` | Catálogo, demanda, escenarios, asignaciones particionadas, triggers de validación, inmutabilidad y auditoría, RLS de todo lo nuevo. |
+| `0007_vistas_programacion` | Costo, baseline, `resumir_escenario`, ahorro y reporte ejecutivo. |
+| `0008_empresas_parametros` | `tope_objetivo` y `costo_hora_default` por empresa. |
+| `0009_importaciones_huella` | Huella de contenido por carga (reanudación idempotente). |
+| `0010_timeout_consultas` | `statement_timeout` de `authenticated` a 15 s. |
+| `0011_auditoria_asignaciones` | La auditoría de asignaciones deja de registrar *inserts*. |
+| `0012_semanas_sin_propuesta` | Lista de sucursal-semanas pendientes de programar. |
+| `0013`–`0014_importar_turnos_sucursal` | Importación de una sucursal en una llamada, con bitácora incluida. |
+
 ## Nota de trazabilidad de restricciones
 
 Cada restricción tiene una fuente, un parámetro y un punto donde se hace
