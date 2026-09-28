@@ -131,6 +131,141 @@ con 50 tiendas:
   escenario publicado e inmutable ya es la traza y mil filas por escenario
   duplicaban el volumen escrito.
 
+## Matemática del reparto de horas
+
+Hay dos algoritmos y conviene no confundirlos. El **reacomodo** reparte
+horas entre personas (cuántas horas trabaja cada quien) y es lo que el panel
+muestra como columna "Reacomodada" mientras una semana no tiene propuesta. El
+**optimizador** decide turnos concretos (quién, qué día, de qué hora a qué
+hora, cubriendo qué habilidad) y es lo que produce la propuesta publicada.
+El reacomodo es exacto y se ejecuta en milisegundos; el optimizador es una
+heurística con reglas duras y un presupuesto de tiempo.
+
+### Reacomodo: reparto equitativo bajo el tope
+
+Código: `src/lib/reacomodo/index.ts` (TypeScript) y
+`public.reacomodar_semana` en `supabase/migrations/0005_reacomodo.sql`
+(PL/pgSQL). Son la misma regla y dan el mismo resultado al décimo de hora.
+
+**Entrada.** Para cada colaborador `i` de la sucursal en la semana:
+`h_i` horas que trabaja hoy, opcionalmente `c_i` horas de contrato. Un tope
+`T` (48 → 40 h) y, opcionalmente, un margen `m` sobre el contrato.
+
+**Límite individual.** Nadie puede subir de
+
+```
+L_i = T                                   si no hay margen o no hay contrato
+L_i = min(T, max(c_i, h_i) + m)           si hay margen y contrato
+```
+
+**Paso 1, ceder.** Quien excede el tope baja exactamente al tope; lo que
+suelta va a una bolsa común `B`:
+
+```
+B = Σ_i max(h_i − T, 0)         h_i ← min(h_i, T)
+```
+
+`B` se redondea hacia abajo a múltiplos de 0.5 h (los turnos se programan a
+la media hora); la fracción que sobra se cuenta como "sin cubrir".
+
+**Paso 2, deuda de contrato.** Primero se paga a quien está por debajo de su
+contrato, de mayor déficit a menor: `d_i = max(0, min(c_i, L_i) − h_i)`,
+y cada quien recibe `min(d_i, B)` hasta agotar la bolsa. Así el reparto
+respeta lo pactado antes de repartir "lo que sobra".
+
+**Paso 3, nivelación (water-filling).** Mientras quede bolsa, cada bloque de
+0.5 h va a la persona que **menos horas tiene** y todavía cabe en su límite
+(`h_i + 0.5 ≤ L_i`). Los empates se resuelven por orden de lista, que es
+estable (apellido, nombre), así que el resultado es determinista.
+
+**Salida.** `reacomodada_i`, `delta_i = reacomodada_i − h_i` y el rol
+`cede / recibe / igual`; y el balance: horas excedentes, absorbidas, sin
+cubrir, y `vacantes = ⌈sin_cubrir / T⌉`.
+
+**Propiedades.**
+
+- *Ningún colaborador queda arriba del tope* (todos ceden hasta `T`, nadie
+  sube más allá de `L_i ≤ T`).
+- *Se conservan las horas*: `Σ reacomodada_i + sin_cubrir = Σ h_i`. La
+  demanda no se recorta: si la plantilla no alcanza para absorber el exceso,
+  sobran horas y se sugieren vacantes, nunca se "pierden" en silencio.
+- *Equidad max-min*: el paso 3 es el algoritmo de llenado de agua. Al
+  terminar, no existe ningún par `(i, j)` tal que `i` haya recibido un bloque
+  y `j` tenga menos horas y espacio libre: el vector final maximiza el mínimo
+  de horas (y, entre los que empatan en mínimo, el siguiente mínimo, y así
+  sucesivamente: orden leximin) sujeto a los límites `L_i`. Es la misma
+  noción de justicia que usa el reparto de ancho de banda en redes.
+- *Determinista y barato*: `O(n + B/0.5 · n)`, decenas de miles de
+  operaciones para una tienda de 80 personas; corre en el servidor al pintar
+  el panel.
+
+**Ejemplo.** Tope `T = 40`, sin margen. Cuatro colaboradores:
+
+| | Hoy | Contrato | Cede / recibe | Reacomodada |
+|---|---|---|---|---|
+| A | 52 | 48 | −12 | 40 |
+| B | 48 | 48 | −8 | 40 |
+| C | 30 | 40 | +10 (deuda de contrato) | 40 |
+| D | 36 | — | +4 (nivelación, 8 bloques de 0.5 h) | 40 |
+
+Bolsa: 12 + 8 = 20 h. Paso 2 paga las 10 h de deuda de C. Paso 3 lleva a D
+de 36 a 40 con 4 h; quedan 6 h que ya no caben en nadie (todos están en el
+tope): `sin_cubrir = 6`, `vacantes = ⌈6/40⌉ = 1`. Total antes 166 h = total
+después 160 h + 6 h sin cubrir.
+
+### Optimizador: de horas a turnos
+
+Código: `src/lib/motor/optimizar.ts`; formulación completa y alternativas en
+`docs/arquitectura.md` §6. El reacomodo dice *cuántas* horas; el optimizador
+dice *cuáles*, porque la cobertura se necesita por intervalo de 30 min y por
+habilidad (caja, piso, almacén, supervisión).
+
+**Objetivo.** Minimizar
+
+```
+Σ costo(e, p, d) · x[e,d,p]  +  M · Σ u[i,h]  +  λ · Σ o[i]
+```
+
+donde `x[e,d,p] = 1` si el empleado `e` trabaja la plantilla de turno `p` el
+día `d`; `costo` = horas × tarifa del puesto (+ prima dominical si `d` es
+domingo); `u[i,h]` es el déficit de personas en el intervalo `i` para la
+habilidad `h` y `o[i]` el exceso; `M ≫ λ`, de modo que cubrir la demanda
+(sobre todo en pico) domina y el sobrestaffing se penaliza con su costo real
+(λ = tarifa media ponderada × 0.5 h).
+
+**Reglas duras** (nunca se violan; se revalidan al final con código
+independiente y las vuelve a comprobar Postgres al guardar): un turno por
+empleado-día; Σ horas ≤ tope y ≤ `max_horas_semana`; horas por día ≤
+`max_horas_dia`; ≤ `max_dias_semana` días; descanso ≥
+`descanso_entre_turnos_horas` entre turnos; ventanas de disponibilidad;
+habilidad del rol en las del empleado; sin traslapes.
+
+**Heurística.**
+
+1. *Construcción voraz.* Mientras haya déficit, se elige la terna (día,
+   plantilla, habilidad) con mayor puntuación
+   `(déficit ponderado que cubre − 0.1 · exceso) / (horas + K)`, donde los
+   intervalos pico pesan 50 veces más, y se asigna al empleado elegible más
+   barato, prefiriendo que su puesto coincida con la habilidad, la
+   continuidad (misma plantilla que el día anterior) y **menos horas
+   acumuladas**: este último desempate es lo que reparte las horas entre
+   personas de igual tarifa en vez de cargar a unas pocas. `K` regula qué
+   recurso escasea (horas o empleados-día) y se prueban varios valores
+   (multi-arranque determinista), la mitad con "reserva" de capacidad para
+   los picos de otros días.
+2. *Búsqueda local*, hasta no mejorar o agotar el presupuesto (3 s): quitar
+   turnos cuya retirada no crea déficit; mover un turno a otra plantilla,
+   empleado o habilidad del mismo día, o a otro día del mismo empleado, si
+   baja el objetivo; y volver a construir por si se liberó capacidad.
+3. Lo que queda sin empleado elegible se reporta como **vacantes**
+   (horas-turno sin cubrir). Nunca se rompe el tope para cubrirlo.
+
+**Cómo se mide el resultado.** `evaluar.ts` replica al centavo la fórmula de
+`resumir_escenario`: horas regulares hasta el tope, dobles hasta
+`horas_dobles_max` al `factor_doble`, triples al `factor_triple`, prima
+dominical, y sobrestaffing valuado a la tarifa media. Con ese mismo cálculo
+se comparan baseline y propuesta en `v_ahorro_escenario`.
+
 ## Nota de trazabilidad de restricciones
 
 Cada restricción tiene una fuente, un parámetro y un punto donde se hace
